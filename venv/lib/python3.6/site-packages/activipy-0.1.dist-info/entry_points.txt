@@ -1,0 +1,3 @@
+        [console_scripts]
+        activipy_tester = activipy.testcli:main
+        

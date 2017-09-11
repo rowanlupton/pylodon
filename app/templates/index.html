@@ -1,0 +1,11 @@
+{% extends 'basic.html' %}
+
+{% block content %}
+	{% for p in posts %}
+		<p>
+			{{ p.text }}
+			<br>
+			&mdash;{{ mongo.db.users.find_one({'_id': p.poster})['displayName'] }}
+		</p>
+	{% endfor %}
+{% endblock content %}

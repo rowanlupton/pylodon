@@ -1,0 +1,11 @@
+click==6.7
+Flask==0.12.2
+Flask-PyMongo==0.5.1
+Flask-WTF==0.14.2
+gunicorn==19.7.1
+itsdangerous==0.24
+Jinja2==2.9.6
+MarkupSafe==1.0
+pymongo==3.5.1
+Werkzeug==0.12.2
+WTForms==2.1

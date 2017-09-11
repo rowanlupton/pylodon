@@ -1,0 +1,16 @@
+{% extends 'basic.html' %}
+
+
+{% block content %}
+<form action="" method="post" name="api">
+    {{ form.csrf_token }}
+
+    <p> your post: <br>
+    {{ form.text(size=40) }}<br>
+    {% for error in form.text.errors %}
+      <span class="error">[{{ error }}]</span>
+    {% endfor %}</p>
+
+    <p><input type ="submit" value="post" class="btn btn-sm btn-primary"></p>
+  </form>
+  {% endblock content %}

@@ -1,0 +1,43 @@
+{% extends 'basic.html' %}
+
+{% block content %}
+	
+	<form action="" method="post" name="api">
+    {{ form.csrf_token }}
+
+    <p> handle: <br>
+    {{ form.handle(size=40) }}<br>
+    {% for error in form.handle.errors %}
+      <span class="error">[{{ error }}]</span>
+    {% endfor %}</p>
+
+    <p> display name: <br>
+    {{ form.displayName(size=40) }}<br>
+    {% for error in form.displayName.errors %}
+      <span class="error">[{{ error }}]</span>
+    {% endfor %}</p>
+
+    <p> email: <br>
+    {{ form.email(size=40) }}<br>
+    {% for error in form.email.errors %}
+      <span class="error">[{{ error }}]</span>
+    {% endfor %}</p>
+
+    <p> password: <br>
+    {{ form.password }}<br>
+    {% for error in form.password.errors %}
+      <span class="error">[{{ error }}]</span>
+    {% endfor %}</p>
+
+    <p> confirm password: <br>
+    {{ form.passwordConfirm }}<br>
+    {% for error in form.passwordConfirm.errors %}
+      <span class="error">[{{ error }}]</span>
+    {% endfor %}</p>
+    
+    <p><input type ="submit" value="register" class="btn btn-sm btn-primary"></p>
+
+    <p><a href="/login">existing user?</a>
+  </form>
+
+{% endblock content%}
