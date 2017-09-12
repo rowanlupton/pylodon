@@ -3,9 +3,9 @@
 {% block content %}
 	{% for p in posts %}
 		<p>
-			{{ p.text }}
+			{{ p.object.content }}
 			<br>
-			&mdash;{{ mongo.db.users.find_one({'_id': p.poster})['displayName'] }}
+			&mdash;{{ p.actor['displayName'] }}
 		</p>
 	{% endfor %}
 {% endblock content %}
