@@ -31,7 +31,7 @@ def index():
 def login():
 	form = userLogin()
 	if form.validate_on_submit():
-		user = mongo.db.users.find_one({'id': request.base_url + form.handle.data})
+		user = mongo.db.users.find_one({'id': request.url_root + form.handle.data})
 		if user and User.validate_login(user['password'], form.password.data):
 			user_obj = User(user['id'])
 			login_user(user_obj)
