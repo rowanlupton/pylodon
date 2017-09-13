@@ -1,0 +1,10 @@
+{% extends 'basic.html' %}
+
+{% block content %}
+	<p> {%for p in posts["items"]%} 
+			<h4>{{p['actor']['displayName']}}:</h4>
+			<p> {{p['object']['content']}} </p>
+			{% endfor %}
+	</p>
+
+{% endblock content %}

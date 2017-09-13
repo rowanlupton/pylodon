@@ -1,7 +1,9 @@
 from app import app, lm
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from bson.objectid import ObjectId
+from flask_restful import Resource, Api, marshal_with
+from bson import ObjectId, json_util
+import json
 from flask_pymongo import PyMongo
 from activipy import vocab
 
@@ -10,6 +12,7 @@ from .users import User
 # from .emails import lostPassword, checkToken
 
 mongo = PyMongo(app)
+api = Api(app)
 
 @lm.user_loader
 def load_user(handle):
@@ -24,7 +27,6 @@ def index():
 	posts = mongo.db.posts.find()
 	return render_template('index.html', posts=posts, mongo=mongo)
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	form = userLogin()
@@ -37,7 +39,7 @@ def login():
 			return redirect(request.args.get("next") or url_for('index'))
 		else:
 			flash('wrong username or password', category='error')
-	return render_template('login.html', form=form)
+	return render_template('login.html', form=form, mongo=mongo)
 
 def returnNewUser(handle, displayName, email, passwordHash):
 	return 	{	
@@ -68,35 +70,27 @@ def register():
 				return redirect(request.args.get("next") or url_for('index'))
 			else:
 				flash("username taken")
-				return render_template('registration.html', form=form)
+				return render_template('registration.html', form=form, mongo=mongo)
 		else:
 			flash("passwords did not match")
-			return render_template('registration.html', form=form)
-	return render_template('registration.html', form=form)
+			return render_template('registration.html', form=form, mongo=mongo)
+	return render_template('registration.html', form=form, mongo=mongo)
 
 def createPost(text, name, id, receivers):
-	return {
-						"@type": "Create",
-						"actor": {
-												"@type": "Person",
-												"@id": id,
-												"@displayName": name
-											},
-						"to": receivers,
-						"object": {
-							"@type": "Note",
-							"content": text
-						}
-					}
+	return vocab.Create(
+											actor=vocab.Person(
+													id,
+													displayName=name),
+											to=[receivers],
+											object=vocab.Note(
+												content=text))
 
 @app.route('/compose', methods=['GET', 'POST'])
 @login_required
 def compose():
 	form = composePost()
-	if form.validate_on_submit():
-		return redirect(request.args.get("next") or url_for('index'))
 	url = mongo.db.users.find_one({'id': current_user.get_id()})['outbox']
-	return render_template('compose.html', form=form, url=url)
+	return render_template('compose.html', form=form, url=url, mongo=mongo)
 
 
 
@@ -119,10 +113,16 @@ def inbox(handle):
 	return 'foo'
 
 @app.route('/<handle>/feed', methods=["GET", "POST"])
-def feed(handle, post):
+def feed(handle):
 	if request.method == 'POST':
+		user = mongo.db.users.find_one({'id': request.url_root + handle})
+		print(request.url_root + handle)
+		post = createPost(request.form['text'], user['name'], user['id'], user['outbox'])
 		mongo.db.posts.insert_one(post.json())
+		return redirect(request.args.get("next") or url_for('index'))
 	else:
-		return 'hi'
-	
-
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': 'http://populator.smilodon.social/'+handle}).sort('_id', -1))
+		if request.headers.get('application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or request.headers.get('application/activity+json'):
+			return feedObj
+		else:
+			return render_template('feed.html', posts=feedObj, mongo=mongo)

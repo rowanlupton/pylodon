@@ -46,7 +46,7 @@
 				<span class="spacer"></span>
 				<span>
 				{% if current_user.is_authenticated: %}
-					logged in as: {{ current_user.preferredUsername }}
+					logged in as: {{ mongo.db.users.find_one({'id': current_user.get_id()})['name'] }}
 					<a href="/logout">logout</a>
 				{% else: %}
 					<a href="{{url_for('login')}}">login</a>
