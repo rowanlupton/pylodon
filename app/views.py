@@ -31,8 +31,8 @@ def index():
 def login():
 	form = userLogin()
 	if form.validate_on_submit():
-		user = mongo.db.users.find_one({'id': form.handle.data})
-		if user and User.validate_login(user['password'], request.base_url + form.password.data):
+		user = mongo.db.users.find_one({'id': request.base_url + form.handle.data})
+		if user and User.validate_login(user['password'], form.password.data):
 			user_obj = User(user['id'])
 			login_user(user_obj)
 			flash("Logged in successfully!", category='success')
