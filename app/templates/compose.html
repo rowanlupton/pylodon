@@ -2,7 +2,7 @@
 
 
 {% block content %}
-<form action="" method="post" name="api">
+<form action="{{ url }}" method="post" name="api">
     {{ form.csrf_token }}
 
     <p> your post: <br>

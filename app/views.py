@@ -94,16 +94,9 @@ def createPost(text, name, id, receivers):
 def compose():
 	form = composePost()
 	if form.validate_on_submit():
-		post_this = vocab.Create(
-			actor=vocab.Person(
-				current_user.get_id(),
-				displayName=mongo.db.users.find_one({'id': current_user.get_id()})['name']),
-			to=['http://populator.smilodon.social/'+current_user.get_id()+'/feed'],
-			object=vocab.Note(
-				content=form.text.data))
-		mongo.db.posts.insert_one(post_this.json())
-		return redirect(url_for('index'))
-	return render_template('compose.html', form=form)
+		return redirect(request.args.get("next") or url_for('index'))
+	url = mongo.db.users.find_one({'id': current_user.get_id()})['outbox']
+	return render_template('compose.html', form=form, url=url)
 
 
 
@@ -121,12 +114,15 @@ def followers(handle):
 def liked(handle):
 	return mongo.db.liked.find({'id': handle+'@populator.smilodon.social'})
 
-@app.route('/<handle>/inbox')
+@app.route('/<handle>/inbox', methods=["POST"])
 def inbox(handle):
-	return mongo.db.inbox.find({'id': handle+'@populator.smilodon.social'})
+	return 'foo'
 
-@app.route('/<handle>/feed', methods=["POST"])
-def postToFeed(handle, post):
-	mongo.db.posts.insert(post, ordered=True)
+@app.route('/<handle>/feed', methods=["GET", "POST"])
+def feed(handle, post):
+	if request.method == 'POST':
+		mongo.db.posts.insert_one(post.json())
+	else:
+		return 'hi'
 	
 
