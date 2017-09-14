@@ -1,9 +1,8 @@
 from app import app, lm
-from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify
-import requests
+from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, make_response
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_restful import Resource, Api, marshal_with, abort
-from bson import ObjectId
+from bson import ObjectId, json_util
+import json
 from flask_pymongo import PyMongo
 from activipy import vocab
 
@@ -12,7 +11,8 @@ from .users import User
 # from .emails import lostPassword, checkToken
 
 mongo = PyMongo(app)
-api = Api(app)
+
+SERVER_URL = 'http://populator.smilodon.social/'
 
 @lm.user_loader
 def load_user(handle):
@@ -24,7 +24,7 @@ def load_user(handle):
 @app.route('/')
 @login_required
 def index():
-	posts = mongo.db.posts.find()
+	posts = mongo.db.posts.find().sort('_id', -1)
 	return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -93,59 +93,49 @@ def compose():
 	return render_template('compose.html', form=form, url=url, mongo=mongo)
 
 
-def jsonifyASObj(jsonify_me):
-	return_me = []
-	for j in jsonify_me:
-		return_me.append(j)
-	return jsonify(return_me)
+
 
 # user routes
 @app.route('/<handle>/following')
 def following(handle):
-	return mongo.db.following.find({'id': handle+'@populator.smilodon.social'})
+	return mongo.db.following.find({'id': SERVER_URL+handle})
 
 @app.route('/<handle>/followers')
 def followers(handle):
-	return mongo.db.followers.find({'id': handle+'@populator.smilodon.social'})
+	return mongo.db.followers.find({'id': SERVER_URL+handle})
 
 @app.route('/<handle>/liked')
 def liked(handle):
-	return mongo.db.liked.find({'id': handle+'@populator.smilodon.social'})
+	return mongo.db.liked.find({'id': SERVER_URL+handle})
 
 @app.route('/<handle>/inbox', methods=["POST"])
 def inbox(handle):
-	return 'foo'
-
-@app.route('/<handle>')
-def viewFeed(handle):
-	print('in viewFeed')
-	user = load_user(handle)
-	r = requests.get(user['outbox'], headers={'Content-Type': 'application/activity+json'})
-	print(r.url)
-	return render_template('feed.html', posts=r)
+	user = mongo.db.users.find_one({'id': SERVER_URL + handle})
+	post = createPost(request.form['text'], user['name'], user['id'], user['inbox'])
+	mongo.db.posts.insert_one(post.json())
+	return redirect(request.args.get("next") or url_for('index'))
 
 
-class feed(Resource):
-	def get(self, handle):
-		print('in feed')
-		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': 'http://populator.smilodon.social/'+handle}).sort('_id', -1))
-		contentType = None
-		profile = None
-		if request.headers.get('Content-Type'):
-			contentType = request.headers['Content-Type']
-		if request.headers.get('profile'):
-			profile = request.headers['profile']
-
-		if (contentType == 'application/ld+json' and profile == 'https://www.w3.org/ns/activitystreams') or (contentType == 'application/activity+json'):
-			return list(feedObj)
-		else:
-			return abort(403)
-
-	def post(self, handle):
-		user = mongo.db.users.find_one({'id': request.url_root + handle})
+@app.route('/<handle>/feed', methods=["GET", "POST"])
+def feed(handle):
+	if request.method == 'POST':
+		user = mongo.db.users.find_one({'id': SERVER_URL + handle})
 		post = createPost(request.form['text'], user['name'], user['id'], user['outbox'])
 		mongo.db.posts.insert_one(post.json())
 		return redirect(request.args.get("next") or url_for('index'))
 
-api.add_resource(feed, '/<string:handle>/feed')
-		
+	elif request.method == 'GET':
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1))
+		if request.headers.get('Content-Type'):
+			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
+				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
+				return jsonify(feedObj_sanitized)
+			else:
+				return render_template('feed.html', posts=feedObj, mongo=mongo)
+		else:
+			return render_template('feed.html', posts=feedObj, mongo=mongo)
+
+@app.route('/<handle>')
+def viewFeed(handle):
+	feed = mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1)
+	return render_template('feed.html', posts=feed, mongo=mongo)
