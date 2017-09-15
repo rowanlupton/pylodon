@@ -13,6 +13,7 @@ from .users import User
 mongo = PyMongo(app)
 
 SERVER_URL = 'http://populator.smilodon.social/'
+API_HEADERS = {'Content-Type': 'application/ld+json', 'profile': 'https://www.w3.org/ns/activitystreams'}
 
 @lm.user_loader
 def load_user(handle):
@@ -25,9 +26,10 @@ def load_user(handle):
 @login_required
 def index():
 	user = mongo.db.users.find_one({'id': current_user.get_id()})
-	r = requests.get(user['inbox'])
-	return jsonify(r.text)
-	return render_template('index.html', posts=posts, mongo=mongo)
+
+	r = requests.get(user['inbox'], headers=API_HEADERS)
+	return render_template('index.html', posts=r.json()['items'], mongo=mongo)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -112,25 +114,6 @@ def followers(handle):
 def liked(handle):
 	return mongo.db.liked.find({'id': SERVER_URL+handle})
 
-@app.route('/<handle>/inbox', methods=["GET", "POST"])
-def inbox(handle):
-	if request.method == 'POST':
-		user = mongo.db.users.find_one({'id': SERVER_URL + handle})
-		post = createPost(request.form['text'], user['name'], user['id'], user['inbox'])
-		mongo.db.posts.insert_one(post.json())
-		return redirect(request.args.get("next") or url_for('index'))
-	if request.method == 'GET':
-		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1))
-		if request.headers.get('Content-Type'):
-			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
-				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-				return jsonify(feedObj_sanitized)
-			else:
-				pass
-		else:
-			pass
-
-
 @app.route('/<handle>/feed', methods=["GET", "POST"])
 def feed(handle):
 	if request.method == 'POST':
@@ -153,8 +136,9 @@ def feed(handle):
 
 @app.route('/<handle>')
 def viewFeed(handle):
-	feed = mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1)
-	return render_template('feed.html', posts=feed, mongo=mongo)
+	u = mongo.db.users.get({'id': SERVER_URL+handle})
+	r = requests.get(u['feed'], headers=API_HEADERS)
+	return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
 
 
 
@@ -192,4 +176,19 @@ def api_inbox(handle):
 
 @app.route('/api/<handle>/feed', methods=["GET", "POST"])
 def api_feed(handle):
-	pass
+	if request.method == 'POST':
+		user = mongo.db.users.find_one({'id': SERVER_URL + handle})
+		post = createPost(request.form['text'], user['name'], user['id'], user['outbox'])
+		mongo.db.posts.insert_one(post.json())
+		return redirect(request.args.get("next") or url_for('index'))
+
+	elif request.method == 'GET':
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1))
+		if request.headers.get('Content-Type'):
+			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
+				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
+				return jsonify(feedObj_sanitized)
+			else:
+				pass
+		else:
+			pass
