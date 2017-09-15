@@ -136,8 +136,9 @@ def feed(handle):
 
 @app.route('/<handle>')
 def viewFeed(handle):
-	u = mongo.db.users.get({'id': SERVER_URL+handle})
-	r = requests.get(u['feed'], headers=API_HEADERS)
+	u = mongo.db.users.find_one({'id': SERVER_URL+handle})
+	r = requests.get(u['outbox'], headers=API_HEADERS)
+	return jsonify(r.json()['items'])
 	return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
 
 
@@ -164,7 +165,7 @@ def api_inbox(handle):
 		mongo.db.posts.insert_one(post.json())
 		return redirect(request.args.get("next") or url_for('index'))
 	if request.method == 'GET':
-		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1))
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': SERVER_URL+handle}).sort('_id', -1))
 		if request.headers.get('Content-Type'):
 			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
 				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
