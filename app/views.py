@@ -28,7 +28,7 @@ def index():
 	user = mongo.db.users.find_one({'id': current_user.get_id()})
 	# user = mongo.db.users.find_one({'id': 'http://populator.smilodon.social/roo'})
 
-	r = requests.get('http://localhost:5000/api/roo/inbox', headers=API_HEADERS)
+	r = requests.get(user['inbox'], headers=API_HEADERS)
 	# return jsonify(r.text)
 	return render_template('index.html', posts=r.json()['items'], mongo=mongo)
 
