@@ -23,11 +23,12 @@ def load_user(handle):
     return User(u['id'])
 
 @app.route('/', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def index():
-	user = mongo.db.users.find_one({'id': current_user.get_id()})
+	# user = mongo.db.users.find_one({'id': current_user.get_id()})
+	user = mongo.db.users.find_one({'id': 'http://populator.smilodon.social/roo'})
 
-	r = requests.get(user['inbox'], headers=API_HEADERS)
+	r = requests.get('http://localhost:5000/api/roo/inbox', headers=API_HEADERS)
 	return jsonify(r.text)
 	return render_template('index.html', posts=r.json()['items'], mongo=mongo)
 
@@ -145,7 +146,7 @@ def api_inbox(handle):
 		mongo.db.posts.insert_one(post.json())
 		return redirect(request.args.get("next") or url_for('index'))
 	elif request.method == 'GET':
-		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': {'$elemMatch': {SERVER_URL+handle}}}).sort('_id', -1))
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': SERVER_URL+handle+'/inbox'}).sort('_id', -1))
 		if request.headers.get('Content-Type'):
 			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
 				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
