@@ -2,7 +2,7 @@ from app import app, lm
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from bson import ObjectId, json_util
-import json
+import json, requests
 from flask_pymongo import PyMongo
 from activipy import vocab
 
@@ -21,17 +21,23 @@ def load_user(handle):
         return None
     return User(u['id'])
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-	posts = mongo.db.posts.find().sort('_id', -1)
+	user = mongo.db.users.find_one({'id': current_user.get_id()})
+	print('in index')
+	r = requests.get(user['inbox'])
+	print('********************'+r.get_data())
+	return jsonify(r.get_data())
 	return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	form = userLogin()
 	if form.validate_on_submit():
-		user = mongo.db.users.find_one({'id': request.url_root + form.handle.data})
+		handle = form.handle.data
+		password = form.password.data
+		user = mongo.db.users.find_one({'id':  form.handle.data})
 		if user and User.validate_login(user['password'], form.password.data):
 			user_obj = User(user['id'])
 			login_user(user_obj)
@@ -108,12 +114,23 @@ def followers(handle):
 def liked(handle):
 	return mongo.db.liked.find({'id': SERVER_URL+handle})
 
-@app.route('/<handle>/inbox', methods=["POST"])
+@app.route('/<handle>/inbox', methods=["GET", "POST"])
 def inbox(handle):
-	user = mongo.db.users.find_one({'id': SERVER_URL + handle})
-	post = createPost(request.form['text'], user['name'], user['id'], user['inbox'])
-	mongo.db.posts.insert_one(post.json())
-	return redirect(request.args.get("next") or url_for('index'))
+	if request.method == 'POST':
+		user = mongo.db.users.find_one({'id': SERVER_URL + handle})
+		post = createPost(request.form['text'], user['name'], user['id'], user['inbox'])
+		mongo.db.posts.insert_one(post.json())
+		return redirect(request.args.get("next") or url_for('index'))
+	if request.method == 'GET':
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1))
+		if request.headers.get('Content-Type'):
+			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
+				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
+				return jsonify(feedObj_sanitized)
+			else:
+				pass
+		else:
+			pass
 
 
 @app.route('/<handle>/feed', methods=["GET", "POST"])
@@ -131,11 +148,36 @@ def feed(handle):
 				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
 				return jsonify(feedObj_sanitized)
 			else:
-				return render_template('feed.html', posts=feedObj, mongo=mongo)
+				pass
 		else:
-			return render_template('feed.html', posts=feedObj, mongo=mongo)
+			pass
+
 
 @app.route('/<handle>')
 def viewFeed(handle):
 	feed = mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1)
 	return render_template('feed.html', posts=feed, mongo=mongo)
+
+
+
+######################## API ########################
+
+@app.route('/api/<handle>/following')
+def api_following(handle):
+	pass
+
+@app.route('/api/<handle>/followers')
+def api_followers(handle):
+	pass
+
+@app.route('/api/<handle>/liked')
+def api_liked(handle):
+	pass
+
+@app.route('/api/<handle>/inbox', methods=["GET", "POST"])
+def api_inbox(handle):
+	return make_response('hi')
+
+@app.route('/api/<handle>/feed', methods=["GET", "POST"])
+def api_feed(handle):
+	pass
