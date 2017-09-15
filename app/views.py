@@ -25,10 +25,8 @@ def load_user(handle):
 @login_required
 def index():
 	user = mongo.db.users.find_one({'id': current_user.get_id()})
-	print('in index')
 	r = requests.get(user['inbox'])
-	print('********************'+r.get_data())
-	return jsonify(r.get_data())
+	return jsonify(r.text)
 	return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -176,7 +174,21 @@ def api_liked(handle):
 
 @app.route('/api/<handle>/inbox', methods=["GET", "POST"])
 def api_inbox(handle):
-	return make_response('hi')
+	if request.method == 'POST':
+		user = mongo.db.users.find_one({'id': SERVER_URL + handle})
+		post = createPost(request.form['text'], user['name'], user['id'], user['inbox'])
+		mongo.db.posts.insert_one(post.json())
+		return redirect(request.args.get("next") or url_for('index'))
+	if request.method == 'GET':
+		feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'actor.@id': SERVER_URL+handle}).sort('_id', -1))
+		if request.headers.get('Content-Type'):
+			if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
+				feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
+				return jsonify(feedObj_sanitized)
+			else:
+				pass
+		else:
+			pass
 
 @app.route('/api/<handle>/feed', methods=["GET", "POST"])
 def api_feed(handle):
