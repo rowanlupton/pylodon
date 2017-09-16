@@ -1,33 +1,13 @@
+from app import mongo, rest_api
+from .utilities import find_user_or_404, get_logged_in_user, check_headers, createPost
+
 from flask import Blueprint, request, abort
 from flask_restful import Resource
-from activipy import vocab
-from app import mongo, rest_api
 from bson import ObjectId, json_util
 import json
 
+
 api = Blueprint('api', __name__, template_folder='templates')
-
-API_HEADERS = {'Content-Type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
-
-def check_headers(request):
-  print(request.headers)
-  if request.headers.get('Content-Type'):
-    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
-      print(request.headers)
-      return True
-    else:
-      print(request.headers)
-  print(request.headers)
-  return False
-def createPost(text, name, id, receivers):
-  return vocab.Create(
-                      actor=vocab.Person(
-                            id,
-                            displayName=name),
-                      to=[receivers],
-                      object=vocab.Note(
-                                        content=text))
-
 
 class following(Resource):
   def get(self, handle):
@@ -74,16 +54,17 @@ class inbox(Resource):
 
 class feed(Resource):
   def get(self, handle):
-    feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('_id', -1))
-    print('feed')
     if check_headers(request):
+      items = mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('_id', -1)
+      feedObj = vocab.OrderedCollection(items=items)
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj_sanitized
     else:
       abort(400)
   def post(self, handle):
-    u = mongo.db.users.find_one({'id': SERVER_URL + handle})
-    to = [u['outbox']]
+    u = find_user_or_404(handle)
+
+    to = [u.outbox]
     if request.data['to']:
       to.append(request.data['to'])
 

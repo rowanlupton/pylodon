@@ -1,15 +1,15 @@
 from app import app, lm, api, mongo
-from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, make_response, abort
+from .forms import userLogin, userRegister, composePost
+from .users import User
+from .utilities import find_user_or_404, get_logged_in_user
+# from .emails import lostPassword, checkToken
+
+from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 import requests
 
-from .forms import userLogin, userRegister, composePost
-from .users import User
-# from .emails import lostPassword, checkToken
-
 app.register_blueprint(api.api)
-SERVER_URL = 'http://populator.smilodon.social/'
-API_HEADERS = {'Content-Type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
+
 
 ###################### SET-UP ######################
 @lm.user_loader
@@ -19,18 +19,8 @@ def load_user(handle):
         return None
     return User(u['id'])
 
-def find_user_or_404(handle):
-  u = mongo.db.users.find_one({'id': request.url_root + handle})
-  if not u:
-    abort(404)
-  else:
-    return u
-def get_logged_in_user():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
-  if not u:
-    abort(404)
-  else:
-    return u
+SERVER_URL = 'http://populator.smilodon.social/'
+
 
 #################### REAL STUFF ####################
 
@@ -44,15 +34,15 @@ def index():
 @app.route('/notifications')
 @login_required
 def notifications():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
-
+  u = get_logged_in_user()
   r = requests.get(u['inbox'], headers=API_HEADERS)
+
   return render_template('index.html', posts=r.json()['items'], mongo=mongo)
 
 @app.route('/compose', methods=['GET', 'POST'])
 @login_required
 def compose():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
+  u = get_logged_in_user()
   form = composePost()
   if form.validate_on_submit():
     requests.post(u['outbox'], data=data, headers=API_HEADERS)
@@ -117,6 +107,6 @@ def register():
 
 @app.route('/<handle>')
 def viewFeed(handle):
-  u = mongo.db.users.find_one({'id': SERVER_URL+handle})
+  u = find_user_or_404(handle)
   r = requests.get(u['outbox'], headers=API_HEADERS)
   return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
