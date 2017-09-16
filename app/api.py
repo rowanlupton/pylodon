@@ -63,7 +63,7 @@ class feed(Resource):
     else:
       abort(400)
   def post(self, handle):
-    # if check_headers(request):
+    if check_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
       
@@ -89,7 +89,7 @@ class feed(Resource):
 
       if r['@type'] == 'Follow':
         pass
-    # else: abort(400)
+    abort(400)
 
 
 # url handling
