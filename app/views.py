@@ -54,7 +54,7 @@ def compose():
 
     post = createPost(form.text.data, u['name'], u['id'], to)
 
-    requests.post(u['outbox'], data=post, headers=API_HEADERS)
+    requests.post(u['outbox'], data=post.json(), headers=API_HEADERS)
     return redirect(request.args.get("next") or url_for('index'))
   return render_template('compose.html', form=form, mongo=mongo)
 
