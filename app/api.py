@@ -76,6 +76,7 @@ class feed(Resource):
           object=obj)
 
       if r['@type'] == 'Create':
+        return "it's a Create"
         if r['object']['@type'] != 'Note':
           abort(403)
         content = r['object']['content']
