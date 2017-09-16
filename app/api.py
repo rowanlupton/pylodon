@@ -64,6 +64,7 @@ class feed(Resource):
       abort(400)
   def post(self, handle):
     if check_headers(request):
+      u = get_logged_in_user()
       r = request.get_json()
       
       # if it's a note it creates a request that will be handled by the next bit
@@ -81,8 +82,7 @@ class feed(Resource):
         note = vocab.Note(content=content, person = u)
         mongo.db.posts.insert_one(note)
         return redirect(request.args.get("next") or url_for('index'), 202)
-
-        return redirect(request.args.get("next") or url_for('index'))
+      
       if r['@type'] == 'Like':
         pass
 
