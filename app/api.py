@@ -66,6 +66,7 @@ class feed(Resource):
     if check_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
+      print('*********'+r)
       
       # if it's a note it creates a request that will be handled by the next bit
       if r['@type'] == 'Note':
