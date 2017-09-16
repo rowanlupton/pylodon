@@ -76,10 +76,10 @@ class feed(Resource):
           object=obj)
 
       if r['@type'] == 'Create':
-        if r['object']['type'] != 'Note':
+        if r['object']['@type'] != 'Note':
           abort(403)
         content = r['object']['content']
-        note = vocab.Note(content=content, person = u)
+        note = vocab.Note(content=content, actor=u['id'])
         mongo.db.posts.insert_one(note)
         return redirect(request.args.get("next") or url_for('index'), 202)
       
