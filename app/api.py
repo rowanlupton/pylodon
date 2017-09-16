@@ -66,7 +66,6 @@ class feed(Resource):
     if check_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
-      print('*********'+str(r))
       
       # if it's a note it creates a request that will be handled by the next bit
       if r['@type'] == 'Note':
@@ -77,7 +76,6 @@ class feed(Resource):
           object=obj)
 
       if r['@type'] == 'Create':
-        print("it's a Create")
         if r['object']['@type'] != 'Note':
           abort(403)
         content = r['object']['content']

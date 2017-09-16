@@ -5,7 +5,7 @@ from flask import request, abort
 from flask_login import current_user
 
 def find_user_or_404(handle):
-  u = mongo.db.users.find_one({'id': request.url_root + handle})
+  u = mongo.db.users.find_one({'id': 'acct:'+handle+'@'+request.host})
   if not u:
     abort(404)
   else:

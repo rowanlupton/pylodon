@@ -58,15 +58,20 @@ def compose():
     return redirect(request.args.get("next") or url_for('index'))
   return render_template('compose.html', form=form, mongo=mongo)
 
+@app.route('/<handle>')
+def viewFeed(handle):
+  u = find_user_or_404(handle)
+  r = requests.get(u['outbox'], headers=API_HEADERS)
+  return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
 
 ################### LOG IN/OUT ###################
 @app.route('/login', methods=['GET', 'POST'])
 def login():
   form = userLogin()
   if form.validate_on_submit():
-    handle = form.handle.data
+    handle = 'acct:'+form.handle.data+'@'+request.host
     password = form.password.data
-    user = mongo.db.users.find_one({'id':  form.handle.data})
+    user = mongo.db.users.find_one({'id':  handle})
     if user and User.validate_login(user['password'], form.password.data):
       user_obj = User(user['id'])
       login_user(user_obj)
@@ -78,17 +83,18 @@ def login():
 
 def returnNewUser(handle, displayName, email, passwordHash):
   return   {  
-            'id': handle+'@populator.smilodon.social', 
+            'id': 'acct:'+handle+'@'+request.host, 
             'context': 'https://www.w3.org/ns/activitystreams', 
             'name': displayName, 
             'email': email, 
             'password': passwordHash, 
             'type': 'Person', 
-            'following': 'http://populator.smilodon.social/'+handle+'/following.json', 
-            'followers': 'http://populator.smilodon.social/'+handle+'/followers.json', 
-            'liked': 'http://populator.smilodon.social/'+handle+'/liked.json', 
-            'inbox': 'http://populator.smilodon.social/'+handle+'/inbox.json', 
-            'outbox': 'http://populator.smilodon.social/'+handle+'/feed.json', 
+            'following': request.url_root+handle+'/following.json', 
+            'followers': request.url_root+handle+'/followers.json', 
+            'liked': request.url_root+handle+'/liked.json', 
+            'inbox': request.url_root+handle+'/inbox.json', 
+            'outbox': request.url_root+handle+'/feed.json', 
+            'url': request.url_root+handle,
             'summary': '', 
             'icon': ''
           }
@@ -111,11 +117,3 @@ def register():
       return render_template('registration.html', form=form, mongo=mongo)
   return render_template('registration.html', form=form, mongo=mongo)
 
-
-#################### USER ROUTES ####################
-
-@app.route('/<handle>')
-def viewFeed(handle):
-  u = find_user_or_404(handle)
-  r = requests.get(u['outbox'], headers=API_HEADERS)
-  return render_template('feed.html', posts=r.json()['items'], mongo=mongo)

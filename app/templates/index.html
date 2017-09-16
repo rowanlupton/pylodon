@@ -5,9 +5,9 @@
 {% block content %}
   {% for p in posts %}
     <p>
-      {{ p.object.content }}
+      {{ p.content }}
       <br>
-      &mdash;{{ p.actor['displayName'] }}
+      &mdash;<a href="{{ mongo.db.users.find_one({'id': p.actor})['url'] }}">{{ mongo.db.users.find_one({'id': p.actor})['name'] }}</a>
     </p>
   {% endfor %}
 {% endblock content %}
