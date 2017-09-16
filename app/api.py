@@ -64,7 +64,7 @@ class feed(Resource):
   def post(self, handle):
     u = find_user_or_404(handle)
 
-    to = [u.outbox]
+    to = [u['outbox']]
     if request.data['to']:
       to.append(request.data['to'])
 
