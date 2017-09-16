@@ -2,8 +2,8 @@
 
 {% block content %}
   <p> {%for p in posts%} 
-      <h4>{{p.actor.displayName}}:</h4>
-      <p> {{p.object.content}} </p>
+      <h4>{{ mongo.db.users.find_one({'id': p.actor})['name'] }}:</h4>
+      <p> {{ p.content }} </p>
       {% endfor %}
   </p>
 
