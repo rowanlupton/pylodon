@@ -1,10 +1,11 @@
 from app import mongo, rest_api
 from .utilities import find_user_or_404, get_logged_in_user, check_headers, createPost
 
-from flask import Blueprint, request, abort
+from flask import Blueprint, request, abort, redirect, url_for
 from flask_restful import Resource
 from bson import ObjectId, json_util
 import json
+from activipy import vocab
 
 
 api = Blueprint('api', __name__, template_folder='templates')
@@ -62,15 +63,16 @@ class feed(Resource):
     else:
       abort(400)
   def post(self, handle):
-    u = find_user_or_404(handle)
+    if check_headers(request):
+      u = find_user_or_404(handle)
+      to = u['outbox']
+      if request.form.get('to'):
+        to.append(request.form.get('to'))
 
-    to = [u['outbox']]
-    if request.data['to']:
-      to.append(request.data['to'])
-
-    post = createPost(request.data['text'], u['name'], u['id'], to)
-    mongo.db.posts.insert_one(post.json())
-    return redirect(request.args.get("next") or url_for('index'))
+      post = createPost(request.form.get('text'), u['name'], u['id'], to)
+      mongo.db.posts.insert_one(post.json())
+      return redirect(request.args.get("next") or url_for('index'))
+    else: abort(400)
 
 
 # url handling
