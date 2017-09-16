@@ -3,11 +3,11 @@
 {% block title %}home{% endblock title %}
 
 {% block content %}
-	{% for p in posts %}
-		<p>
-			{{ p.object.content }}
-			<br>
-			&mdash;{{ p.actor['displayName'] }}
-		</p>
-	{% endfor %}
+  {% for p in posts %}
+    <p>
+      {{ p.object.content }}
+      <br>
+      &mdash;{{ p.actor['displayName'] }}
+    </p>
+  {% endfor %}
 {% endblock content %}

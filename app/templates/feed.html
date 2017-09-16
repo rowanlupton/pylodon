@@ -1,10 +1,10 @@
 {% extends 'basic.html' %}
 
 {% block content %}
-	<p> {%for p in posts%} 
-			<h4>{{p.actor.displayName}}:</h4>
-			<p> {{p.object.content}} </p>
-			{% endfor %}
-	</p>
+  <p> {%for p in posts%} 
+      <h4>{{p.actor.displayName}}:</h4>
+      <p> {{p.object.content}} </p>
+      {% endfor %}
+  </p>
 
 {% endblock content %}

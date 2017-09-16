@@ -1,59 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		{% block head %}
-			<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" />
-			<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-			{% block pageCSS %}{% endblock pageCSS %}
-			<link href="https://fonts.googleapis.com/css?family=Martel|Pontano+Sans" rel="stylesheet">
-			<title>{% block title %}{% endblock title %} - smilodon</title>
-		{% endblock head %}
-	
+  <head>
+    {% block head %}
+      <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" />
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+      {% block pageCSS %}{% endblock pageCSS %}
+      <link href="https://fonts.googleapis.com/css?family=Martel|Pontano+Sans" rel="stylesheet">
+      <title>{% block title %}{% endblock title %} - smilodon</title>
+    {% endblock head %}
+  
 
-	</head>
+  </head>
 
-	<body>
-	<div id="header">
-		{% block header %}
-			<h1><div class="brand" id="company"><a href="/">
-				smilodon.social
-			</a></div></h1>
-		{% endblock header %}
-	</div>
-		
-	<div class="wrapper">
-		<ul id="navigation">
-			
-		</ul>
+  <body>
+  <div id="header">
+    {% block header %}
+      <h1><div class="brand" id="company"><a href="/">
+        smilodon.social
+      </a></div></h1>
+    {% endblock header %}
+  </div>
+    
+  <div class="wrapper">
+    <ul id="navigation">
+      
+    </ul>
 
-		{% with messages = get_flashed_messages() %}
-			{% if messages %}
-			  <ul class=flashes>
-			  {% for message in messages %}
-			    <li>{{ message }}</li>
-			  {% endfor %}
-			  </ul>
-			{% endif %}
-		{% endwith %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class=flashes>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
 
-		<div class="content">{% block content %}{% endblock content %}</div>
-	</div>
+    <div class="content">{% block content %}{% endblock content %}</div>
+  </div>
 
-	<footer>
-		<div id="footerDiv">
-			{% block footer %}
-				<span>website created by <a href="http://web.rowanlupton.com">Rowan Lupton</a></span>
-				<span class="spacer"></span>
-				<span>
-				{% if current_user.is_authenticated: %}
-					logged in as: {{ mongo.db.users.find_one({'id': current_user.get_id()})['name'] }}
-					<a href="/logout">logout</a>
-				{% else: %}
-					<a href="{{url_for('login')}}">login</a>
-				{% endif %}
-				</span>
-			{% endblock footer %}
-		</div>
-	</footer>
-	</body>
+  <footer>
+    <div id="footerDiv">
+      {% block footer %}
+        <span>website created by <a href="http://web.rowanlupton.com">Rowan Lupton</a></span>
+        <span class="spacer"></span>
+        <span>
+        {% if current_user.is_authenticated: %}
+          logged in as: {{ mongo.db.users.find_one({'id': current_user.get_id()})['name'] }}
+          <a href="/logout">logout</a>
+        {% else: %}
+          <a href="{{url_for('login')}}">login</a>
+        {% endif %}
+        </span>
+      {% endblock footer %}
+    </div>
+  </footer>
+  </body>
 </html>
