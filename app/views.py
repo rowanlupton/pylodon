@@ -1,12 +1,13 @@
 from app import app, lm, api, mongo
+from config import API_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
-from .utilities import find_user_or_404, get_logged_in_user
+from .utilities import find_user_or_404, get_logged_in_user, createPost
 # from .emails import lostPassword, checkToken
 
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
-import requests
+import requests, json
 
 app.register_blueprint(api.api)
 
@@ -45,9 +46,17 @@ def compose():
   u = get_logged_in_user()
   form = composePost()
   if form.validate_on_submit():
-    requests.post(u['outbox'], data=data, headers=API_HEADERS)
-  url = mongo.db.users.find_one({'id': current_user.get_id()})['outbox']
-  return render_template('compose.html', form=form, url=url, mongo=mongo)
+    u = get_logged_in_user()
+
+    to = [u['outbox']]
+    if form.to.data:
+      to.append(form.to.data)
+
+    post = createPost(form.text.data, u['name'], u['id'], to)
+
+    requests.post(u['outbox'], data=post, headers=API_HEADERS)
+    return redirect(request.args.get("next") or url_for('index'))
+  return render_template('compose.html', form=form, mongo=mongo)
 
 
 ################### LOG IN/OUT ###################

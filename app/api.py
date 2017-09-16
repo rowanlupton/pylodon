@@ -64,17 +64,30 @@ class feed(Resource):
       abort(400)
   def post(self, handle):
     if check_headers(request):
-      u = find_user_or_404(handle)
-      to = [u['outbox']]
-
       r = request.get_json()
-      if r['to']:
-        to.append(r['to'])
+      
+      # if it's a note it creates a request that will be handled by the next bit
+      if r['@type'] == 'Note':
+        obj = r
+        r = vocab.Create(
+          to=u['followers'],
+          actor=u['id'],
+          object=obj)
 
-      post = createPost(r['text'], u['name'], u['id'], to)
+      if r['@type'] == 'Create':
+        if r['object']['type'] != 'Note':
+          abort(403)
+        content = r['object']['content']
+        note = vocab.Note(content=content, person = u)
+        mongo.db.posts.insert_one(note)
+        return redirect(request.args.get("next") or url_for('index'), 202)
 
-      mongo.db.posts.insert_one(post.json())
-      return redirect(request.args.get("next") or url_for('index'))
+        return redirect(request.args.get("next") or url_for('index'))
+      if r['@type'] == 'Like':
+        pass
+
+      if r['@type'] == 'Follow':
+        pass
     else: abort(400)
 
 
