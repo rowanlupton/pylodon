@@ -9,11 +9,16 @@ api = Blueprint('api', __name__, template_folder='templates')
 
 API_HEADERS = {'Content-Type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
 
-def check_headers():
-	if request.headers.get('Content-Type'):
-		if (request.headers['Content-Type'] == 'application/ld+json' and request.headers['profile'] == 'https://www.w3.org/ns/activitystreams') or (request.headers['Content-Type'] == 'application/activity+json'):
-			return True
-	return False
+def check_headers(request):
+  print(request.headers)
+  if request.headers.get('Content-Type'):
+    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
+      print(request.headers)
+      return True
+    else:
+      print(request.headers)
+  print(request.headers)
+  return False
 def createPost(text, name, id, receivers):
   return vocab.Create(
                       actor=vocab.Person(
@@ -70,7 +75,8 @@ class inbox(Resource):
 class feed(Resource):
   def get(self, handle):
     feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('_id', -1))
-    if check_headers():
+    print('feed')
+    if check_headers(request):
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj_sanitized
     else:
@@ -87,7 +93,6 @@ class feed(Resource):
 
 
 # url handling
-# this part is so simple :'(
 rest_api.add_resource(following, '/api/<string:handle>/following')
 rest_api.add_resource(followers, '/api/<string:handle>/followers')
 rest_api.add_resource(liked, '/api/<string:handle>/liked')
