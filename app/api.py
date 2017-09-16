@@ -75,7 +75,7 @@ class feed(Resource):
           actor=u['id'],
           object=obj)
 
-      if r.type == 'Create':
+      if r['@type'] == 'Create':
         if r['object']['type'] != 'Note':
           abort(403)
         content = r['object']['content']
