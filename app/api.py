@@ -65,11 +65,14 @@ class feed(Resource):
   def post(self, handle):
     if check_headers(request):
       u = find_user_or_404(handle)
-      to = u['outbox']
-      if request.form.get('to'):
-        to.append(request.form.get('to'))
+      to = [u['outbox']]
 
-      post = createPost(request.form.get('text'), u['name'], u['id'], to)
+      r = request.get_json()
+      if r['to']:
+        to.append(r['to'])
+
+      post = createPost(r['text'], u['name'], u['id'], to)
+
       mongo.db.posts.insert_one(post.json())
       return redirect(request.args.get("next") or url_for('index'))
     else: abort(400)
