@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, request, abort
 from flask_restful import Resource
 from activipy import vocab
 from app import mongo, rest_api
@@ -29,7 +29,7 @@ class following(Resource):
     feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': request.url_root+handle}).sort('_id', -1))
     if check_headers():
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return jsonify(feedObj_sanitized)
+      return feedObj_sanitized
     else:
       abort(400)
 
@@ -38,7 +38,7 @@ class followers(Resource):
     feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': request.url_root+handle}).sort('_id', -1))
     if check_headers():
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return jsonify(feedObj_sanitized)
+      return feedObj_sanitized
     else:
       abort(400)
 
@@ -47,7 +47,7 @@ class liked(Resource):
     feedObj = vocab.OrderedCollection(items=mongo.db.likes.find({'to': request.url_root+handle}).sort('_id', -1))
     if check_headers():
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return jsonify(feedObj_sanitized)
+      return feedObj_sanitized
     else:
       abort(400)
 
@@ -56,7 +56,7 @@ class inbox(Resource):
     feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': request.url_root+handle}).sort('_id', -1))
     if check_headers(request):
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return jsonify(feedObj_sanitized)
+      return feedObj_sanitized
     else:
       abort(400)
   def post(self, handle):
@@ -72,7 +72,7 @@ class feed(Resource):
     feedObj = vocab.OrderedCollection(items=mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('_id', -1))
     if check_headers():
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return jsonify(feedObj_sanitized)
+      return feedObj_sanitized
     else:
       abort(400)
   def post(self, handle):
