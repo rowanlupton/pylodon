@@ -77,12 +77,12 @@ class feed(Resource):
           object=obj)
 
       if r['@type'] == 'Create':
-        return "it's a Create"
+        print("it's a Create")
         if r['object']['@type'] != 'Note':
           abort(403)
         content = r['object']['content']
         note = vocab.Note(content=content, actor=u['id'])
-        mongo.db.posts.insert_one(note)
+        mongo.db.posts.insert_one(note.json())
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
