@@ -64,8 +64,8 @@ class feed(Resource):
       abort(400)
   def post(self, handle):
     if check_headers(request):
-      u = get_logged_in_user()
       r = request.get_json()
+      u = find_user_or_404(handle)
       
       # if it's a note it creates a request that will be handled by the next bit
       if r['@type'] == 'Note':
