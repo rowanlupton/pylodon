@@ -56,7 +56,7 @@ class inbox(Resource):
 class feed(Resource):
   def get(self, handle):
     if check_headers(request):
-      items = mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('_id', -1)
+      items = mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('created_at', -1)
       feedObj = vocab.OrderedCollection(items=items)
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj_sanitized

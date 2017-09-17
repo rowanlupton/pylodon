@@ -1,17 +1,41 @@
 from app import mongo
 
 from activipy import vocab
-from flask import request, abort
+from flask import request, abort, url_for
 from flask_login import current_user
+import datetime
 
+def return_new_user(handle, displayName, email, passwordHash):
+  now = datetime.datetime.now()
+
+  return   {  
+            'id': 'acct:'+handle+'@'+request.host, 
+            'context': 'https://www.w3.org/ns/activitystreams',
+            'type': 'Person', 
+            'username': handle,
+            'acct': handle,
+            'url': request.url_root+handle,
+            'name': displayName, 
+            'email': email, 
+            'password': passwordHash,
+            'locked': False,
+            'avatar': url_for('static', filename='img/defaultAvatar.png'),
+            'header': url_for('static', filename='img/defaultHeader.gif'),
+            'following': request.url_root+handle+'/following', 
+            'followers': request.url_root+handle+'/followers', 
+            'liked': request.url_root+handle+'/liked', 
+            'inbox': request.url_root+handle+'/inbox', 
+            'outbox': request.url_root+handle+'/feed',
+            'created_at': now.isoformat()
+          }
 def find_user_or_404(handle):
-  u = mongo.db.users.find_one({'id': 'acct:'+handle+'@'+request.host})
+  u = mongo.db.users.find_one({'username': handle})
   if not u:
     abort(404)
   else:
     return u
 def get_logged_in_user():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
+  u = mongo.db.users.find_one({'acct': current_user.get_id()})
   if not u:
     abort(404)
   else:
@@ -26,11 +50,12 @@ def check_headers(request):
       return True
   return False
 
-def createPost(text, name, id, receivers):
+def createPost(text, name, acct, receivers):
   return vocab.Create(
                       actor=vocab.Person(
-                            id,
+                            acct+'@'+request.host,
                             displayName=name),
                       to=receivers,
                       object=vocab.Note(
-                                        content=text))
+                                        content=text),
+                      created_at=now.isoformat())

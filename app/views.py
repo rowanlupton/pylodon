@@ -2,7 +2,7 @@ from app import app, lm, api, mongo
 from config import API_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
-from .utilities import find_user_or_404, get_logged_in_user, createPost
+from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user
 # from .emails import lostPassword, checkToken
 
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
@@ -15,12 +15,10 @@ app.register_blueprint(api.api)
 ###################### SET-UP ######################
 @lm.user_loader
 def load_user(handle):
-    u = mongo.db.users.find_one({"id": handle})
+    u = mongo.db.users.find_one({"acct": handle})
     if not u:
         return None
-    return User(u['id'])
-
-SERVER_URL = 'http://populator.smilodon.social/'
+    return User(u['acct'])
 
 
 #################### REAL STUFF ####################
@@ -52,7 +50,7 @@ def compose():
     if form.to.data:
       to.append(form.to.data)
 
-    post = createPost(form.text.data, u['name'], u['id'], to)
+    post = createPost(form.text.data, u['name'], u['acct']+'@'+request.host, to)
 
     requests.post(u['outbox'], data=json.dumps(post.json()), headers=API_HEADERS)
     return redirect(request.args.get("next") or url_for('index'))
@@ -69,11 +67,10 @@ def viewFeed(handle):
 def login():
   form = userLogin()
   if form.validate_on_submit():
-    handle = 'acct:'+form.handle.data+'@'+request.host
     password = form.password.data
-    user = mongo.db.users.find_one({'id':  handle})
+    user = mongo.db.users.find_one({'username':  form.handle.data})
     if user and User.validate_login(user['password'], form.password.data):
-      user_obj = User(user['id'])
+      user_obj = User(user['acct'])
       login_user(user_obj)
       flash("Logged in successfully!", category='success')
       return redirect(request.args.get("next") or url_for('index'))
@@ -81,32 +78,15 @@ def login():
       flash('wrong username or password', category='error')
   return render_template('login.html', form=form, mongo=mongo)
 
-def returnNewUser(handle, displayName, email, passwordHash):
-  return   {  
-            'id': 'acct:'+handle+'@'+request.host, 
-            'context': 'https://www.w3.org/ns/activitystreams', 
-            'name': displayName, 
-            'email': email, 
-            'password': passwordHash, 
-            'type': 'Person', 
-            'following': request.url_root+handle+'/following.json', 
-            'followers': request.url_root+handle+'/followers.json', 
-            'liked': request.url_root+handle+'/liked.json', 
-            'inbox': request.url_root+handle+'/inbox.json', 
-            'outbox': request.url_root+handle+'/feed.json', 
-            'url': request.url_root+handle,
-            'summary': '', 
-            'icon': ''
-          }
-
 @app.route('/register', methods=['GET', 'POST'])
+
 def register():
   form = userRegister()
   if form.validate_on_submit():
     if form.password.data == form.passwordConfirm.data:
-      if mongo.db.users.find({"id": form.handle.data}) != None:
+      if mongo.db.users.find({"acct": form.handle.data}) != None:
         passwordHash = User.hash_password(form.password.data)
-        putData = returnNewUser(form.handle.data, form.displayName.data, form.email.data, passwordHash)
+        putData = return_new_user(form.handle.data, form.displayName.data, form.email.data, passwordHash)
         mongo.db.users.insert_one(putData)
         return redirect(request.args.get("next") or url_for('index'))
       else:
