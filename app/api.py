@@ -56,7 +56,7 @@ class inbox(Resource):
 class feed(Resource):
   def get(self, handle):
     if check_headers(request):
-      items = mongo.db.posts.find({'to': request.url_root+handle+'/feed'}).sort('created_at', -1)
+      items = mongo.db.posts.find({'attributedTo': handle+'@'+request.host}).sort('created_at', -1)
       feedObj = vocab.OrderedCollection(items=items)
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj_sanitized
@@ -72,19 +72,20 @@ class feed(Resource):
         obj = r
         r = vocab.Create(
           to=u['followers'],
-          actor=u['id'],
+          actor=u['acct'],
           object=obj)
 
       if r['@type'] == 'Create':
         if r['object']['@type'] != 'Note':
           abort(403)
         content = r['object']['content']
-        note = vocab.Note(content=content, actor=u['id'])
+        note = vocab.Note(content=content, attributedTo=u['acct'])
         mongo.db.posts.insert_one(note.json())
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
         pass
+        # mongo.db.find('liked_by': )
 
       if r['@type'] == 'Follow':
         pass

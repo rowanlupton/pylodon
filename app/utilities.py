@@ -21,11 +21,11 @@ def return_new_user(handle, displayName, email, passwordHash):
             'locked': False,
             'avatar': url_for('static', filename='img/defaultAvatar.png'),
             'header': url_for('static', filename='img/defaultHeader.gif'),
-            'following': request.url_root+handle+'/following', 
-            'followers': request.url_root+handle+'/followers', 
-            'liked': request.url_root+handle+'/liked', 
-            'inbox': request.url_root+handle+'/inbox', 
-            'outbox': request.url_root+handle+'/feed',
+            'following': request.url_root+'api/'+handle+'/following', 
+            'followers': request.url_root+'api/'+handle+'/followers', 
+            'liked': request.url_root+'api/'+handle+'/liked', 
+            'inbox': request.url_root+'api/'+handle+'/inbox', 
+            'outbox': request.url_root+'api/'+handle+'/feed',
             'created_at': now.isoformat()
           }
 def find_user_or_404(handle):
@@ -51,6 +51,7 @@ def check_headers(request):
   return False
 
 def createPost(text, name, acct, receivers):
+  now = datetime.datetime.now()
   return vocab.Create(
                       actor=vocab.Person(
                             acct+'@'+request.host,

@@ -4,18 +4,21 @@
 
 {% block content %}
   {% for p in posts %}
-    <p>
+    <div class="post">
       {{ p.content }}
       <br>
-      &mdash;
-      {% if mongo.db.users.find_one({'acct': p.actor }) %}
-      	<a href="{{ mongo.db.users.find_one({'acct': p.actor})['url'] }}">
-      		{{ mongo.db.users.find_one({'acct': p.actor})['name'] }}
+      
+      {% if mongo.db.users.find_one({'acct': p.attributedTo }) %}
+      	<img src="{{ mongo.db.users.find_one({'acct': p.attributedTo })['avatar']  }}" height="20px" />
+      	<a href="{{ mongo.db.users.find_one({'acct': p.attributedTo})['url'] }}">
+      		{{ mongo.db.users.find_one({'acct': p.attributedTo})['name'] }}
     		</a>
 
     	{% else %}
+    		<img src="static/img/avatarNone.png" height="20px" />
     		[user deleted]
   		{% endif%}
-    </p>
+  		<hr>
+    </div>
   {% endfor %}
 {% endblock content %}

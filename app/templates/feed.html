@@ -2,7 +2,7 @@
 
 {% block content %}
   <p> {%for p in posts%} 
-      <h4>{{ mongo.db.users.find_one({'id': p.actor})['name'] }}:</h4>
+      <h4>{{ mongo.db.users.find_one({'acct': p.attributedTo})['name'] }}:</h4>
       <p> {{ p.content }} </p>
       {% endfor %}
   </p>
