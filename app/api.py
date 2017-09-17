@@ -84,8 +84,7 @@ class feed(Resource):
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
-        pass
-        # mongo.db.find('liked_by': )
+        mongo.db.find('liked_by': )
 
       if r['@type'] == 'Follow':
         pass
