@@ -51,7 +51,6 @@ def check_headers(request):
   return False
 
 def createPost(text, name, acct, receivers):
-  now = datetime.datetime.now()
   return vocab.Create(
                       actor=vocab.Person(
                             acct+'@'+request.host,

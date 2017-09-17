@@ -84,7 +84,11 @@ class feed(Resource):
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
-        mongo.db.find('liked_by': )
+        if u['liked']:
+          none
+        else:
+          mongo.db.users.put('acct': u['acct'])
+        mongo.db.users.update({'acct': r['actor']}, {'liked': r['object']['id']}, {upsert: true})
 
       if r['@type'] == 'Follow':
         pass
