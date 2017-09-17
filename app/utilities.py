@@ -12,7 +12,7 @@ def return_new_user(handle, displayName, email, passwordHash):
             'context': 'https://www.w3.org/ns/activitystreams',
             'type': 'Person', 
             'username': handle,
-            'acct': handle,
+            'acct': handle+'@'+request.host,
             'url': request.url_root+handle,
             'name': displayName, 
             'email': email, 
