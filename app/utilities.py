@@ -5,9 +5,6 @@ from flask import request, abort, url_for
 from flask_login import current_user
 import datetime
 
-def get_time():
-  return datetime.datetime.now().isoformat()
-
 
 def return_new_user(handle, displayName, email, passwordHash):
   return   {  
@@ -45,16 +42,11 @@ def get_logged_in_user():
     return u
 
 
-# API utilities
-def check_headers(request):
-  print(request.headers)
-  if request.headers.get('Content-Type'):
-    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
-      return True
-  return False
-
+def get_time():
+  return datetime.datetime.now().isoformat()
 def createPost(text, name, acct, receivers):
   return vocab.Create(
+                      context="https://www.w3.org/ns/activitystreams",
                       actor=vocab.Person(
                             acct+'@'+request.host,
                             displayName=name),
@@ -62,3 +54,27 @@ def createPost(text, name, acct, receivers):
                       object=vocab.Note(
                                         content=text),
                       created_at=get_time())
+def createLike(actorAcct, post):
+  to = post['attributedTo']
+  if to in post:
+    for t in post['to']:
+      to.append(t)
+  return vocab.Like(
+                    context="https://www.w3.org/ns/activitystreams",
+                    actor=actorAcct,
+                    to=to,
+                    object=vocab.Note(
+                                      context={"@language": 'en'},
+                                      id=post['@id'],
+                                      attributedTo=post['attributedTo'],
+                                      content=post['content']))
+
+
+
+# API
+def check_headers(request):
+  print(request.headers)
+  if request.headers.get('Content-Type'):
+    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
+      return True
+  return False
