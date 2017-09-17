@@ -2,7 +2,7 @@ from app import app, lm, api, mongo
 from config import API_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
-from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user
+from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user, createLike
 # from .emails import lostPassword, checkToken
 
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
@@ -62,6 +62,21 @@ def viewFeed(handle):
   r = requests.get(u['outbox'], headers=API_HEADERS)
   return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
 
+@app.route('/<handle>/posts/<postID>')
+def viewPost(handle, postID):
+  p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
+  return render_template('feed.html', posts=p, mongo=mongo)
+
+@app.route('/<handle>/posts/<postID>/like')
+@login_required
+def likePost(handle, postID):
+  loggedin_u = get_logged_in_user()
+  u = find_user_or_404(handle)
+  p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
+  like = createLike(u['acct'], p)
+  requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=API_HEADERS)
+  return redirect(request.args.get("next") or url_for('index'))
+
 ################### LOG IN/OUT ###################
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -79,7 +94,6 @@ def login():
   return render_template('login.html', form=form, mongo=mongo)
 
 @app.route('/register', methods=['GET', 'POST'])
-
 def register():
   form = userRegister()
   if form.validate_on_submit():
