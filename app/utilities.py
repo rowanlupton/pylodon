@@ -5,9 +5,11 @@ from flask import request, abort, url_for
 from flask_login import current_user
 import datetime
 
-def return_new_user(handle, displayName, email, passwordHash):
-  now = datetime.datetime.now()
+def get_time():
+  return datetime.datetime.now().isoformat()
 
+
+def return_new_user(handle, displayName, email, passwordHash):
   return   {  
             'id': 'acct:'+handle+'@'+request.host, 
             'context': 'https://www.w3.org/ns/activitystreams',
@@ -26,7 +28,8 @@ def return_new_user(handle, displayName, email, passwordHash):
             'liked': request.url_root+'api/'+handle+'/liked', 
             'inbox': request.url_root+'api/'+handle+'/inbox', 
             'outbox': request.url_root+'api/'+handle+'/feed',
-            'created_at': now.isoformat()
+            'metrics': {'post_count': 0},
+            'created_at': get_time()
           }
 def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
@@ -51,7 +54,6 @@ def check_headers(request):
   return False
 
 def createPost(text, name, acct, receivers):
-  now = datetime.datetime.now()
   return vocab.Create(
                       actor=vocab.Person(
                             acct+'@'+request.host,
@@ -59,4 +61,4 @@ def createPost(text, name, acct, receivers):
                       to=receivers,
                       object=vocab.Note(
                                         content=text),
-                      created_at=now.isoformat())
+                      created_at=get_time())

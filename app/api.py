@@ -1,5 +1,5 @@
 from app import mongo, rest_api
-from .utilities import find_user_or_404, get_logged_in_user, check_headers, createPost
+from .utilities import find_user_or_404, get_logged_in_user, check_headers, createPost, get_time
 
 from flask import Blueprint, request, abort, redirect, url_for
 from flask_restful import Resource
@@ -71,6 +71,7 @@ class feed(Resource):
       if r['@type'] == 'Note':
         obj = r
         r = vocab.Create(
+
           to=u['followers'],
           actor=u['acct'],
           object=obj)
@@ -78,14 +79,21 @@ class feed(Resource):
       if r['@type'] == 'Create':
         if r['object']['@type'] != 'Note':
           abort(403)
+        
+        mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
+        id=request.url_root+u['username']+'/posts/'+str(mongo.db.users.find_one({'acct': u['acct']})['metrics']['post_count'])
+        
         content = r['object']['content']
-        note = vocab.Note(content=content, attributedTo=u['acct'])
+        note = vocab.Note(id=id, content=content, attributedTo=u['acct'], created_at=get_time())
         mongo.db.posts.insert_one(note.json())
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
-        pass
-        # mongo.db.find('liked_by': )
+        if u['liked']:
+          none
+        else:
+          mongo.db.users.put({'acct': u['acct']})
+        mongo.db.users.update({'acct': r['actor']}, {'liked': r['object']['id']}, {upsert: true})
 
       if r['@type'] == 'Follow':
         pass
