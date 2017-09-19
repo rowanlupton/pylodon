@@ -35,7 +35,7 @@ def find_user_or_404(handle):
   else:
     return u
 def get_logged_in_user():
-  u = mongo.db.users.find_one({'acct': current_user.get_id()})
+  u = mongo.db.users.find_one({'id': current_user.get_id()})
   if not u:
     abort(404)
   else:
