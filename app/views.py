@@ -20,7 +20,7 @@ def load_user(handle):
     u = mongo.db.users.find_one({"username": handle})
     if not u:
         return None
-    return User(u['acct'])
+    return User(u['id'])
 
 
 #################### REAL STUFF ####################
@@ -87,7 +87,7 @@ def login():
     password = form.password.data
     user = mongo.db.users.find_one({'username':  form.handle.data})
     if user and User.validate_login(user['password'], form.password.data):
-      user_obj = User(user['acct'])
+      user_obj = User(user['username'])
       login_user(user_obj)
       flash("Logged in successfully!", category='success')
       return redirect(request.args.get("next") or url_for('index'))
