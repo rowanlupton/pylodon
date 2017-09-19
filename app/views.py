@@ -12,9 +12,9 @@ import requests, json
 app.register_blueprint(api.api)
 
 
-@app.route('/.well-known/acme-challenge/RxF73w3YsCwqe6wBlVY_dzZitTpwyVyBgsQXWjTHc8Y.b_4kFtxVpD_AhZGESaoiEWQv0w10su9I7MMJ_qGIGWg')
+@app.route('/.well-known/acme-challenge/-rWOfxX3v6DQx-GJJDgiy5C3JRWFd2TwhYvIVsuhutY')
 def acme_challenge():
-  return app.send_static_file('RxF73w3YsCwqe6wBlVY_dzZitTpwyVyBgsQXWjTHc8Y.b_4kFtxVpD_AhZGESaoiEWQv0w10su9I7MMJ_qGIGWg')
+  return app.send_static_file('-rWOfxX3v6DQx-GJJDgiy5C3JRWFd2TwhYvIVsuhutY.b_4kFtxVpD_AhZGESaoiEWQv0w10su9I7MMJ_qGIGWg')
 
 ###################### SET-UP ######################
 @lm.user_loader
