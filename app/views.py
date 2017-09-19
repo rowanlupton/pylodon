@@ -12,6 +12,10 @@ import requests, json
 app.register_blueprint(api.api)
 
 
+@app.route('/.well-known/acme-challenge/TvLCo6fCY_5gKEqpJi--aK3-Xj-1_g9hf95R6evsQTg.b_4kFtxVpD_AhZGESaoiEWQv0w10su9I7MMJ_qGIGWg')
+def acme_challenge():
+  return app.send_static_file('TvLCo6fCY_5gKEqpJi--aK3-Xj-1_g9hf95R6evsQTg.b_4kFtxVpD_AhZGESaoiEWQv0w10su9I7MMJ_qGIGWg')
+
 ###################### SET-UP ######################
 @lm.user_loader
 def load_user(handle):
