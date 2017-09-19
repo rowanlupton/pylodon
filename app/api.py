@@ -100,9 +100,18 @@ class feed(Resource):
     abort(400)
 
 
+class user(Resource):
+  def get(self, handle):
+    if check_headers(request):
+      u = mongo.db.users.find({'username': handle})
+      return json.loads(json_util.dumps(u))
+    abort(400)
+
+
 # url handling
 rest_api.add_resource(following, '/api/<string:handle>/following')
 rest_api.add_resource(followers, '/api/<string:handle>/followers')
 rest_api.add_resource(liked, '/api/<string:handle>/liked')
 rest_api.add_resource(inbox, '/api/<string:handle>/inbox')
 rest_api.add_resource(feed, '/api/<string:handle>/feed')
+rest_api.add_resource(user, '/api/<string:handle>')
