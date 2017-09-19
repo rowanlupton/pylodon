@@ -13,8 +13,8 @@ def get_user_info(**kwargs):
   jrd = {
           'subject': u['id'],
           'aliases': [
-            request.host+'@'+u['username'],
-            request.host+'users/'+u['username']
+            request.url_root+'@'+u['username'],
+            request.url_root+'users/'+u['username']
           ],
           'properties': {
             'http://schema.org/name': u['name']
@@ -22,10 +22,10 @@ def get_user_info(**kwargs):
           'links': [
             {
               'rel': 'http://webfinger.net/rel/profile-page',
-              'href': request.host+'@'+u['username']
+              'href': request.url_root+'@'+u['username']
             },
             {
-              'href': request.host+'users/'+u['username'],
+              'href': request.url_root+'users/'+u['username'],
               'rel': 'self',
               'type': 'application/activity+json'
             }
