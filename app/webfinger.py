@@ -12,6 +12,9 @@ def get_user_info(**kwargs):
 
 	returnMe = {
 							'subject': u['acct'],
+							'aliases': [
+								'http://populator.smilodon.social/roo'
+							],
 							'properties': {
 								'http://schema.org/name': u['name']
 							},
@@ -23,6 +26,6 @@ def get_user_info(**kwargs):
 							]
 						}
 
-	return str(u)
+	return str(returnMe)
 
 
