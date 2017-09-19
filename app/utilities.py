@@ -9,7 +9,7 @@ import datetime
 def return_new_user(handle, displayName, email, passwordHash):
   return   {  
             'id': 'acct:'+handle+'@'+request.host, 
-            'context': 'https://www.w3.org/ns/activitystreams',
+            '@context': 'https://www.w3.org/ns/activitystreams',
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+request.host,
