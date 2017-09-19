@@ -25,7 +25,7 @@ def get_user_info(**kwargs):
               'href': request.url_root+'@'+u['username']
             },
             {
-              'href': request.url_root+'users/'+u['username'],
+              'href': request.url_root+u['username']+'/feed',
               'rel': 'self',
               'type': 'application/activity+json'
             }
