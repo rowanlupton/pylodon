@@ -102,10 +102,10 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    if check_headers(request):
+    # if check_headers(request):
       u = mongo.db.users.find({'username': handle})
-      return json.loads(json_util.dumps(u))
-    abort(400)
+      return json.loads(json_util.dumps(u))[0]
+    # abort(400)
 
 
 # url handling
