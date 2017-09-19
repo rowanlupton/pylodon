@@ -16,7 +16,7 @@ def return_new_user(handle, displayName, email, passwordHash):
             'url': request.url_root+handle,
             'name': displayName, 
             'email': email, 
-            'password': passwordHash,
+            'hashpw': passwordHash,
             'locked': False,
             'avatar': url_for('static', filename='img/defaultAvatar.png'),
             'header': url_for('static', filename='img/defaultHeader.gif'),

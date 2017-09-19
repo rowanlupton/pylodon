@@ -6,6 +6,7 @@ from flask_restful import Resource
 from bson import ObjectId, json_util
 import json
 from activipy import vocab
+from webfinger import finger
 
 
 api = Blueprint('api', __name__, template_folder='templates')
