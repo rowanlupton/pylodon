@@ -113,3 +113,8 @@ def register():
       return render_template('registration.html', form=form, mongo=mongo)
   return render_template('registration.html', form=form, mongo=mongo)
 
+@app.route('/logout')
+def logout():
+  logout_user()
+  return redirect('index')
+
