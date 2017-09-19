@@ -1,4 +1,4 @@
-from app import app, lm, api, mongo
+from app import app, lm, api, mongo, webfinger
 from config import API_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
@@ -8,18 +8,16 @@ from .utilities import find_user_or_404, get_logged_in_user, createPost, return_
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 import requests, json
+# from webfinger import finger
 
 app.register_blueprint(api.api)
+app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known/webfinger')
 
-
-@app.route('/.well-known/acme-challenge/-rWOfxX3v6DQx-GJJDgiy5C3JRWFd2TwhYvIVsuhutY')
-def acme_challenge():
-  return app.send_static_file('-rWOfxX3v6DQx-GJJDgiy5C3JRWFd2TwhYvIVsuhutY.b_4kFtxVpD_AhZGESaoiEWQv0w10su9I7MMJ_qGIGWg')
 
 ###################### SET-UP ######################
 @lm.user_loader
 def load_user(handle):
-    u = mongo.db.users.find_one({"acct": handle})
+    u = mongo.db.users.find_one({"username": handle})
     if not u:
         return None
     return User(u['acct'])
