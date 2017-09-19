@@ -7,12 +7,15 @@ webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/')
 def get_user_info(**kwargs):
-  acct = request.args['resource']
-  u = mongo.db.users.find_one({'acct': acct})
+  id = request.args['resource']
+  u = mongo.db.users.find_one({'id': id})
 
   jrd = {
           'subject': u['id'],
-          'aliases': [],
+          'aliases': [
+            request.host+'@'+u['username'],
+            request.host+'users/'+u['username']
+          ],
           'properties': {
             'http://schema.org/name': u['name']
           },
