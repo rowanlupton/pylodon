@@ -11,7 +11,7 @@ def get_user_info(**kwargs):
 	u = mongo.db.users.find_one({'id': acct})
 
 	jrd = {
-					'subject': u['acct'],
+					'subject': u['id'],
 					'aliases': [],
 					'properties': {
 						'http://schema.org/name': u['name']
