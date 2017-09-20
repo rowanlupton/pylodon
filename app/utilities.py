@@ -69,6 +69,19 @@ def createLike(actorAcct, post):
                                       attributedTo=post['attributedTo'],
                                       content=post['content']))
 
+def follow_user(actorAcct, otherUser):
+  return vocab.Follow(
+                      context="https://www.w3.org/ns/activitystreams",
+                      actor=actorAcct,
+                      object=vocab.User(
+                                        context={"@language": 'en'},
+                                        id=otherUser['id']))
+
+def accept_follow(actorAcct, followActivity):
+  return vocab.Accept(
+                      context="https://www.w3.org/ns/activitystreams",
+                      actor=actorAcct,
+                      object=followActivity)
 
 
 # API
