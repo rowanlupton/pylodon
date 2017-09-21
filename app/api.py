@@ -60,16 +60,16 @@ class inbox(Resource):
 
       print(r)
 
-      if r['@type'] == 'Like':
+      if r['type'] == 'Like':
         mongo.db.posts.update_one({'@id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
-      if r['@type'] == 'Follow':
+      if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
 
-      if r['@type'] == 'Accept':
+      if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
 
-      if r['@type'] == 'Create':
+      if r['type'] == 'Create':
         if not mongo.db.posts.find({'_id': obj['_id']}):
           mongo.db.posts.insert_one(r['object'].json())
 
