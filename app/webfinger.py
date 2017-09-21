@@ -8,9 +8,11 @@ webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 @webfinger.route('/')
 def get_user_info(**kwargs):
   id = unquote(request.args['resource'])
+  print(id)
   if request.args['rel']:
     rel = request.args['rel']
   u = mongo.db.users.find_one({'id': id})
+  print(u)
 
   # if rel is not 'me':
   resp = {
