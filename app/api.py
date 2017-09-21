@@ -1,4 +1,5 @@
 from app import mongo, rest_api
+from .config import API_HEADERS
 from .utilities import find_user_or_404, get_logged_in_user, check_headers, createPost, get_time, follow_user, accept_follow
 
 from flask import Blueprint, request, abort, redirect, url_for
@@ -65,7 +66,7 @@ class inbox(Resource):
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         a = requests.get(r['actor'])
         print(a)
-        requests.post(r['actor'])
+        requests.post(a['inbox'], data=accept_follow(r), headers=API_HEADERS)
 
       if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
@@ -109,6 +110,7 @@ class feed(Resource):
         content = r['object']['content']
         note = vocab.Note(id=id, content=content, attributedTo=u['acct'], created_at=get_time())
         mongo.db.posts.insert_one(note.json())
+        requests.post(r['to'], data=jsonify(r), headers=API_HEADERS)
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
