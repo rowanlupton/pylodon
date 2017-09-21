@@ -12,9 +12,8 @@ def get_user_info(**kwargs):
   if 'rel' in request.args:
     rel = request.args['rel']
   u = mongo.db.users.find_one({'id': id})
-  print(u.json())
+  print(u)
 
-  # if rel is not 'me':
   resp = {
           'subject': u['id'],
           'aliases': [
@@ -36,13 +35,6 @@ def get_user_info(**kwargs):
             }
           ]
         }
-    # resp = {
-    #         'subject': request.url_root+u['username'],
-    #         'aliases': [u['acct']],
-    #         'links': [
-    #                   {'rel': 'self', 'type': "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"", 'href': request.url_root+u['username']}
-    #                   ]
-    # }
 
   return jsonify(resp)
 
