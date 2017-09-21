@@ -42,6 +42,6 @@ def get_user_info(**kwargs):
     #                   ]
     # }
 
-    return jsonify(resp)
+  return jsonify(resp)
 
 
