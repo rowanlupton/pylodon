@@ -12,7 +12,7 @@ def get_user_info(**kwargs):
   if request.args['rel']:
     rel = request.args['rel']
   u = mongo.db.users.find_one({'id': id})
-  print(u)
+  print(u.json())
 
   # if rel is not 'me':
   resp = {
