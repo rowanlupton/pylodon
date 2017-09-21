@@ -37,7 +37,7 @@ def get_user_info(**kwargs):
             'subject': request.url_root+u['username'],
             'aliases': [u['acct']],
             'links': [
-                      {'rel': 'self', type="application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"", href=request.url_root+u['username']}
+                      {'rel': 'self', 'type': "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"", 'href': request.url_root+u['username']}
                       ]
     }
 
