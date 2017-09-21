@@ -58,13 +58,14 @@ class inbox(Resource):
       u = find_user_or_404(handle)
       r = request.get_json()
 
-      print(r)
-
       if r['type'] == 'Like':
         mongo.db.posts.update_one({'@id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
       if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
+        a = requests.get(r['actor'])
+        print(a)
+        requests.post(r['actor'])
 
       if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
@@ -82,7 +83,7 @@ class feed(Resource):
       items = mongo.db.posts.find({'attributedTo': handle+'@'+request.host}).sort('created_at', -1)
       feedObj = vocab.OrderedCollection(items=items)
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return feedObj_sanitized
+      return feedObj
     else:
       abort(400)
   def post(self, handle):
