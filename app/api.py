@@ -58,6 +58,8 @@ class inbox(Resource):
       u = find_user_or_404(handle)
       r = request.get_json()
 
+      print(r)
+
       if r['@type'] == 'Like':
         mongo.db.posts.update_one({'@id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
