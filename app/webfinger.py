@@ -29,7 +29,7 @@ def get_user_info(**kwargs):
             {
               'href': request.url_root+'api/'+u['username'],
               'rel': 'self',
-              'type': 'application/activity+json"'
+              'type': 'application/activity+json'
             }
           ]
         }
