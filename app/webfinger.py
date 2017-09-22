@@ -8,11 +8,9 @@ webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 @webfinger.route('/')
 def get_user_info(**kwargs):
   id = unquote(request.args['resource'])
-  print(id)
   if 'rel' in request.args:
     rel = request.args['rel']
   u = mongo.db.users.find_one({'id': id})
-  print(u)
 
   resp = {
           'subject': u['id'],
@@ -31,7 +29,7 @@ def get_user_info(**kwargs):
             {
               'href': request.url_root+'api/'+u['username'],
               'rel': 'self',
-              'type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
+              'type': 'application/activity+json"'
             }
           ]
         }
