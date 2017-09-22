@@ -16,7 +16,7 @@ def get_user_info(**kwargs):
           'subject': u['id'],
           'aliases': [
             request.url_root+'@'+u['username'],
-            request.url_root+'users/'+u['username']
+            request.url_root+'api/'+u['username']
           ],
           'properties': {
             'http://schema.org/name': u['name']
