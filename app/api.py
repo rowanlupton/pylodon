@@ -1,6 +1,6 @@
 from app import mongo, rest_api
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
-from .utilities import find_user_or_404, get_logged_in_user, check_request_headers, check_accept_headers, createPost, get_time, follow_user, accept_follow
+from .utilities import find_user_or_404, get_logged_in_user, check_accept_headers, check_accept_headers, createPost, get_time, follow_user, accept_follow
 
 from flask import Blueprint, request, abort, redirect, url_for, jsonify
 from flask_restful import Resource
