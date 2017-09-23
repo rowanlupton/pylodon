@@ -1,5 +1,5 @@
 from app import app, lm, api, mongo, webfinger
-from config import API_CONTENT_HEADERS
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
 from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user, createLike
@@ -61,7 +61,7 @@ def compose():
 @app.route('/@<handle>')
 def viewFeed(handle):
   u = find_user_or_404(handle)
-  r = requests.get(u['outbox'], headers=API_CONTENT_HEADERS)
+  r = requests.get(u['outbox'], headers=API_ACCEPT_HEADERS)
   return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
 
 @app.route('/<handle>/posts/<postID>')

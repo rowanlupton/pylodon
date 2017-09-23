@@ -8,6 +8,7 @@ from bson import ObjectId, json_util
 import json, requests
 from activipy import vocab
 from webfinger import finger
+from urllib.parse import unquote
 
 
 api = Blueprint('api', __name__, template_folder='templates')
@@ -84,9 +85,9 @@ class feed(Resource):
       items = mongo.db.posts.find({'attributedTo': handle+'@'+request.host}).sort('created_at', -1)
       feedObj = vocab.OrderedCollection(items=items)
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return feedObj
+      return feedObj_sanitized
     else:
-      return redirect(url_for('viewFeed', handle=handle))
+      return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):
     if check_content_headers(request):
       r = request.get_json()
