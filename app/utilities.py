@@ -92,4 +92,9 @@ def check_accept_headers(request):
       return True
   return False
 
-def check_content_headers
+def check_content_headers:
+  print(request.headers)
+  if request.headers.get('Content-Type'):
+    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
+      return True
+  return False
