@@ -1,4 +1,5 @@
 from app import mongo
+from .crypto import generate_keys
 
 from activipy import vocab
 from flask import request, abort, url_for
@@ -7,9 +8,14 @@ import datetime
 
 
 def return_new_user(handle, displayName, email, passwordHash):
-  return   {  
+  public, private = generate_keys()
+
+  user =   {  
             'id': 'acct:'+handle+'@'+request.host, 
-            '@context': 'https://www.w3.org/ns/activitystreams',
+            '@context': [
+                          'https://www.w3.org/ns/activitystreams',
+                          {'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers'}
+                        ],
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+request.host,
@@ -17,7 +23,7 @@ def return_new_user(handle, displayName, email, passwordHash):
             'name': displayName, 
             'email': email, 
             'hashpw': passwordHash,
-            'locked': False,
+            'manuallyApprovesFollowers': False,
             'avatar': url_for('static', filename='img/defaultAvatar.png'),
             'header': url_for('static', filename='img/defaultHeader.gif'),
             'following': request.url_root+'api/'+handle+'/following', 
@@ -26,8 +32,16 @@ def return_new_user(handle, displayName, email, passwordHash):
             'inbox': request.url_root+'api/'+handle+'/inbox', 
             'outbox': request.url_root+'api/'+handle+'/feed',
             'metrics': {'post_count': 0},
-            'created_at': get_time()
+            'created_at': get_time(),
+            'publicKey': {
+                          'id': request.url_root+'users/'+handle+'#main-key',
+                          'owner': request.url_root+'users/'+handle,
+                          'publicKeyPem': public
+                          }
           }
+
+
+  return user
 def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
   if not u:

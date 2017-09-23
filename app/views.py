@@ -58,6 +58,10 @@ def compose():
     return redirect(request.args.get("next") or url_for('index'))
   return render_template('compose.html', form=form, mongo=mongo)
 
+@app.route('/<handle>')
+def redirectToViewFeed(handle):
+  return redirect(unquote(url_for('viewFeed', handle=handle)))
+
 @app.route('/@<handle>')
 def viewFeed(handle):
   u = find_user_or_404(handle)
