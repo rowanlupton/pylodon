@@ -37,7 +37,8 @@ def return_new_user(handle, displayName, email, passwordHash):
                           'id': request.url_root+'users/'+handle+'#main-key',
                           'owner': request.url_root+'users/'+handle,
                           'publicKeyPem': public
-                          }
+                          },
+            'privateKey': private
           }
 
 
