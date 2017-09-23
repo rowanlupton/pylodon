@@ -48,7 +48,7 @@ class liked(Resource):
 
 class inbox(Resource):
   def get(self, handle):
-    items = mongo.db.posts.find({'to': request.url_root+handle}).sort('_id', -1)
+    items = mongo.db.posts.find({'to': get_logged_in_user()['id']}).sort('_id', -1)
     feedObj = vocab.OrderedCollection(items=items)
     if check_accept_headers(request):
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
@@ -58,6 +58,8 @@ class inbox(Resource):
   def post(self, handle):
     if check_content_headers(request):
       u = find_user_or_404(handle)
+      print(u)
+      print(handle)
       r = request.get_json()
 
       if r['type'] == 'Like':
@@ -66,8 +68,6 @@ class inbox(Resource):
       if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         a = requests.get(r['actor'], headers=API_HEADERS)
-        print(a.content)
-        # requests.post(a['inbox'], data=accept_follow(r), headers=API_HEADERS)
 
       if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
