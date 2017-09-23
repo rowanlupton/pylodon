@@ -9,7 +9,7 @@ MONGO_URI = 'mongodb://rowanlupton:'+os.environ['mongodb-password']+'@cluster0-s
 MONGO_DBNAME = 'Cluster0'
 
 API_CONTENT_HEADERS = {'Content-Type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
-API_ACTIVITY_HEADERS = {'activity': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
+API_ACCEPT_HEADERS = {'accept': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
 
 # email server
 MAIL_SERVER = 'smtp.mail.me.com'
