@@ -10,6 +10,13 @@ MONGO_DBNAME = 'Cluster0'
 
 API_CONTENT_HEADERS = {'Content-Type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
 API_ACCEPT_HEADERS = {'accept': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'}
+DEFAULT_CONTEXT = [
+										"https://www.w3.org/ns/activitystreams",
+										{
+											"manuallyApprovesFollowers": "as:manuallyApprovesFollowers"
+										}
+									]
+
 
 # email server
 MAIL_SERVER = 'smtp.mail.me.com'

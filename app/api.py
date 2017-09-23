@@ -101,7 +101,7 @@ class feed(Resource):
       if r['@type'] == 'Note':
         obj = r
         r = vocab.Create(
-          to=u['followers'],
+          to="https://www.w3.org/ns/activitystreams#Public",
           actor=u['acct'],
           object=obj)
 

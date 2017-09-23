@@ -31,7 +31,8 @@ def get_user_info(**kwargs):
               'rel': 'self',
               'type': 'application/activity+json'
             }
-          ]
+          ],
+          'publicKey': u[publicKey]
         }
 
   return jsonify(resp)
