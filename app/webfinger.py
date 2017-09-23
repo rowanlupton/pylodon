@@ -11,6 +11,8 @@ def get_user_info(**kwargs):
   if 'rel' in request.args:
     rel = request.args['rel']
   u = mongo.db.users.find_one({'id': id})
+  publicKey = u['publickey']
+  publicKey = publicKey.decode('utf-8')
 
   resp = {
           'subject': u['id'],
@@ -32,7 +34,7 @@ def get_user_info(**kwargs):
               'type': 'application/activity+json'
             }
           ],
-          'publicKey': jsonify(u['publicKey'])
+          'publicKey': publicKey
         }
 
   return jsonify(resp)
