@@ -82,8 +82,12 @@ class inbox(Resource):
 class feed(Resource):
   def get(self, handle):
     if check_accept_headers(request):
-      items = mongo.db.posts.find({'attributedTo': handle+'@'+request.host}).sort('created_at', -1)
-      feedObj = vocab.OrderedCollection(items=items)
+      u = find_user_or_404(handle)
+      items = mongo.db.posts.find({'attributedTo': u['id']}).sort('created_at', -1)
+      feedObj = vocab.OrderedCollection(
+                                        id=u['outbox'],
+                                        items=items
+                                        )
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj_sanitized
     else:
@@ -131,7 +135,7 @@ class user(Resource):
     if check_accept_headers(request):
       u = mongo.db.users.find({'username': handle})
       return json.loads(json_util.dumps(u))[0]
-    pass
+    redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling
 rest_api.add_resource(following, '/api/<string:handle>/following')
