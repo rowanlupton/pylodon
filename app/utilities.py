@@ -19,10 +19,10 @@ def return_new_user(handle, displayName, email, passwordHash):
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+request.host,
-            'url': request.url_root+handle,
+            'url': request.url_root+'users/'+handle,
             'name': displayName, 
             'email': email, 
-            'hashpw': passwordHash,
+            'password': passwordHash,
             'manuallyApprovesFollowers': False,
             'avatar': url_for('static', filename='img/defaultAvatar.png'),
             'header': url_for('static', filename='img/defaultHeader.gif'),
@@ -68,7 +68,7 @@ def createPost(text, name, acct, receivers):
                       to=receivers,
                       object=vocab.Note(
                                         content=text),
-                      created_at=get_time())
+                      published=get_time())
 def createLike(actorAcct, post):
   to = post['attributedTo']
   if to in post:

@@ -37,3 +37,5 @@ def get_user_info(**kwargs):
   return jsonify(resp)
 
 
+def webfinger_find_user(acct):
+  pass

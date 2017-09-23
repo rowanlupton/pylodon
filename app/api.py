@@ -67,13 +67,13 @@ class inbox(Resource):
 
       if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-        a = requests.get(r['actor'], headers=API_HEADERS)
+        a = requests.get(r['actor'], headers=API_ACCEPT_HEADERS)
 
       if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
 
       if r['type'] == 'Create':
-        if not mongo.db.posts.find({'_id': obj['_id']}):
+        if not mongo.db.posts.find({'_id': r['_id']}):
           mongo.db.posts.insert_one(r['object'].json())
 
       return 202
@@ -83,13 +83,16 @@ class feed(Resource):
   def get(self, handle):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
-      items = mongo.db.posts.find({'attributedTo': u['id']}).sort('created_at', -1)
-      feedObj = vocab.OrderedCollection(
-                                        id=u['outbox'],
-                                        items=items
-                                        )
-      feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return feedObj_sanitized
+      items = list(mongo.db.posts.find({'attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+
+      feed =  {
+                '@context': vocab.OrderedCollection().types_expanded,
+                'id': u['outbox'],
+                'type': vocab.OrderedCollection().types,
+                'totalItems': len(items),
+                'orderedItems': items
+              }
+      return feed
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):
@@ -115,7 +118,11 @@ class feed(Resource):
         content = r['object']['content']
         note = vocab.Note(id=id, content=content, attributedTo=u['acct'], created_at=get_time())
         mongo.db.posts.insert_one(note.json())
-        requests.post(r['to'], data=jsonify(r), headers=API_HEADERS)
+
+        if u['outbox'] in r['to']:
+          r['to'].remove(u['outbox'])
+        for to in r['to']:
+          requests.post(to, data=jsonify(r), headers=API_CONTENT_HEADERS)
         return redirect(request.args.get("next") or url_for('index'), 202)
       
       if r['@type'] == 'Like':
@@ -134,7 +141,13 @@ class user(Resource):
   def get(self, handle):
     if check_accept_headers(request):
       u = mongo.db.users.find({'username': handle})
-      return json.loads(json_util.dumps(u.decode('utf-8')))[0]
+
+      returnMe = {
+                   'id': '' 
+                }
+
+
+      return returnMe
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling

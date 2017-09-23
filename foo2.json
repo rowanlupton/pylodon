@@ -1,0 +1,1 @@
+{"@context": ["http://www.w3.org/ns/activitystreams#OrderedCollection"], "id": "http://localhost:5000/api/roo2/feed", "type": ["OrderedCollection"], "totalItems": 1, "orderedItems": [{"@type": "Note", "content": "just to fill the aaaaaair", "attributedTo": "roo2@localhost:5000", "created_at": "2017-09-23T17:09:17.879356", "@id": "http://localhost:5000/roo2/posts/9"}]}

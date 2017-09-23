@@ -3,6 +3,7 @@ from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
 from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user, createLike
+from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
