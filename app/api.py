@@ -134,7 +134,7 @@ class user(Resource):
   def get(self, handle):
     if check_accept_headers(request):
       u = mongo.db.users.find({'username': handle})
-      return json.loads(json_util.dumps(u))[0]
+      return json.loads(json_util.dumps(u.decode('utf-8')))[0]
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling
