@@ -88,7 +88,7 @@ class feed(Resource):
     else:
       pass
   def post(self, handle):
-    if check_request_headers(request):
+    if check_content_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
       
