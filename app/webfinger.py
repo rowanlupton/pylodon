@@ -32,7 +32,7 @@ def get_user_info(**kwargs):
               'type': 'application/activity+json'
             }
           ],
-          'publicKey': u[publicKey]
+          'publicKey': u['publicKey']
         }
 
   return jsonify(resp)
