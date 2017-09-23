@@ -1,6 +1,6 @@
 from app import mongo, rest_api
-from config import API_HEADERS
-from .utilities import find_user_or_404, get_logged_in_user, check_headers, createPost, get_time, follow_user, accept_follow
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
+from .utilities import find_user_or_404, get_logged_in_user, check_request_headers, check_accept_headers, createPost, get_time, follow_user, accept_follow
 
 from flask import Blueprint, request, abort, redirect, url_for, jsonify
 from flask_restful import Resource
@@ -14,48 +14,48 @@ api = Blueprint('api', __name__, template_folder='templates')
 
 class following(Resource):
   def get(self, handle):
-    if check_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
       if 'following_coll' in u:
         following = u['following_coll']
         return following
       abort(404)
-    abort(400)
+    pass
 
 class followers(Resource):
   def get(self, handle):
-    if check_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
       if 'followers_coll' in u:
         followers = u['followers_coll']
         return followers
       abort(404)
-    abort(400)
+    pass
 
 class liked(Resource):
   def get(self, handle):
-    if check_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
       if 'likes' in u:
         likes = u['likes']
         return likes
       abort(404)
-    abort(400)
+    pass
 
 class inbox(Resource):
   def get(self, handle):
     items = mongo.db.posts.find({'to': request.url_root+handle}).sort('_id', -1)
     feedObj = vocab.OrderedCollection(items=items)
-    if check_headers(request):
+    if check_accept_headers(request):
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj_sanitized
     else:
-      abort(400)
+      pass
   def post(self, handle):
-    if check_headers(request):
+    if check_content_headers(request):
       u = find_user_or_404(handle)
       r = request.get_json()
 
@@ -80,15 +80,15 @@ class inbox(Resource):
 
 class feed(Resource):
   def get(self, handle):
-    if check_headers(request):
+    if check_accept_headers(request):
       items = mongo.db.posts.find({'attributedTo': handle+'@'+request.host}).sort('created_at', -1)
       feedObj = vocab.OrderedCollection(items=items)
       feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
       return feedObj
     else:
-      abort(400)
+      pass
   def post(self, handle):
-    if check_headers(request):
+    if check_request_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
       
@@ -127,11 +127,10 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    if check_headers(request):
+    if check_accept_headers(request):
       u = mongo.db.users.find({'username': handle})
       return json.loads(json_util.dumps(u))[0]
-    abort(400)
-
+    pass
 
 # url handling
 rest_api.add_resource(following, '/api/<string:handle>/following')

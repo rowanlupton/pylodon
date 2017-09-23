@@ -1,5 +1,5 @@
 from app import app, lm, api, mongo, webfinger
-from config import API_HEADERS
+from config import API_CONTENT_HEADERS
 from .forms import userLogin, userRegister, composePost
 from .users import User
 from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user, createLike
@@ -36,7 +36,7 @@ def index():
 @login_required
 def notifications():
   u = get_logged_in_user()
-  r = requests.get(u['inbox'], headers=API_HEADERS)
+  r = requests.get(u['inbox'], headers=API_CONTENT_HEADERS)
 
   return render_template('index.html', posts=r.json()['items'], mongo=mongo)
 
@@ -54,14 +54,14 @@ def compose():
 
     post = createPost(form.text.data, u['name'], u['acct']+'@'+request.host, to)
 
-    requests.post(u['outbox'], data=json.dumps(post.json()), headers=API_HEADERS)
+    requests.post(u['outbox'], data=json.dumps(post.json()), headers=API_CONTENT_HEADERS)
     return redirect(request.args.get("next") or url_for('index'))
   return render_template('compose.html', form=form, mongo=mongo)
 
 @app.route('/@<handle>')
 def viewFeed(handle):
   u = find_user_or_404(handle)
-  r = requests.get(u['outbox'], headers=API_HEADERS)
+  r = requests.get(u['outbox'], headers=API_CONTENT_HEADERS)
   return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
 
 @app.route('/<handle>/posts/<postID>')
@@ -76,7 +76,7 @@ def likePost(handle, postID):
   u = find_user_or_404(handle)
   p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
   like = createLike(u['acct'], p)
-  requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=API_HEADERS)
+  requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=API_CONTENT_HEADERS)
   return redirect(request.args.get("next") or url_for('index'))
 
 ################### LOG IN/OUT ###################
