@@ -6,7 +6,7 @@ def generate_keys():
 	key = crypto.PKey()
 	cert = crypto.X509()
 
-	key.generate_key(crypto.TYPE_RSA, 1024)
+	key.generate_key(crypto.TYPE_RSA, 512)
 
 	public_key = crypto.dump_publickey(crypto.FILETYPE_PEM, key)
 	private_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, key)
