@@ -1,13 +1,14 @@
 from app import app, mongo
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 from urllib.request import unquote
+from .utilities import sign_headers
 
 webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/host-meta')
 def host_meta():
-  return render_template('host-meta.xml')
+  return render_template('host-meta.xml', url_root=request.url_root)
 
 @webfinger.route('/webfinger')
 def get_user_info(**kwargs):
@@ -38,7 +39,7 @@ def get_user_info(**kwargs):
           ]
         }
 
-  return jsonify(resp)
+  return jsonify(resp), sign_headrs(u)
 
 
 def webfinger_find_user(acct):
