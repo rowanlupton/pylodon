@@ -36,13 +36,14 @@ def get_user_info(**kwargs):
               'href': request.url_root+'api/'+u['username'],
               'rel': 'self',
               'type': 'application/activity+json'
-            },
+            }
           ]
         }
+  resp_xml = render_template('webfinger_user.xml', resp=resp)
 
   if request.headers.get('accept'):
     if 'application/xrd+xml' in request.headers['accept']:
-      return Response(dicttoxml(resp), mimetype='application/xrd+xml', content_type='application/xrd+xml')
+      return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml')
 
   return jsonify(resp), sign_headers(u)
 

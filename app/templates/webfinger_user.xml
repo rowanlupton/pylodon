@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
+  <Subject>{{resp['subject']}}</Subject>
+  <Alias>{{resp['aliases'][0]}}</Alias>
+  <Alias>{{resp['aliases'][1]}}</Alias>
+  <Link rel="http://webfinger.net/rel/profile-page" type="text/html" href="{{resp['links'][0]['href']}}"/>
+  <Link rel="self" type="application/activity+json" href="{{resp['links'][1]['href']}}"/>
+</XRD>
