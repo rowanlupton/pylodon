@@ -1,6 +1,6 @@
 from app import app, mongo
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
 from urllib.request import unquote
 from .utilities import sign_headers
 
