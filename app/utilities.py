@@ -104,7 +104,6 @@ def createLike(actorAcct, post):
                                       id=post['@id'],
                                       attributedTo=post['attributedTo'],
                                       content=post['content']))
-
 def follow_user(actorAcct, otherUser):
   return vocab.Follow(
                       context="https://www.w3.org/ns/activitystreams",
@@ -113,12 +112,6 @@ def follow_user(actorAcct, otherUser):
                                         context={"@language": 'en'},
                                         id=otherUser['id']))
 
-def accept_follow(actorAcct, followActivity):
-  return vocab.Accept(
-                      context="https://www.w3.org/ns/activitystreams",
-                      actor=actorAcct,
-                      object=followActivity)
-
 
 # API
 def check_accept_headers(request):
@@ -126,7 +119,6 @@ def check_accept_headers(request):
     if (request.headers['accept'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['accept'] == 'application/activity+json'):
       return True
   return False
-
 def check_content_headers(request):
   if request.headers.get('Content-Type'):
     if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):

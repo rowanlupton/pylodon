@@ -1,15 +1,17 @@
 from app import mongo, rest_api
-from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
-from .utilities import find_user_or_404, get_logged_in_user, check_accept_headers, check_content_headers, createPost, get_time, follow_user, accept_follow
+from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
+from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_logged_in_user, get_time
 
-from flask import Blueprint, request, abort, redirect, url_for, jsonify
-from flask_restful import Resource
-from bson import ObjectId, json_util
-import json, requests
 from activipy import vocab
-from webfinger import finger
+from bson import ObjectId, json_util
+from flask import abort, Blueprint, jsonify, make_response, redirect, request, url_for
+from flask_restful import Resource
+from httpsig import HeaderSigner
+from httpsig.requests_auth import HTTPSignatureAuth
 from urllib.parse import unquote
-
+from webfinger import finger
+from werkzeug.http import http_date, parse_date
+import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
 
@@ -84,16 +86,23 @@ class feed(Resource):
   def get(self, handle):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
+
+      key_id = u['publicKey']['id']
+      secret = u['privateKey']
+
       items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
-      return items
-      feed =  {
+      resp =  {
                 '@context': vocab.OrderedCollection().types_expanded,
                 'id': u['outbox'],
                 'type': 'OrderedCollection',
                 'totalItems': len(items),
                 'orderedItems': items
               }
-      return feed
+
+      hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
+      auth = hs.sign({"Date": parse_date(http_date())})
+
+      return resp, auth
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):
@@ -132,21 +141,10 @@ class feed(Resource):
         content = r['object']['content']
 
         for to in r['to']:
-          requests.post(to, data=r, headers=API_CONTENT_HEADERS)
+          requests.post(to, data=r, headers=API_CONTENT_HEADERS, auth=auth)
         for cc in r['cc']:
-          requests.post(cc, data=r, headers=API_CONTENT_HEADERS)
+          requests.post(cc, data=r, headers=API_CONTENT_HEADERS, auth=auth)
 
-        # note =  {
-        #           'id': r['object']['id'],
-        #           'type': 'Note',
-        #           'summary': None,
-        #           'content': r['object']['content'],
-        #           'attributedTo': r['object']['attributedTo'],
-        #           'published': r['published'],
-        #           'to': r['to'],
-        #           'cc': r['cc'],
-        #           'sensitive': False,
-        #         }
         mongo.db.posts.insert_one(r)
 
         return 202
