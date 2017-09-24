@@ -102,6 +102,10 @@ class feed(Resource):
       hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
       auth = hs.sign({"Date": parse_date(http_date())})
 
+      auth['Signature'] = auth.pop('authorization')
+      assert auth['Signature'].startswith('Signature ')
+      auth['Signature'] = auth['Signature'][len('Signature '):]
+
       return resp, auth
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
@@ -189,6 +193,10 @@ class user(Resource):
 
       hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
       auth = hs.sign({"Date": parse_date(http_date())})
+
+      auth['Signature'] = auth.pop('authorization')
+      assert auth['Signature'].startswith('Signature ')
+      auth['Signature'] = auth['Signature'][len('Signature '):]
 
       return user, auth
     redirect(unquote(url_for('viewFeed', handle=handle)))
