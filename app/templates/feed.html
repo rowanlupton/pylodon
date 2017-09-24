@@ -1,8 +1,7 @@
 {% extends 'basic.html' %}
 
 {% block content %}
-  <p> {%
-	  for p in posts%} 
+  <p> {%for p in posts%} 
 	    <h4>{{ mongo.db.users.find_one({'acct': p.object.attributedTo})['name'] }}:</h4>
 	    <p> {{ p.object.content }} </p>
 	  {% endfor %}
