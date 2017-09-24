@@ -24,7 +24,7 @@ def load_user(handle):
     return User(u['id'])
 
 
-#################### REAL STUFF ####################
+#################### MISCELLANEA ####################
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
@@ -44,23 +44,29 @@ def notifications():
 @app.route('/compose', methods=['GET', 'POST'])
 @login_required
 def compose():
-  u = get_logged_in_user()
   form = composePost()
   if form.validate_on_submit():
     u = get_logged_in_user()
 
-    to = [u['outbox']]
+    to = ['https://www.w3.org/ns/activitystreams#Public', u['outbox']]
+    cc = []
+    if 'followers_coll' in u:
+      for f in u['followers_coll']:
+        cc.append(f)
     if form.to.data:
-      to.append(form.to.data)
+      cc.append(form.to.data)
 
-    post = createPost(form.text.data, u['name'], u['acct']+'@'+request.host, to)
+    create = createPost(form.text.data, u['username'], to, cc)
 
-    requests.post(u['outbox'], data=json.dumps(post.json()), headers=API_CONTENT_HEADERS)
+    requests.post(u['outbox'], data=create, headers=API_CONTENT_HEADERS)
     return redirect(request.args.get("next") or url_for('index'))
   return render_template('compose.html', form=form, mongo=mongo)
 
+
+#################### PROFILE ####################
 @app.route('/<handle>')
 def redirectToViewFeed(handle):
+
   return redirect(unquote(url_for('viewFeed', handle=handle)))
 
 @app.route('/@<handle>')

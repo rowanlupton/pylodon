@@ -4,7 +4,7 @@ from .crypto import generate_keys
 from activipy import vocab
 from flask import request, abort, url_for
 from flask_login import current_user
-import datetime
+import datetime, json
 
 
 def return_new_user(handle, displayName, email, passwordHash):
@@ -58,17 +58,38 @@ def get_logged_in_user():
 
 
 def get_time():
+
   return datetime.datetime.now().isoformat()
-def createPost(text, name, acct, receivers):
-  return vocab.Create(
-                      context="https://www.w3.org/ns/activitystreams",
-                      actor=vocab.Person(
-                            acct+'@'+request.host,
-                            displayName=name),
-                      to=receivers,
-                      object=vocab.Note(
-                                        content=text),
-                      published=get_time())
+def createPost(content, handle, to, cc):
+  u = find_user_or_404(handle)
+  
+  post_number = str(u['metrics']['post_count'])
+  id = request.url_root+u['username']+'/posts/'+post_number
+  note_url = request.url_root+'@'+post_number
+  
+  time = get_time()
+
+  create =  {
+            'id': id+'/activity',
+            'type': 'Create',
+            'context': vocab.Create().types_expanded,
+            'actor': u['acct'],
+            'published': time,
+            'to': to,
+            'cc': cc,
+            'object': {
+                        'id': id,
+                        'type': 'Note',
+                        'summary': None,
+                        'content': content,
+                        'published': time,
+                        'url': note_url,
+                        'attributedTo': u['acct'],
+                        'to': to,
+                        'cc': cc
+                      }
+          }
+  return json.dumps(create)
 def createLike(actorAcct, post):
   to = post['attributedTo']
   if to in post:

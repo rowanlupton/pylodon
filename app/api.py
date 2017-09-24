@@ -48,11 +48,12 @@ class liked(Resource):
 
 class inbox(Resource):
   def get(self, handle):
-    items = mongo.db.posts.find({'to': get_logged_in_user()['id']}).sort('_id', -1)
+    
     feedObj = vocab.OrderedCollection(items=items)
     if check_accept_headers(request):
-      feedObj_sanitized = json.loads(json_util.dumps(feedObj.json()))
-      return feedObj_sanitized
+      items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
+
+      return items
     else:
       pass
   def post(self, handle):
@@ -63,7 +64,7 @@ class inbox(Resource):
       r = request.get_json()
 
       if r['type'] == 'Like':
-        mongo.db.posts.update_one({'@id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
+        mongo.db.posts.update_one({'id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
       if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
@@ -101,41 +102,70 @@ class feed(Resource):
       u = find_user_or_404(handle)
       
       # if it's a note it creates a request that will be handled by the next bit
-      if r['@type'] == 'Note':
-        obj = r
-        r = vocab.Create(
-          to="https://www.w3.org/ns/activitystreams#Public",
-          actor=u['acct'],
-          object=obj)
+      if r['type'] == 'Note':
+        to = []
+        if 'to' in r:
+          for t in r['to']:
+            to.append(t)
+        cc = []
+        if 'cc' in r:
+          for c in r['cc']:
+            cc.append(c)
 
-      if r['@type'] == 'Create':
-        if r['object']['@type'] != 'Note':
+        obj = r
+        r = {
+              'id': obj['id']+'/activity',
+              'type': 'Create',
+              'actor': u[id],
+              'published': obj['published'],
+              'to': to,
+              'cc': cc,
+              'object': obj.get_json()
+            }
+
+      if r['type'] == 'Create':
+        if r['object']['type'] != 'Note':
           abort(403)
 
         mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
-        id=request.url_root+u['username']+'/posts/'+str(mongo.db.users.find_one({'acct': u['acct']})['metrics']['post_count'])
 
         content = r['object']['content']
-        note = vocab.Note(id=id, content=content, attributedTo=u['acct'], created_at=get_time())
-        mongo.db.posts.insert_one(note.json())
 
         if u['outbox'] in r['to']:
           r['to'].remove(u['outbox'])
+
         for to in r['to']:
-          requests.post(to, data=jsonify(r), headers=API_CONTENT_HEADERS)
-        return redirect(request.args.get("next") or url_for('index'), 202)
+          requests.post(to, data=r, headers=API_CONTENT_HEADERS)
+        for cc in r['cc']:
+          requests.post(cc, data=r, headers=API_CONTENT_HEADERS)
+
+        note =  {
+                  'id': r['object']['id'],
+                  'type': 'Note',
+                  'summary': None,
+                  'content': r['object']['content'],
+                  'attributedTo': r['object']['attributedTo'],
+                  'published': r['published'],
+                  'to': r['to'],
+                  'cc': r['cc'],
+                  'sensitive': False,
+                }
+        mongo.db.posts.insert_one(note)
+
+        return 202
       
-      if r['@type'] == 'Like':
+
+
+      if r['type'] == 'Like':
         if r['object']['@id'] not in mongo.db.users.find({'acct': r['actor']})['likes']:
           mongo.db.users.update({'acct': r['actor']}, {'$push': {'likes': r['object']['@id']}})
         if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
           mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
 
 
-      if r['@type'] == 'Follow':
+      if r['type'] == 'Follow':
         pass
     abort(400)
-
 
 class user(Resource):
   def get(self, handle):
