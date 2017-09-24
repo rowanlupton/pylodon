@@ -2,17 +2,15 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_logged_in_user, get_time
+from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
 from flask import abort, Blueprint, jsonify, make_response, redirect, request, url_for
 from flask_restful import Resource
-from httpsig import HeaderSigner
-from httpsig.requests_auth import HTTPSignatureAuth
 from urllib.parse import unquote
 from webfinger import finger
-from werkzeug.http import http_date, parse_date
+
 import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
@@ -89,9 +87,6 @@ class feed(Resource):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      key_id = u['publicKey']['id']
-      secret = u['privateKey']
-
       items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
       resp =  {
                 '@context': vocab.OrderedCollection().types_expanded,
@@ -101,14 +96,7 @@ class feed(Resource):
                 'orderedItems': items
               }
 
-      hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
-      auth = hs.sign({"Date": parse_date(http_date())})
-
-      auth['Signature'] = auth.pop('authorization')
-      assert auth['Signature'].startswith('Signature ')
-      auth['Signature'] = auth['Signature'][len('Signature '):]
-
-      return resp, auth
+      return resp, sign_headers(u)
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):
@@ -146,10 +134,12 @@ class feed(Resource):
 
         content = r['object']['content']
 
+        headers=API_CONTENT_HEADERS.update(sign_headers(u))
+
         for to in r['to']:
-          requests.post(to, data=r, headers=API_CONTENT_HEADERS, auth=auth)
+          requests.post(to, data=r, headers=headers)
         for cc in r['cc']:
-          requests.post(cc, data=r, headers=API_CONTENT_HEADERS, auth=auth)
+          requests.post(cc, data=r, headers=headers)
 
         mongo.db.posts.insert_one(r)
 
@@ -178,7 +168,7 @@ class user(Resource):
                'id': u['id'],
                'followers': u['followers'],
                'following': u['following'],
-               'icon': {'type': 'Image', 'url': request.url_root+u['avatar']},
+               'icon': {'type': 'Image', 'url': u['avatar']},
                'inbox': u['inbox'],
                'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
                'name': u['name'],

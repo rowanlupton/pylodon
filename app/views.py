@@ -74,7 +74,7 @@ def redirectToViewFeed(handle):
 def viewFeed(handle):
   u = find_user_or_404(handle)
   r = requests.get(u['outbox'], headers=API_ACCEPT_HEADERS).json()
-  return render_template('feed.html', posts=r, mongo=mongo)
+  return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
 
 @app.route('/<handle>/posts/<postID>')
 def viewPost(handle, postID):

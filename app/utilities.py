@@ -4,6 +4,9 @@ from .crypto import generate_keys
 from activipy import vocab
 from flask import request, abort, url_for
 from flask_login import current_user
+from httpsig import HeaderSigner, Signer
+from httpsig.requests_auth import HTTPSignatureAuth
+from werkzeug.http import http_date, parse_date
 import datetime, json
 
 
@@ -24,8 +27,8 @@ def return_new_user(handle, displayName, email, passwordHash):
             'email': email, 
             'password': passwordHash,
             'manuallyApprovesFollowers': False,
-            'avatar': url_for('static', filename='img/defaultAvatar.png'),
-            'header': url_for('static', filename='img/defaultHeader.gif'),
+            'avatar': None,
+            'header': None,
             'following': request.url_root+'api/'+handle+'/following', 
             'followers': request.url_root+'api/'+handle+'/followers', 
             'liked': request.url_root+'api/'+handle+'/liked', 
@@ -124,3 +127,26 @@ def check_content_headers(request):
     if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
       return True
   return False
+def sign_headers(u):
+  key_id = u['publicKey']['id']
+  secret = u['privateKey']
+
+  hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
+  auth = hs.sign({"Date": http_date()})
+
+  auth['Signature'] = auth.pop('authorization')
+  assert auth['Signature'].startswith('Signature ')
+  auth['Signature'] = auth['Signature'][len('Signature '):]
+
+  return auth
+
+
+def sign_object(u, r):
+  key_id = u['publicKey']['id']
+  secret = u['privateKey']
+
+  hs = Signer(secret=secret, algorithm="rsa-sha256")
+  auth_object = hs._sign(r.json())
+
+  return auth_object
+
