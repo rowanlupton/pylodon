@@ -39,7 +39,7 @@ def get_user_info(**kwargs):
           ]
         }
 
-  return jsonify(resp), sign_headrs(u)
+  return jsonify(resp), sign_headers(u)
 
 
 def webfinger_find_user(acct):
