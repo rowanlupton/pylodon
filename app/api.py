@@ -167,7 +167,7 @@ class feed(Resource):
 class user(Resource):
   def get(self, handle):
     if check_accept_headers(request):
-      u = mongo.db.users.find({'username': handle})
+      u = find_user_or_404(handle)
 
       user =  {
                '@context': 'https://www.w3.org/ns/activitystreams',
@@ -178,14 +178,14 @@ class user(Resource):
                'inbox': u['inbox'],
                'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
                'name': u['name'],
-               'outbox': u['feed'],
+               'outbox': u['outbox'],
                'preferredUsername': u['username'],
-               'publicKey': {'id': u['publicKey']['id'], 'owner': u['publicKey']['owner'], 'publicKeyPem': u['publicKey']['publicKeyPem']},
+               'publicKey': {'id': u['publicKey']['id'], 'owner': u['publicKey']['owner'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
                'summary': '',
                'type': u['type'],
                'url': u['url']
               }
-              
+
       return user
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
