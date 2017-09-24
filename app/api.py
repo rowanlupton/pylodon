@@ -169,12 +169,24 @@ class user(Resource):
     if check_accept_headers(request):
       u = mongo.db.users.find({'username': handle})
 
-      returnMe = {
-                   'id': '' 
-                }
-
-
-      return returnMe
+      user =  {
+               '@context': 'https://www.w3.org/ns/activitystreams',
+               'id': u['id'],
+               'followers': u['followers'],
+               'following': u['following'],
+               'icon': {'type': 'Image', 'url': request.url_root+u['avatar']},
+               'inbox': u['inbox'],
+               'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
+               'name': u['name'],
+               'outbox': u['feed'],
+               'preferredUsername': u['username'],
+               'publicKey': {'id': u['publicKey']['id'], 'owner': u['publicKey']['owner'], 'publicKeyPem': u['publicKey']['publicKeyPem']},
+               'summary': '',
+               'type': u['type'],
+               'url': u['url']
+              }
+              
+      return user
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling
