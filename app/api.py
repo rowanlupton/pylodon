@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -109,10 +109,14 @@ class feed(Resource):
         to = []
         if 'to' in r:
           for t in r['to']:
+            if t.startswith('acct:'):
+              t = get_address_from_webfinger(t)
             to.append(t)
         cc = []
         if 'cc' in r:
           for c in r['cc']:
+            if c.startswith('acct:'):
+              c = get_address_from_webfinger(c)
             cc.append(c)
 
         obj = r
@@ -137,8 +141,12 @@ class feed(Resource):
         headers=API_CONTENT_HEADERS.update(sign_headers(u))
 
         for to in r['to']:
+          if to.startswith('acct:'):
+            to = get_address_from_webfinger(to)
           requests.post(to, data=r, headers=headers)
         for cc in r['cc']:
+          if cc.startswith('acct:'):
+            cc = get_address_from_webfinger(cc)
           requests.post(cc, data=r, headers=headers)
 
         mongo.db.posts.insert_one(r)
@@ -180,17 +188,7 @@ class user(Resource):
                'url': u['url']
               }
 
-      key_id = u['publicKey']['id']
-      secret = u['privateKey']
-
-      hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
-      auth = hs.sign({"Date": parse_date(http_date())})
-
-      auth['Signature'] = auth.pop('authorization')
-      assert auth['Signature'].startswith('Signature ')
-      auth['Signature'] = auth['Signature'][len('Signature '):]
-
-      return user, auth
+      return user, sign_headers(u)
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling

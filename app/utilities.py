@@ -1,4 +1,5 @@
 from app import mongo
+from config import API_ACCEPT_HEADERS
 from .crypto import generate_keys
 
 from activipy import vocab
@@ -6,8 +7,9 @@ from flask import request, abort, url_for
 from flask_login import current_user
 from httpsig import HeaderSigner, Signer
 from httpsig.requests_auth import HTTPSignatureAuth
+from webfinger import finger
 from werkzeug.http import http_date, parse_date
-import datetime, json
+import datetime, json, requests
 
 
 def return_new_user(handle, displayName, email, passwordHash):
@@ -147,4 +149,10 @@ def sign_object(u, r):
   auth_object = hs._sign(r.json())
 
   return auth_object
+def get_address_from_webfinger(acct, box='inbox'):
+  wf = finger(acct)
+  user = wf.rel('self')
+  u = requests.get(user, headers=API_ACCEPT_HEADERS).json()
+  address = u[box]
 
+  return address

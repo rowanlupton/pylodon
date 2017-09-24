@@ -5,7 +5,11 @@ from urllib.request import unquote
 
 webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
-@webfinger.route('/')
+@webfinger.route('/host-meta')
+def host-meta():
+  return render_template('host-meta.xml')
+
+@webfinger.route('/webfinger')
 def get_user_info(**kwargs):
   id = unquote(request.args['resource'])
   if 'rel' in request.args:
