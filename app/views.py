@@ -9,6 +9,7 @@ from .webfinger import webfinger_find_user
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 import requests, json
+from urllib.parse import unquote
 # from webfinger import finger
 
 app.register_blueprint(api.api)
@@ -72,8 +73,8 @@ def redirectToViewFeed(handle):
 @app.route('/@<handle>')
 def viewFeed(handle):
   u = find_user_or_404(handle)
-  r = requests.get(u['outbox'], headers=API_ACCEPT_HEADERS)
-  return render_template('feed.html', posts=r.json()['items'], mongo=mongo)
+  r = requests.get(u['outbox'], headers=API_ACCEPT_HEADERS).json()
+  return render_template('feed.html', posts=r, mongo=mongo)
 
 @app.route('/<handle>/posts/<postID>')
 def viewPost(handle, postID):

@@ -6,12 +6,13 @@
   {% for p in posts %}
     <div class="post">
       {{ p.object.content }}
+
       <br>
-      
+
       {% if mongo.db.users.find_one({'acct': p.object.attributedTo }) %}
       	<img src="{{ mongo.db.users.find_one({'acct': p.object.attributedTo })['avatar']  }}" height="20px" />
       	<a href="{{ mongo.db.users.find_one({'acct': p.object.attributedTo})['url'] }}">
-      		{{ mongo.db.users.find_one({'acct': p.attributedTo})['name'] }}
+      		{{ mongo.db.users.find_one({'acct': p.object.attributedTo})['name'] }}
     		</a>
 
     	{% else %}
