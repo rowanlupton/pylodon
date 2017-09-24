@@ -184,7 +184,13 @@ class user(Resource):
                'url': u['url']
               }
 
-      return user
+      key_id = u['publicKey']['id']
+      secret = u['privateKey']
+
+      hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
+      auth = hs.sign({"Date": parse_date(http_date())})
+
+      return user, auth
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling
