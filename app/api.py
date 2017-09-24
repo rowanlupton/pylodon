@@ -84,12 +84,12 @@ class feed(Resource):
   def get(self, handle):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
-      items = list(mongo.db.posts.find({'attributedTo': u['acct']},{'_id': False}).sort('published', -1))
-
+      items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+      return items
       feed =  {
                 '@context': vocab.OrderedCollection().types_expanded,
                 'id': u['outbox'],
-                'type': vocab.OrderedCollection().types,
+                'type': 'OrderedCollection',
                 'totalItems': len(items),
                 'orderedItems': items
               }
@@ -130,9 +130,6 @@ class feed(Resource):
         mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
 
         content = r['object']['content']
-
-        if u['outbox'] in r['to']:
-          r['to'].remove(u['outbox'])
 
         for to in r['to']:
           requests.post(to, data=r, headers=API_CONTENT_HEADERS)

@@ -1,1 +1,25 @@
-{"@context": ["http://www.w3.org/ns/activitystreams#OrderedCollection"], "id": "https://populator.smilodon.social/api/roo/feed", "type": ["OrderedCollection"], "totalItems": 1, "orderedItems": [{"id": "https://populator.smilodon.social/roo/posts/2", "type": "Note", "summary": null, "content": "will it ~blend~ show", "attributedTo": "roo@populator.smilodon.social", "published": "2017-09-24T00:38:40.689806", "to": ["https://www.w3.org/ns/activitystreams#Public"], "cc": [], "sensitive": false}]}
+{
+  "@context": [
+    "http://www.w3.org/ns/activitystreams#OrderedCollection"
+  ],
+  "id": "https://populator.smilodon.social/api/roo/feed",
+  "type": [
+    "OrderedCollection"
+  ],
+  "totalItems": 1,
+  "orderedItems": [
+    {
+      "id": "https://populator.smilodon.social/roo/posts/2",
+      "type": "Note",
+      "summary": null,
+      "content": "will it ~blend~ show",
+      "attributedTo": "roo@populator.smilodon.social",
+      "published": "2017-09-24T00:38:40.689806",
+      "to": [
+        "https://www.w3.org/ns/activitystreams#Public"
+      ],
+      "cc": [],
+      "sensitive": false
+    }
+  ]
+}
