@@ -1,3 +1,5 @@
+# thanks to https://github.com/snarfed for the authorization -> signature headers hack
+
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
 from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_logged_in_user, get_time
@@ -102,6 +104,10 @@ class feed(Resource):
       hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
       auth = hs.sign({"Date": parse_date(http_date())})
 
+      auth['Signature'] = auth.pop('authorization')
+      assert auth['Signature'].startswith('Signature ')
+      auth['Signature'] = auth['Signature'][len('Signature '):]
+
       return resp, auth
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
@@ -189,6 +195,10 @@ class user(Resource):
 
       hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
       auth = hs.sign({"Date": parse_date(http_date())})
+
+      auth['Signature'] = auth.pop('authorization')
+      assert auth['Signature'].startswith('Signature ')
+      auth['Signature'] = auth['Signature'][len('Signature '):]
 
       return user, auth
     redirect(unquote(url_for('viewFeed', handle=handle)))
