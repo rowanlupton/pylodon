@@ -1,6 +1,7 @@
 from app import app, mongo
 
-from flask import Blueprint, jsonify, render_template, request
+from dicttoxml import dicttoxml
+from flask import Blueprint, jsonify, render_template, request, Response
 from urllib.request import unquote
 from .utilities import sign_headers
 
@@ -38,6 +39,10 @@ def get_user_info(**kwargs):
             },
           ]
         }
+
+  if request.headers.get('accept'):
+    if 'application/xrd+xml' in request.headers['accept']:
+      return Response(dicttoxml(resp), mimetype='application/xrd+xml', content_type='application/xrd+xml')
 
   return jsonify(resp), sign_headers(u)
 
