@@ -6,7 +6,7 @@ from urllib.request import unquote
 webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/host-meta')
-def host-meta():
+def host_meta():
   return render_template('host-meta.xml')
 
 @webfinger.route('/webfinger')
