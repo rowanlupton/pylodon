@@ -9,10 +9,12 @@ webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/host-meta')
 def host_meta():
+  print('in host_meta')
   return render_template('host-meta.xml', url_root=request.url_root)
 
 @webfinger.route('/webfinger')
 def get_user_info(**kwargs):
+  print('in get_user_info')
   id = unquote(request.args['resource'])
   if 'rel' in request.args:
     rel = request.args['rel']
@@ -46,7 +48,3 @@ def get_user_info(**kwargs):
       return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml')
 
   return jsonify(resp), sign_headers(u)
-
-
-def webfinger_find_user(acct):
-  pass
