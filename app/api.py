@@ -139,18 +139,18 @@ class feed(Resource):
         for cc in r['cc']:
           requests.post(cc, data=r, headers=API_CONTENT_HEADERS)
 
-        note =  {
-                  'id': r['object']['id'],
-                  'type': 'Note',
-                  'summary': None,
-                  'content': r['object']['content'],
-                  'attributedTo': r['object']['attributedTo'],
-                  'published': r['published'],
-                  'to': r['to'],
-                  'cc': r['cc'],
-                  'sensitive': False,
-                }
-        mongo.db.posts.insert_one(note)
+        # note =  {
+        #           'id': r['object']['id'],
+        #           'type': 'Note',
+        #           'summary': None,
+        #           'content': r['object']['content'],
+        #           'attributedTo': r['object']['attributedTo'],
+        #           'published': r['published'],
+        #           'to': r['to'],
+        #           'cc': r['cc'],
+        #           'sensitive': False,
+        #         }
+        mongo.db.posts.insert_one(r)
 
         return 202
       
