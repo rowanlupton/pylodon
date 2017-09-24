@@ -139,8 +139,6 @@ def sign_headers(u):
   auth['Signature'] = auth['Signature'][len('Signature '):]
 
   return auth
-
-
 def sign_object(u, r):
   key_id = u['publicKey']['id']
   secret = u['privateKey']
