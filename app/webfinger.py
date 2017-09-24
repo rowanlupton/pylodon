@@ -48,3 +48,6 @@ def get_user_info(**kwargs):
       return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml')
 
   return jsonify(resp), sign_headers(u)
+
+def webfinger_find_user():
+  pass
