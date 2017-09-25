@@ -16,7 +16,7 @@ def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
   user =   {  
-            'id': 'acct:'+handle+'@'+request.host, 
+            'id': request.host+'api/'+handle, 
             '@context': [
                           'https://www.w3.org/ns/activitystreams',
                           {'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers'}
@@ -39,8 +39,8 @@ def return_new_user(handle, displayName, email, passwordHash):
             'metrics': {'post_count': 0},
             'created_at': get_time(),
             'publicKey': {
-                          'id': request.url_root+'users/'+handle+'#main-key',
-                          'owner': request.url_root+'users/'+handle,
+                          'id': request.url_root+'api/'+handle+'#main-key',
+                          'owner': request.url_root+'api/'+handle,
                           'publicKeyPem': public
                           },
             'privateKey': private
