@@ -182,7 +182,7 @@ class user(Resource):
                'name': u['name'],
                'outbox': u['outbox'],
                'preferredUsername': u['username'],
-               'publicKey': {'id': u['url'], 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+               'publicKey': {'id': u['url']+'@main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
                'summary': '',
                'type': u['type'],
                'url': u['url']
