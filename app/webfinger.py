@@ -18,7 +18,8 @@ def get_user_info(**kwargs):
   id = unquote(request.args['resource'])
   if 'rel' in request.args:
     rel = request.args['rel']
-  u = mongo.db.users.find_one({'acct': 'acct:'+id})
+  acct = id[5:]
+  u = mongo.db.users.find_one({'acct': id})
 
   resp = {
           'subject': u['id'],
