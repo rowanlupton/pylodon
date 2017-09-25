@@ -19,7 +19,6 @@ def get_user_info(**kwargs):
   if 'rel' in request.args:
     rel = request.args['rel']
   acct = user_id[5:]
-  print(acct)
   u = mongo.db.users.find_one({'acct': acct})
 
   resp = {
