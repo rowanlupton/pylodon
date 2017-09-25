@@ -84,19 +84,19 @@ class inbox(Resource):
 
 class feed(Resource):
   def get(self, handle):
-    if check_accept_headers(request):
-      u = find_user_or_404(handle)
+    # if check_accept_headers(request):
+    u = find_user_or_404(handle)
 
-      items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
-      resp =  {
-                '@context': vocab.OrderedCollection().types_expanded,
-                'id': u['outbox'],
-                'type': 'OrderedCollection',
-                'totalItems': len(items),
-                'orderedItems': items
-              }
+    items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+    resp =  {
+              '@context': vocab.OrderedCollection().types_expanded,
+              'id': u['outbox'],
+              'type': 'OrderedCollection',
+              'totalItems': len(items),
+              'orderedItems': items
+            }
 
-      return resp, sign_headers(u)
+    return resp, sign_headers(u)
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):

@@ -97,7 +97,7 @@ def login():
   form = userLogin()
   if form.validate_on_submit():
     password = form.password.data
-    user = mongo.db.users.find_one({'username':  form.handle.data})
+    user = find_user_or_404(form.handle.data)
     if user and User.validate_login(user['password'], form.password.data):
       user_obj = User(user['username'])
       login_user(user_obj)
