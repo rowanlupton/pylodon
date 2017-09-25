@@ -22,7 +22,7 @@ def get_user_info(**kwargs):
   u = mongo.db.users.find_one({'acct': acct})
 
   resp = {
-          'subject': u['id'],
+          'subject': 'acct:'+u['acct'],
           'aliases': [
             request.url_root+'@'+u['username'],
             request.url_root+'api/'+u['username']
