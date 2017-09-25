@@ -36,7 +36,7 @@ def get_user_info(**kwargs):
               'href': request.url_root+'@'+u['username']
             },
             {
-              'href': request.url_root+'api/'+u['username'],
+              'href': u['id'],
               'rel': 'self',
               'type': 'application/activity+json'
             }
@@ -46,8 +46,12 @@ def get_user_info(**kwargs):
 
   if request.headers.get('accept'):
     if 'application/xrd+xml' in request.headers['accept']:
-      return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml')
+      print('returning xml')
+      print(resp_xml)
+      return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
 
+  print('returning json')
+  print(resp)
   return jsonify(resp), sign_headers(u)
 
 def webfinger_find_user():
