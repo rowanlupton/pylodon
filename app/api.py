@@ -172,7 +172,7 @@ class user(Resource):
       u = find_user_or_404(handle)
 
       user =  {
-               '@context': 'https://www.w3.org/ns/activitystreams',
+               '@context': u['@context'],
                'id': u['id'],
                'followers': u['followers'],
                'following': u['following'],
