@@ -173,7 +173,7 @@ class user(Resource):
 
       user =  {
                '@context': 'https://www.w3.org/ns/activitystreams',
-               'id': u['url'],
+               'id': u['id'],
                'followers': u['followers'],
                'following': u['following'],
                'icon': {'type': 'Image', 'url': u['avatar']},
@@ -182,7 +182,7 @@ class user(Resource):
                'name': u['name'],
                'outbox': u['outbox'],
                'preferredUsername': u['username'],
-               'publicKey': {'id': u['url']+'@main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
                'summary': '',
                'type': u['type'],
                'url': u['url']
