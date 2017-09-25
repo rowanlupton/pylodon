@@ -52,7 +52,7 @@ def get_user_info(**kwargs):
 
   print('returning json')
   print(resp)
-  return jsonify(resp), sign_headers(u)
+  return jsonify(resp)
 
 def webfinger_find_user():
   pass
