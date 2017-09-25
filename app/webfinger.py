@@ -15,11 +15,11 @@ def host_meta():
 @webfinger.route('/webfinger')
 def get_user_info(**kwargs):
   print('in get_user_info')
-  id = unquote(request.args['resource'])
+  user_id = unquote(request.args['resource'])
   if 'rel' in request.args:
     rel = request.args['rel']
-  acct = id[5:]
-  u = mongo.db.users.find_one({'acct': id})
+  acct = user_id[5:]
+  u = mongo.db.users.find_one({'acct': acct})
 
   resp = {
           'subject': u['id'],
