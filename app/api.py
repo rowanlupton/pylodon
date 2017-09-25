@@ -97,8 +97,8 @@ class feed(Resource):
             }
 
     return resp, sign_headers(u)
-    else:
-      return redirect(unquote(url_for('viewFeed', handle=handle)))
+    # else:
+    #   return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):
     if check_content_headers(request):
       r = request.get_json()
