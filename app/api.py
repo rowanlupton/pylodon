@@ -89,7 +89,7 @@ class feed(Resource):
 
     items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
     context = vocab.OrderedCollection().types_expanded
-    context = context.append( {
+    context.append( {
                       'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
                       'sensitive': 'as:sensitive'
                       })
