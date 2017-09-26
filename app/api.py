@@ -69,7 +69,7 @@ class inbox(Resource):
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
       if r['type'] == 'Follow':
-        print(r)
+        print(r.json())
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         accept = createAccept(r)
         requests.post(accept['to'], data=accept, headers=API_CONTENT_HEADERS)
