@@ -1,9 +1,10 @@
 from app import app, mongo
+from config import API_CONTENT_HEADERS
+from .utilities import sign_headers
 
 from dicttoxml import dicttoxml
 from flask import Blueprint, jsonify, render_template, request, Response
 from urllib.request import unquote
-from .utilities import sign_headers
 
 webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
@@ -48,7 +49,7 @@ def get_user_info(**kwargs):
     if 'application/xrd+xml' in request.headers['accept']:
       return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml')
 
-  return jsonify(resp), sign_headers(u)
+  return jsonify(resp), sign_headers(u, API_CONTENT_HEADERS)
 
 def webfinger_find_user():
   pass

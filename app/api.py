@@ -96,7 +96,7 @@ class feed(Resource):
                 'orderedItems': items
               }
 
-      return resp, sign_headers(u)
+      return resp, sign_headers(u, API_CONTENT_HEADERS)
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
   def post(self, handle):
@@ -138,7 +138,7 @@ class feed(Resource):
 
         content = r['object']['content']
 
-        headers=API_CONTENT_HEADERS.update(sign_headers(u))
+        headers=sign_headers(h, API_CONTENT_HEADERS)
 
         for to in r['to']:
           if to.startswith('acct:'):
@@ -188,7 +188,7 @@ class user(Resource):
                'url': u['url']
               }
 
-      return user, sign_headers(u)
+      return user, sign_headers(u, API_CONTENT_HEADERS)
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling

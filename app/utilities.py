@@ -129,7 +129,7 @@ def check_content_headers(request):
     if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
       return True
   return False
-def sign_headers(u):
+def sign_headers(u, headers):
   key_id = u['publicKey']['id']
   secret = u['privateKey']
 
@@ -140,13 +140,16 @@ def sign_headers(u):
   assert auth['Signature'].startswith('Signature ')
   auth['Signature'] = auth['Signature'][len('Signature '):]
 
+  for h in headers:
+    auth.update(h)
+
   return auth
-def sign_object(u, r):
+def sign_object(u, obj):
   key_id = u['publicKey']['id']
   secret = u['privateKey']
 
   hs = Signer(secret=secret, algorithm="rsa-sha256")
-  auth_object = hs._sign(r.json())
+  auth_object = hs._sign(obj.json())
 
   return auth_object
 def get_address_from_webfinger(acct, box='inbox'):
