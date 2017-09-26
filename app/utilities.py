@@ -16,7 +16,7 @@ def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
   user =   {  
-            'id': request.host+'api/'+handle, 
+            'id': request.url_root+'api/'+handle, 
             '@context': [
                           'https://www.w3.org/ns/activitystreams',
                           {'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers'}
@@ -69,8 +69,8 @@ def createPost(content, handle, to, cc):
   u = find_user_or_404(handle)
   
   post_number = str(u['metrics']['post_count'])
-  id = request.url_root+u['username']+'/posts/'+post_number
-  note_url = request.url_root+'@'+post_number
+  id = request.url_root+'api/'+u['username']+'/posts/'+post_number
+  note_url = request.url_root+'@'+u['username']+'/'+post_number
   
   time = get_time()
 
@@ -89,7 +89,7 @@ def createPost(content, handle, to, cc):
                         'content': content,
                         'published': time,
                         'url': note_url,
-                        'attributedTo': u['acct'],
+                        'attributedTo': u['id'],
                         'to': to,
                         'cc': cc
                       }
@@ -109,14 +109,29 @@ def createLike(actorAcct, post):
                                       id=post['@id'],
                                       attributedTo=post['attributedTo'],
                                       content=post['content']))
-def follow_user(actorAcct, otherUser):
+def createFollow(actorAcct, otherUser):
   return vocab.Follow(
                       context="https://www.w3.org/ns/activitystreams",
                       actor=actorAcct,
                       object=vocab.User(
                                         context={"@language": 'en'},
                                         id=otherUser['id']))
-
+def createAccept(followObj):
+  acceptObj = {
+                'id': 'not applicable',
+                'type': 'Accept',
+                'to': followObj['actor'],
+                'object': followObj
+              }
+  return acceptObj
+def createReject(followObj):
+  rejectObj = {
+                'id': 'not applicable',
+                'type': 'Reject',
+                'to': followObj['actor'],
+                'object': followObj
+              }
+  return rejectObj
 
 # API
 def check_accept_headers(request):

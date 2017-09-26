@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -69,8 +69,14 @@ class inbox(Resource):
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
       if r['type'] == 'Follow':
+        print(r)
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-        a = requests.get(r['actor'], headers=API_ACCEPT_HEADERS)
+        accept = createAccept(r)
+        get_headers = API_CONTENT_HEADERS
+        post_headers = API_ACCEPT_HEADERS
+        post_headers.append(sign_headers(u))
+        to = requests.get(accept['to'], headers=API_ACCEPT_HEADERS).json()['inbox']
+        requests.post(to, data=accept, headers=API_CONTENT_HEADERS)
 
       if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
@@ -84,21 +90,27 @@ class inbox(Resource):
 
 class feed(Resource):
   def get(self, handle):
-    if check_accept_headers(request):
-      u = find_user_or_404(handle)
+    # if check_accept_headers(request):
+    u = find_user_or_404(handle)
 
-      items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
-      resp =  {
-                '@context': vocab.OrderedCollection().types_expanded,
-                'id': u['outbox'],
-                'type': 'OrderedCollection',
-                'totalItems': len(items),
-                'orderedItems': items
-              }
+    items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+    context = vocab.OrderedCollection().types_expanded
+    context.append( {
+                      'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
+                      'sensitive': 'as:sensitive'
+                    })
+    resp =  {
+              '@context': context,
+              'id': u['outbox'],
+              'type': 'OrderedCollection',
+              'totalItems': len(items),
+              'orderedItems': items
+            }
 
       return resp, sign_headers(u, API_CONTENT_HEADERS)
     else:
       return redirect(unquote(url_for('viewFeed', handle=handle)))
+
   def post(self, handle):
     if check_content_headers(request):
       r = request.get_json()
@@ -168,25 +180,27 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    if check_accept_headers(request):
-      u = find_user_or_404(handle)
+    print('user-get')
+    # if check_accept_headers(request):
+    print('right headers')
+    u = find_user_or_404(handle)
 
-      user =  {
-               '@context': u['@context'],
-               'id': u['id'],
-               'followers': u['followers'],
-               'following': u['following'],
-               'icon': {'type': 'Image', 'url': u['avatar']},
-               'inbox': u['inbox'],
-               'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
-               'name': u['name'],
-               'outbox': u['outbox'],
-               'preferredUsername': u['username'],
-               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
-               'summary': '',
-               'type': u['type'],
-               'url': u['url']
-              }
+    user =  {
+             '@context': u['@context'],
+             'id': u['id'],
+             'followers': u['followers'],
+             'following': u['following'],
+             'icon': {'type': 'Image', 'url': u['avatar']},
+             'inbox': u['inbox'],
+             'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
+             'name': u['name'],
+             'outbox': u['outbox'],
+             'preferredUsername': u['username'],
+             'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+             'summary': '',
+             'type': u['type'],
+             'url': u['url']
+            }
 
       return user, sign_headers(u, API_CONTENT_HEADERS)
     redirect(unquote(url_for('viewFeed', handle=handle)))
