@@ -88,8 +88,13 @@ class feed(Resource):
     u = find_user_or_404(handle)
 
     items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+    context = vocab.OrderedCollection.types_expanded
+    context.append( {
+                      'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
+                      'sensitive': 'as:sensitive'
+                      })
     resp =  {
-              '@context': vocab.OrderedCollection().types_expanded,
+              '@context': context,
               'id': u['outbox'],
               'type': 'OrderedCollection',
               'totalItems': len(items),
