@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -70,7 +70,8 @@ class inbox(Resource):
 
       if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-        a = requests.get(r['actor'], headers=API_ACCEPT_HEADERS)
+        accept = createAccept(r)
+        requests.post(accept['to'], data=accept, headers=API_CONTENT_HEADERS)
 
       if r['type'] == 'Accept':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
@@ -92,7 +93,7 @@ class feed(Resource):
     context.append( {
                       'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
                       'sensitive': 'as:sensitive'
-                      })
+                    })
     resp =  {
               '@context': context,
               'id': u['outbox'],
