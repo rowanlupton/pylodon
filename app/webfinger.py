@@ -10,12 +10,10 @@ webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/host-meta')
 def host_meta():
-  print('in host_meta')
   return render_template('host-meta.xml', url_root=request.url_root)
 
 @webfinger.route('/webfinger')
 def get_user_info(**kwargs):
-  print('in get_user_info')
   user_id = unquote(request.args['resource'])
   if 'rel' in request.args:
     rel = request.args['rel']
@@ -47,17 +45,9 @@ def get_user_info(**kwargs):
 
   if request.headers.get('accept'):
     if 'application/xrd+xml' in request.headers['accept']:
-      print('returning xml')
-      print(resp_xml)
       return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
 
-<<<<<<< HEAD
   return jsonify(resp), sign_headers(u, API_CONTENT_HEADERS)
-=======
-  print('returning json')
-  print(resp)
-  return jsonify(resp)
->>>>>>> heroku
 
 def webfinger_find_user():
   pass

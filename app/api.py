@@ -59,33 +59,36 @@ class inbox(Resource):
     else:
       pass
   def post(self, handle):
+    print('*******'+str(request.get_json()))
     if check_content_headers(request):
       u = find_user_or_404(handle)
-      print(u)
-      print(handle)
       r = request.get_json()
 
       if r['type'] == 'Like':
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'likes': r['actor']}}, upsert=True)
 
       if r['type'] == 'Follow':
-        print(r)
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-        accept = createAccept(r)
-        get_headers = API_CONTENT_HEADERS
-        post_headers = API_ACCEPT_HEADERS
-        post_headers.append(sign_headers(u))
-        to = requests.get(accept['to'], headers=API_ACCEPT_HEADERS).json()['inbox']
-        requests.post(to, data=accept, headers=API_CONTENT_HEADERS)
+        to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
+        accept = createAccept(r, to)
+        headers = sign_headers(u, API_CONTENT_HEADERS)
+
+        requests.post(to, json=accept, headers=headers).json()
+        return 202
 
       if r['type'] == 'Accept':
-        mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
+        print('accept received')
+        mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
+        return 202
 
       if r['type'] == 'Create':
         if not mongo.db.posts.find({'_id': r['_id']}):
           mongo.db.posts.insert_one(r['object'].json())
+          return 202
 
-      return 202
+      else:
+        print('other type')
+      abort(400)
     abort(400)
 
 class feed(Resource):
@@ -107,9 +110,9 @@ class feed(Resource):
               'orderedItems': items
             }
 
-      return resp, sign_headers(u, API_CONTENT_HEADERS)
-    else:
-      return redirect(unquote(url_for('viewFeed', handle=handle)))
+    return resp, sign_headers(u, API_CONTENT_HEADERS)
+    # else:
+    #   return redirect(unquote(url_for('viewFeed', handle=handle)))
 
   def post(self, handle):
     if check_content_headers(request):
@@ -180,9 +183,7 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    print('user-get')
     # if check_accept_headers(request):
-    print('right headers')
     u = find_user_or_404(handle)
 
     user =  {
@@ -202,7 +203,7 @@ class user(Resource):
              'url': u['url']
             }
 
-      return user, sign_headers(u, API_CONTENT_HEADERS)
+    return user, sign_headers(u, API_CONTENT_HEADERS)
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling

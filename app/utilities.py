@@ -116,19 +116,24 @@ def createFollow(actorAcct, otherUser):
                       object=vocab.User(
                                         context={"@language": 'en'},
                                         id=otherUser['id']))
-def createAccept(followObj):
+def createAccept(followObj, to):
   acceptObj = {
-                'id': 'not applicable',
+                "@context": [
+                  "https://www.w3.org/ns/activitystreams",
+                  {
+                    "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+                    "sensitive": "as:sensitive"
+                  }
+                ],
                 'type': 'Accept',
-                'to': followObj['actor'],
+                'to': to,
                 'object': followObj
               }
   return acceptObj
-def createReject(followObj):
+def createReject(followObj, to):
   rejectObj = {
-                'id': 'not applicable',
                 'type': 'Reject',
-                'to': followObj['actor'],
+                'to': to,
                 'object': followObj
               }
   return rejectObj
@@ -155,8 +160,7 @@ def sign_headers(u, headers):
   assert auth['Signature'].startswith('Signature ')
   auth['Signature'] = auth['Signature'][len('Signature '):]
 
-  for h in headers:
-    auth.update(h)
+  auth.update(headers)
 
   return auth
 def sign_object(u, obj):
