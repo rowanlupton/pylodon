@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createPost, find_user_or_404, follow_user, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -59,10 +59,9 @@ class inbox(Resource):
     else:
       pass
   def post(self, handle):
+    print('*******'+str(request.get_json()))
     if check_content_headers(request):
       u = find_user_or_404(handle)
-      print(u)
-      print(handle)
       r = request.get_json()
 
       if r['type'] == 'Like':
@@ -70,35 +69,51 @@ class inbox(Resource):
 
       if r['type'] == 'Follow':
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-        a = requests.get(r['actor'], headers=API_ACCEPT_HEADERS)
+        to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
+        accept = createAccept(r, to)
+        headers = sign_headers(u, API_CONTENT_HEADERS)
+
+        requests.post(to, json=accept, headers=headers).json()
+        return 202
 
       if r['type'] == 'Accept':
-        mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['actor']}}, upsert=True)
+        print('accept received')
+        mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
+        return 202
 
       if r['type'] == 'Create':
         if not mongo.db.posts.find({'_id': r['_id']}):
           mongo.db.posts.insert_one(r['object'].json())
+          return 202
 
-      return 202
+      else:
+        print('other type')
+      abort(400)
     abort(400)
 
 class feed(Resource):
   def get(self, handle):
-    if check_accept_headers(request):
-      u = find_user_or_404(handle)
+    # if check_accept_headers(request):
+    u = find_user_or_404(handle)
 
-      items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
-      resp =  {
-                '@context': vocab.OrderedCollection().types_expanded,
-                'id': u['outbox'],
-                'type': 'OrderedCollection',
-                'totalItems': len(items),
-                'orderedItems': items
-              }
+    items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+    context = vocab.OrderedCollection().types_expanded
+    context.append( {
+                      'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
+                      'sensitive': 'as:sensitive'
+                    })
+    resp =  {
+              '@context': context,
+              'id': u['outbox'],
+              'type': 'OrderedCollection',
+              'totalItems': len(items),
+              'orderedItems': items
+            }
 
-      return resp, sign_headers(u)
-    else:
-      return redirect(unquote(url_for('viewFeed', handle=handle)))
+    return resp, sign_headers(u, API_CONTENT_HEADERS)
+    # else:
+    #   return redirect(unquote(url_for('viewFeed', handle=handle)))
+
   def post(self, handle):
     if check_content_headers(request):
       r = request.get_json()
@@ -138,7 +153,7 @@ class feed(Resource):
 
         content = r['object']['content']
 
-        headers=API_CONTENT_HEADERS.update(sign_headers(u))
+        headers=sign_headers(h, API_CONTENT_HEADERS)
 
         for to in r['to']:
           if to.startswith('acct:'):
@@ -168,27 +183,27 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    if check_accept_headers(request):
-      u = find_user_or_404(handle)
+    # if check_accept_headers(request):
+    u = find_user_or_404(handle)
 
-      user =  {
-               '@context': u['@context'],
-               'id': u['id'],
-               'followers': u['followers'],
-               'following': u['following'],
-               'icon': {'type': 'Image', 'url': u['avatar']},
-               'inbox': u['inbox'],
-               'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
-               'name': u['name'],
-               'outbox': u['outbox'],
-               'preferredUsername': u['username'],
-               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
-               'summary': '',
-               'type': u['type'],
-               'url': u['url']
-              }
+    user =  {
+             '@context': u['@context'],
+             'id': u['id'],
+             'followers': u['followers'],
+             'following': u['following'],
+             'icon': {'type': 'Image', 'url': u['avatar']},
+             'inbox': u['inbox'],
+             'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
+             'name': u['name'],
+             'outbox': u['outbox'],
+             'preferredUsername': u['username'],
+             'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+             'summary': '',
+             'type': u['type'],
+             'url': u['url']
+            }
 
-      return user, sign_headers(u)
+    return user, sign_headers(u, API_CONTENT_HEADERS)
     redirect(unquote(url_for('viewFeed', handle=handle)))
 
 # url handling

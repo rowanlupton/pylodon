@@ -1,20 +1,19 @@
 from app import app, mongo
+from config import API_CONTENT_HEADERS
+from .utilities import sign_headers
 
 from dicttoxml import dicttoxml
 from flask import Blueprint, jsonify, render_template, request, Response
 from urllib.request import unquote
-from .utilities import sign_headers
 
 webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/host-meta')
 def host_meta():
-  print('in host_meta')
   return render_template('host-meta.xml', url_root=request.url_root)
 
 @webfinger.route('/webfinger')
 def get_user_info(**kwargs):
-  print('in get_user_info')
   user_id = unquote(request.args['resource'])
   if 'rel' in request.args:
     rel = request.args['rel']
@@ -22,7 +21,7 @@ def get_user_info(**kwargs):
   u = mongo.db.users.find_one({'acct': acct})
 
   resp = {
-          'subject': u['id'],
+          'subject': 'acct:'+u['acct'],
           'aliases': [
             request.url_root+'@'+u['username'],
             request.url_root+'api/'+u['username']
@@ -36,7 +35,7 @@ def get_user_info(**kwargs):
               'href': request.url_root+'@'+u['username']
             },
             {
-              'href': request.url_root+'api/'+u['username'],
+              'href': u['id'],
               'rel': 'self',
               'type': 'application/activity+json'
             }
@@ -46,9 +45,9 @@ def get_user_info(**kwargs):
 
   if request.headers.get('accept'):
     if 'application/xrd+xml' in request.headers['accept']:
-      return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml')
+      return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
 
-  return jsonify(resp), sign_headers(u)
+  return jsonify(resp), sign_headers(u, API_CONTENT_HEADERS)
 
 def webfinger_find_user():
   pass
