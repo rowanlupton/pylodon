@@ -152,8 +152,9 @@ class feed(Resource):
         headers=sign_headers(u, API_CONTENT_HEADERS)
 
         if u['followers_coll']:
-          for f in u['followers_coll']:
-            f = requests.get(f).json()
+          for follower in u['followers_coll']:
+            f = requests.get(follower).json()
+            print(requests.get(follower).text)
             to.append(f['inbox'])
 
         for t in r['to']:
