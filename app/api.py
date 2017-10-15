@@ -152,11 +152,13 @@ class feed(Resource):
         headers=sign_headers(u, API_CONTENT_HEADERS)
 
         for f in r['followers_coll']:
-          to.append(f)
+          f = requests.get(f).json()
+          to.append(f['inbox'])
 
         for t in r['to']:
           if t.startswith('acct:'):
-            to.append(get_address_from_webfinger(t))
+            t = requests.get(get_address_from_webfinger(t)).json()
+            to.append(t['inbox'])
         for cc in r['cc']:
           if cc.startswith('acct:'):
             to.append(get_address_from_webfinger(cc))
