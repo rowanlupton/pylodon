@@ -114,7 +114,7 @@ class feed(Resource):
       r = request.get_json()
       u = find_user_or_404(handle)
       to = []
-
+      
       # if it's a note it turns it into a Create object
       if r['type'] == 'Note':
         to = []
@@ -150,6 +150,9 @@ class feed(Resource):
         content = r['object']['content']
 
         headers=sign_headers(u, API_CONTENT_HEADERS)
+
+        for f in r['followers_coll']:
+          to.append(f)
 
         for t in r['to']:
           if t.startswith('acct:'):
