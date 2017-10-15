@@ -104,18 +104,13 @@ def createLike(actorAcct, post):
                     context="https://www.w3.org/ns/activitystreams",
                     actor=actorAcct,
                     to=to,
-                    object=vocab.Note(
-                                      context={"@language": 'en'},
-                                      id=post['@id'],
-                                      attributedTo=post['attributedTo'],
-                                      content=post['content']))
+                    object=post['id'])
 def createFollow(actorAcct, otherUser):
   return vocab.Follow(
+                      id=None,
                       context="https://www.w3.org/ns/activitystreams",
                       actor=actorAcct,
-                      object=vocab.User(
-                                        context={"@language": 'en'},
-                                        id=otherUser['id']))
+                      object=vocab.User(otherUser['id']))
 def createAccept(followObj, to):
   acceptObj = {
                 "@context": [
