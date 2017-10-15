@@ -153,17 +153,16 @@ class feed(Resource):
 
         if u['followers_coll']:
           for follower in u['followers_coll']:
-            # f = requests.get(follower).json()
-            print(requests.get(follower).text)
-            # to.append(f['inbox'])
+            f = requests.get(follower, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+            to.append(f['inbox'])
 
         for t in r['to']:
           if t.startswith('acct:'):
-            t = requests.get(get_address_from_webfinger(t)).json()
+            t = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
             to.append(t['inbox'])
         for cc in r['cc']:
           if cc.startswith('acct:'):
-            to.append(get_address_from_webfinger(cc))
+            to.append(get_address_from_webfinger(cc), headers=sign_headers(u, API_ACCEPT_HEADERS))
 
         mongo.db.posts.insert_one(r)
 
