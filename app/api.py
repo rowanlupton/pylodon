@@ -162,7 +162,7 @@ class feed(Resource):
             to.append(t['inbox'])
         for cc in r['cc']:
           if cc.startswith('acct:'):
-            to.append(get_address_from_webfinger(cc), headers=sign_headers(u, API_ACCEPT_HEADERS))
+            # to.append(get_address_from_webfinger(cc), headers=sign_headers(u, API_ACCEPT_HEADERS))
 
         mongo.db.posts.insert_one(r)
 
