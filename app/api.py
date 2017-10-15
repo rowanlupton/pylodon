@@ -153,9 +153,9 @@ class feed(Resource):
 
         if u['followers_coll']:
           for follower in u['followers_coll']:
-            f = requests.get(follower).json()
+            # f = requests.get(follower).json()
             print(requests.get(follower).text)
-            to.append(f['inbox'])
+            # to.append(f['inbox'])
 
         for t in r['to']:
           if t.startswith('acct:'):
