@@ -60,9 +60,11 @@ class inbox(Resource):
       r = request.get_json()
 
       if r['type'] == 'Like':
+        print('received Like')
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
 
       if r['type'] == 'Follow':
+        print('received Follow')
         if r['actor'] in u['followers_coll']:
           return 400
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
@@ -74,10 +76,13 @@ class inbox(Resource):
         return 202
 
       if r['type'] == 'Accept':
+        print('received Accept')
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
         return 202
 
       if r['type'] == 'Create':
+        print('received Create')
+        print(r)
         if not mongo.db.posts.find({'_id': r['_id']}):
           mongo.db.posts.insert_one(r['object'].json())
           return 202
@@ -117,6 +122,8 @@ class feed(Resource):
       
       # if it's a note it turns it into a Create object
       if r['type'] == 'Note':
+        print('Note')
+
         to = []
         if 'to' in r:
           for t in r['to']:
@@ -143,7 +150,10 @@ class feed(Resource):
 
       if r['type'] == 'Create':
         if r['object']['type'] != 'Note':
+          print('not a note')
           abort(403)
+
+        print('Create')
 
         mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
 
