@@ -83,7 +83,7 @@ class inbox(Resource):
       if r['type'] == 'Create':
         print('received Create')
         print(r)
-        if not mongo.db.posts.find({'_id': r['_id']}):
+        if not mongo.db.posts.find({'id': r['id']}):
           mongo.db.posts.insert_one(r['object'].json())
           return 202
 
