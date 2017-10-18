@@ -63,7 +63,7 @@ class inbox(Resource):
         print('received Like')
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
 
-      if r['type'] == 'Follow':
+      elif r['type'] == 'Follow':
         print('received Follow')
         if r['actor'] in u['followers_coll']:
           return 400
@@ -75,12 +75,12 @@ class inbox(Resource):
         requests.post(to, json=accept, headers=headers).json()
         return 202
 
-      if r['type'] == 'Accept':
+      elif r['type'] == 'Accept':
         print('received Accept')
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
         return 202
 
-      if r['type'] == 'Create':
+      elif r['type'] == 'Create':
         print('received Create')
         print(r)
         if not mongo.db.posts.find({'id': r['id']}):
@@ -161,7 +161,7 @@ class feed(Resource):
 
         headers=sign_headers(u, API_CONTENT_HEADERS)
 
-        if u['followers_coll']:
+        if 'followers_coll' in u:
           for follower in u['followers_coll']:
             f = requests.get(follower, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
             to.append(f['inbox'])
