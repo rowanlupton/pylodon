@@ -243,6 +243,9 @@ class user(Resource):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
 
+      if request.args.get('get') == 'main-key':
+        return u['publicKey']['publicKeyPem'].decode('utf-8')
+
       user =  {
                '@context': u['@context'],
                'id': u['id'],

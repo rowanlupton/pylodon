@@ -95,7 +95,7 @@ def createPost(content, handle, to, cc):
                       },
             'signature': {
               'created': time,
-              'creator': u['id']+'#main-key',
+              'creator': u['id']+'?get=main-key',
               'signatureValue': sign_object(u, content),
               'type': 'rsa-sha256'
             }
