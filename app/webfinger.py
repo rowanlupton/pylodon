@@ -37,7 +37,7 @@ def get_user_info(**kwargs):
             {
               'href': u['id'],
               'rel': 'self',
-              'type': 'application/activity+json'
+              'type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
             }
           ]
         }
