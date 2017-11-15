@@ -172,6 +172,15 @@ def sign_object(u, obj):
   auth_object = hs._sign(obj)
 
   return auth_object
+
+def get_address_format(addr):
+  if addr.startswith('acct:'):
+    addr = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+    
+    return get_address_from_webfinger(addr)
+  elif addr.startswith('http'):
+    return addr
+
 def get_address_from_webfinger(acct, box='inbox'):
   wf = finger(acct)
   user = wf.rel('self')

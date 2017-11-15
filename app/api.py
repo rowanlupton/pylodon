@@ -97,7 +97,7 @@ class feed(Resource):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      items = list(mongo.db.posts.find({'object.attributedTo': u['acct']},{'_id': False}).sort('published', -1))
+      items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
       context = vocab.OrderedCollection().types_expanded
       context.append( {
                         'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
