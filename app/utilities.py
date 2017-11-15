@@ -147,7 +147,7 @@ def check_accept_headers(request):
   return False
 def check_content_headers(request):
   if request.headers.get('Content-Type'):
-    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
+    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == "application/ld+json; profile='https://www.w3.org/ns/activitystreams'") or (request.headers['Content-Type'] == 'application/activity+json'):
       return True
   return False
 def sign_headers(u, headers):
