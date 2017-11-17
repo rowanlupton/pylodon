@@ -240,30 +240,30 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    if check_accept_headers(request):
-      u = find_user_or_404(handle)
+    # if check_accept_headers(request):
+    u = find_user_or_404(handle)
 
-      if request.args.get('get') == 'main-key':
-        return u['publicKey']['publicKeyPem'].decode('utf-8')
+    if request.args.get('get') == 'main-key':
+      return u['publicKey']['publicKeyPem'].decode('utf-8')
 
-      user =  {
-               '@context': u['@context'],
-               'id': u['id'],
-               'followers': u['followers'],
-               'following': u['following'],
-               'icon': {'type': 'Image', 'url': u['avatar']},
-               'inbox': u['inbox'],
-               'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
-               'name': u['name'],
-               'outbox': u['outbox'],
-               'preferredUsername': u['username'],
-               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
-               'summary': '',
-               'type': u['type'],
-               'url': u['url']
-              }
+    user =  {
+             '@context': u['@context'],
+             'id': u['id'],
+             'followers': u['followers'],
+             'following': u['following'],
+             'icon': {'type': 'Image', 'url': u['avatar']},
+             'inbox': u['inbox'],
+             'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
+             'name': u['name'],
+             'outbox': u['outbox'],
+             'preferredUsername': u['username'],
+             'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+             'summary': '',
+             'type': u['type'],
+             'url': u['url']
+            }
 
-      return user, sign_headers(u, API_CONTENT_HEADERS)
+    return user, sign_headers(u, API_CONTENT_HEADERS)
     abort(406)
 
 # url handling
