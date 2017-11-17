@@ -9,7 +9,7 @@
 
       <br>
 
-      {% if mongo.db.users.find_one({'acct': p.object.attributedTo }) %}
+      {% if mongo.db.users.find_one({'id': p.object.attributedTo }) %}
       	<img src="{{ mongo.db.users.find_one({'acct': p.object.attributedTo })['avatar']  }}" height="20px" />
       	<a href="{{ mongo.db.users.find_one({'acct': p.object.attributedTo})['url'] }}">
       		{{ mongo.db.users.find_one({'acct': p.object.attributedTo})['name'] }}

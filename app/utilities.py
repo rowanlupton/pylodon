@@ -3,7 +3,7 @@ from config import API_ACCEPT_HEADERS
 from .crypto import generate_keys
 
 from activipy import vocab
-from flask import request, abort, url_for
+from flask import abort, request, url_for
 from flask_login import current_user
 from httpsig import HeaderSigner, Signer
 from httpsig.requests_auth import HTTPSignatureAuth
@@ -16,7 +16,7 @@ def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
   user =   {  
-            'id': request.host+'api/'+handle, 
+            'id': request.url_root+'api/'+handle, 
             '@context': [
                           'https://www.w3.org/ns/activitystreams',
                           {'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers'}
@@ -69,8 +69,8 @@ def createPost(content, handle, to, cc):
   u = find_user_or_404(handle)
   
   post_number = str(u['metrics']['post_count'])
-  id = request.url_root+u['username']+'/posts/'+post_number
-  note_url = request.url_root+'@'+post_number
+  id = request.url_root+'api/'+u['username']+'/posts/'+post_number
+  note_url = request.url_root+'@'+u['username']+'/'+post_number
   
   time = get_time()
 
@@ -78,7 +78,7 @@ def createPost(content, handle, to, cc):
             'id': id+'/activity',
             'type': 'Create',
             'context': vocab.Create().types_expanded,
-            'actor': u['acct'],
+            'actor': u['id'],
             'published': time,
             'to': to,
             'cc': cc,
@@ -89,10 +89,16 @@ def createPost(content, handle, to, cc):
                         'content': content,
                         'published': time,
                         'url': note_url,
-                        'attributedTo': u['acct'],
+                        'attributedTo': u['id'],
                         'to': to,
                         'cc': cc
-                      }
+                      },
+            'signature': {
+              'created': time,
+              'creator': u['id']+'?get=main-key',
+              'signatureValue': sign_object(u, content),
+              'type': 'rsa-sha256'
+            }
           }
   return json.dumps(create)
 def createLike(actorAcct, post):
@@ -104,19 +110,34 @@ def createLike(actorAcct, post):
                     context="https://www.w3.org/ns/activitystreams",
                     actor=actorAcct,
                     to=to,
-                    object=vocab.Note(
-                                      context={"@language": 'en'},
-                                      id=post['@id'],
-                                      attributedTo=post['attributedTo'],
-                                      content=post['content']))
-def follow_user(actorAcct, otherUser):
+                    object=post['id'])
+def createFollow(actorAcct, otherUser):
   return vocab.Follow(
+                      id=None,
                       context="https://www.w3.org/ns/activitystreams",
                       actor=actorAcct,
-                      object=vocab.User(
-                                        context={"@language": 'en'},
-                                        id=otherUser['id']))
-
+                      object=vocab.User(otherUser['id']))
+def createAccept(followObj, to):
+  acceptObj = {
+                "@context": [
+                  "https://www.w3.org/ns/activitystreams",
+                  {
+                    "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+                    "sensitive": "as:sensitive"
+                  }
+                ],
+                'type': 'Accept',
+                'to': to,
+                'object': followObj
+              }
+  return acceptObj
+def createReject(followObj, to):
+  rejectObj = {
+                'type': 'Reject',
+                'to': to,
+                'object': followObj
+              }
+  return rejectObj
 
 # API
 def check_accept_headers(request):
@@ -126,10 +147,10 @@ def check_accept_headers(request):
   return False
 def check_content_headers(request):
   if request.headers.get('Content-Type'):
-    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == 'application/activity+json'):
+    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == "application/ld+json; profile='https://www.w3.org/ns/activitystreams'") or (request.headers['Content-Type'] == 'application/activity+json'):
       return True
   return False
-def sign_headers(u):
+def sign_headers(u, headers):
   key_id = u['publicKey']['id']
   secret = u['privateKey']
 
@@ -140,15 +161,26 @@ def sign_headers(u):
   assert auth['Signature'].startswith('Signature ')
   auth['Signature'] = auth['Signature'][len('Signature '):]
 
+  auth.update(headers)
+
   return auth
-def sign_object(u, r):
+def sign_object(u, obj):
   key_id = u['publicKey']['id']
   secret = u['privateKey']
 
   hs = Signer(secret=secret, algorithm="rsa-sha256")
-  auth_object = hs._sign(r.json())
+  auth_object = hs._sign(obj)
 
   return auth_object
+
+def get_address_format(addr):
+  if addr.startswith('acct:'):
+    addr = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+    
+    return get_address_from_webfinger(addr)
+  elif addr.startswith('http'):
+    return addr
+
 def get_address_from_webfinger(acct, box='inbox'):
   wf = finger(acct)
   user = wf.rel('self')
