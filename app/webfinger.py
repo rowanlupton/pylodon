@@ -1,15 +1,15 @@
 from app import app, mongo
+from config import API_CONTENT_HEADERS
+from .utilities import sign_headers
 
 from dicttoxml import dicttoxml
 from flask import Blueprint, jsonify, render_template, request, Response
 from urllib.request import unquote
-from .utilities import sign_headers
 
 webfinger = Blueprint('webfinger', __name__, template_folder='templates')
 
 @webfinger.route('/host-meta')
 def host_meta():
-  print('in host_meta')
   return render_template('host-meta.xml', url_root=request.url_root)
 
 @webfinger.route('/webfinger')
@@ -37,7 +37,8 @@ def get_user_info(**kwargs):
             {
               'href': u['id'],
               'rel': 'self',
-              'type': "application/ld+json; profile='https://www.w3.org/ns/activitystreams'"
+
+              'type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
             }
           ]
         }
@@ -47,12 +48,16 @@ def get_user_info(**kwargs):
     # if 'application/xrd+xml' in request.headers['accept']:
   return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
 
+<<<<<<< HEAD
 # @app.after_request
 def after(response):
   print(response.status)
   print(response.headers)
   print(response.get_data())
   return response
+=======
+  return jsonify(resp), sign_headers(u, API_CONTENT_HEADERS)
+>>>>>>> 3bedfa7f553e12c75e4dc56e8d103f560452d333
 
 def webfinger_find_user():
   pass
