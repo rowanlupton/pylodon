@@ -142,7 +142,7 @@ def createReject(followObj, to):
 # API
 def check_accept_headers(request):
   if request.headers.get('accept'):
-    if (request.headers['accept'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['accept'] == 'application/activity+json'):
+    if (request.headers['accept'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['accept'] == "application/ld+json; profile='https://www.w3.org/ns/activitystreams'") or (request.headers['accept'] == 'application/activity+json'):
       return True
   return False
 def check_content_headers(request):
