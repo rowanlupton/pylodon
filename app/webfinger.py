@@ -53,7 +53,7 @@ def get_user_info(**kwargs):
       return Response(resp_xml, mimetype='application/xrd+xml', headers=(sign_headers(u, {'Content-Type': 'application/xrd+xml'})))
 
   resp = jsonify(resp)
-  resp.headers = sign_headers(u, API_CONTENT_HEADERS)
+  resp.headers = sign_headers(u, {'Content-Type': 'application/jrd'})
 
   return resp
 
