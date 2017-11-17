@@ -14,11 +14,10 @@ def host_meta():
 
 @webfinger.route('/webfinger')
 def get_user_info(**kwargs):
-  print('in get_user_info')
   user_id = unquote(request.args['resource'])
   if 'rel' in request.args:
     rel = request.args['rel']
-  acct = user_id[5:]
+  acct = user_id[5:] # removes the first five characters ('acct:')
   u = mongo.db.users.find_one({'acct': acct})
 
   resp = {
@@ -46,14 +45,14 @@ def get_user_info(**kwargs):
 
   # if request.headers.get('accept'):
     # if 'application/xrd+xml' in request.headers['accept']:
-  print('returning xml')
-  print(resp_xml)
-  print(sign_headers(u))
   return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
 
-  print('returning json')
-  print(resp)
-  return jsonify(resp)
+# @app.after_request
+def after(response):
+  print(response.status)
+  print(response.headers)
+  print(response.get_data())
+  return response
 
 def webfinger_find_user():
   pass

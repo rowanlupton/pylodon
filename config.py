@@ -10,7 +10,7 @@ MONGO_URI = 'mongodb://rowanlupton:'+os.environ['mongodb-password']+'@cluster0-s
 MONGO_DBNAME = 'Cluster0'
 
 API_CONTENT_HEADERS = {'Content-Type': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"', 'Date': http_date()}
-API_ACCEPT_HEADERS = {'accept': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"', 'Date': http_date()}
+API_ACCEPT_HEADERS = {'Accept': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"', 'Date': http_date()}
 DEFAULT_CONTEXT = [
 										"https://www.w3.org/ns/activitystreams",
 										{
