@@ -38,17 +38,18 @@ def get_user_info(**kwargs):
             {
               'href': u['id'],
               'rel': 'self',
-              'type': 'application/activity+json'
+              'type': "application/ld+json; profile='https://www.w3.org/ns/activitystreams'"
             }
           ]
         }
   resp_xml = render_template('webfinger_user.xml', resp=resp)
 
-  if request.headers.get('accept'):
-    if 'application/xrd+xml' in request.headers['accept']:
-      print('returning xml')
-      print(resp_xml)
-      return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
+  # if request.headers.get('accept'):
+    # if 'application/xrd+xml' in request.headers['accept']:
+  print('returning xml')
+  print(resp_xml)
+  print(sign_headers(u))
+  return Response(resp_xml, mimetype='application/xrd+xml', content_type='application/xrd+xml', headers=(sign_headers(u)))
 
   print('returning json')
   print(resp)
