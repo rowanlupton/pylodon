@@ -24,7 +24,7 @@ def return_new_user(handle, displayName, email, passwordHash):
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+request.host,
-            'url': request.url_root+'users/'+handle,
+            'url': request.url_root+'@'+handle,
             'name': displayName, 
             'email': email, 
             'password': passwordHash,
