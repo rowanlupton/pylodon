@@ -16,8 +16,8 @@ import json, requests
 api = Blueprint('api', __name__, template_folder='templates')
 
 class following(Resource):
-  def True #get(self, handle):
-    if check_accept_headers(request):
+  def get(self, handle):
+    if True #check_accept_headers(request):
       u = find_user_or_404(handle)
 
       if 'following_coll' in u:
