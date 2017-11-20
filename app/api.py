@@ -17,7 +17,7 @@ api = Blueprint('api', __name__, template_folder='templates')
 
 class following(Resource):
   def get(self, handle):
-    if True #check_accept_headers(request):
+    if True: #check_accept_headers(request):
       u = find_user_or_404(handle)
 
       if 'following_coll' in u:
@@ -27,7 +27,7 @@ class following(Resource):
 
 class followers(Resource):
   def get(self, handle):
-    if True #check_accept_headers(request):
+    if True: #check_accept_headers(request):
       u = find_user_or_404(handle)
 
       if 'followers_coll' in u:
@@ -49,13 +49,13 @@ class liked(Resource):
 
 class inbox(Resource):
   def get(self, handle):
-    if True #check_accept_headers(request):
+    if True: #check_accept_headers(request):
       items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
   def post(self, handle):
-    if True #check_content_headers(request):
+    if True: #check_content_headers(request):
       u = find_user_or_404(handle)
       r = request.get_json()
 
@@ -94,7 +94,7 @@ class inbox(Resource):
 
 class feed(Resource):
   def get(self, handle):
-    if True #check_accept_headers(request):
+    if True: #check_accept_headers(request):
       u = find_user_or_404(handle)
 
       items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
@@ -115,7 +115,7 @@ class feed(Resource):
     abort(406)
 
   def post(self, handle):
-    if True #check_content_headers(request):
+    if True: #check_content_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
       to = []
