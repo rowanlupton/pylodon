@@ -27,6 +27,7 @@ class following(Resource):
 
 class followers(Resource):
   def get(self, handle):
+    print('followers get')
     if True: #check_accept_headers(request):
       u = find_user_or_404(handle)
 
@@ -49,15 +50,15 @@ class liked(Resource):
 
 class inbox(Resource):
   def get(self, handle):
+    print('inbox get')
     if True: #check_accept_headers(request):
-      print('inbox get')
       items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
   def post(self, handle):
+    print('inbox post')
     if True: #check_content_headers(request):
-      print('inbox post')
       u = find_user_or_404(handle)
       r = request.get_json()
 
@@ -98,6 +99,7 @@ class inbox(Resource):
 
 class feed(Resource):
   def get(self, handle):
+    print('feed get')
     if True: #check_accept_headers(request):
       u = find_user_or_404(handle)
 
@@ -119,6 +121,7 @@ class feed(Resource):
     abort(406)
 
   def post(self, handle):
+    print('feed post')
     if True: #check_content_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
