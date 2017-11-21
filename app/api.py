@@ -6,7 +6,7 @@ from .utilities import check_accept_headers, check_content_headers, createAccept
 
 from activipy import vocab
 from bson import ObjectId, json_util
-from flask import abort, Blueprint, jsonify, make_response, redirect, request, url_for
+from flask import abort, Blueprint, jsonify, make_response, redirect, request, Response, url_for
 from flask_restful import Resource
 from urllib.parse import unquote
 from webfinger import finger
@@ -111,7 +111,7 @@ class feed(Resource):
                 'orderedItems': items
               }
 
-      return resp, sign_headers(u, API_CONTENT_HEADERS)
+      return Response(resp, headers=sign_headers(u, API_CONTENT_HEADERS))
     abort(406)
 
   def post(self, handle):
