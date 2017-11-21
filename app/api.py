@@ -111,7 +111,7 @@ class feed(Resource):
                 'orderedItems': items
               }
 
-      return Response(resp, headers=sign_headers(u, API_CONTENT_HEADERS))
+      return Response(json.dumps(resp), headers=sign_headers(u, API_CONTENT_HEADERS))
     abort(406)
 
   def post(self, handle):
