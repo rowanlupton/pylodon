@@ -15,7 +15,7 @@ import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
 
-@app.before_request
+@api.before_request
 def before():
     values = 'values: '
     if len(request.values) == 0:
