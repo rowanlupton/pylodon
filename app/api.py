@@ -50,12 +50,14 @@ class liked(Resource):
 class inbox(Resource):
   def get(self, handle):
     if True: #check_accept_headers(request):
+      print('inbox get')
       items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
   def post(self, handle):
     if True: #check_content_headers(request):
+      print('inbox post')
       u = find_user_or_404(handle)
       r = request.get_json()
 
