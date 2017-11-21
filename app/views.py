@@ -15,6 +15,15 @@ from urllib.parse import unquote
 app.register_blueprint(api.api)
 app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known')
 
+@app.before_request
+def before():
+    values = 'values: '
+    if len(request.values) == 0:
+        values += '(None)'
+    for key in request.values:
+        values += key + ': ' + request.values[key] + ', '
+    app.logger.debug(values)
+
 
 ###################### SET-UP ######################
 @lm.user_loader
