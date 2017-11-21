@@ -22,7 +22,7 @@ def before():
         values += '(None)'
     for key in request.values:
         values += key + ': ' + request.values[key] + ', '
-    app.logger.debug(values)
+    api.logger.debug(values)
 
 
 class following(Resource):
