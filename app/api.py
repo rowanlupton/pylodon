@@ -59,6 +59,8 @@ class inbox(Resource):
       u = find_user_or_404(handle)
       r = request.get_json()
 
+      print(r)
+
       if r['type'] == 'Like':
         print('received Like')
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
@@ -72,7 +74,7 @@ class inbox(Resource):
         accept = createAccept(r, to)
         headers = sign_headers(u, API_CONTENT_HEADERS)
 
-        requests.post(to, json=accept, headers=headers).json()
+        requests.post(to, json=accept, headers=headers)
         return 202
 
       elif r['type'] == 'Accept':
