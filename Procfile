@@ -1,1 +1,1 @@
-web: gunicorn app:app --threads=4 --access-logfile -
+web: gunicorn app:app --threads=4

@@ -2,10 +2,7 @@
 <html lang="en">
   <head>
     {% block head %}
-      <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" />
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
       {% block pageCSS %}{% endblock pageCSS %}
-      <link href="https://fonts.googleapis.com/css?family=Martel|Pontano+Sans" rel="stylesheet">
       <title>{% block title %}{% endblock title %} - smilodon</title>
     {% endblock head %}
   
