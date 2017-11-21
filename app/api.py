@@ -15,6 +15,16 @@ import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
 
+@app.before_request
+def before():
+    values = 'values: '
+    if len(request.values) == 0:
+        values += '(None)'
+    for key in request.values:
+        values += key + ': ' + request.values[key] + ', '
+    app.logger.debug(values)
+
+
 class following(Resource):
   def get(self, handle):
     if True: #check_accept_headers(request):
