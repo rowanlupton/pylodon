@@ -98,7 +98,7 @@ class feed(Resource):
       u = find_user_or_404(handle)
 
       items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
-      context = "https://www.w3.org/ns/activitystreams"
+      context = ["https://www.w3.org/ns/activitystreams"]
       context.append( {
                         'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
                         'sensitive': 'as:sensitive'
