@@ -62,8 +62,6 @@ class inbox(Resource):
       u = find_user_or_404(handle)
       r = request.get_json()
 
-      print(r)
-
       if r['type'] == 'Like':
         print('received Like')
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
@@ -75,11 +73,8 @@ class inbox(Resource):
             return 400
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
-        print('to: '+to)
         accept = createAccept(r, to)
-        print('accept: '+accept)
         signed_accept = sign_object(u, accept)
-        print('signed_accept: '+signed_accept)
         headers = sign_headers(u, API_CONTENT_HEADERS)
 
         requests.post(to, json=signed_accept, headers=headers)
