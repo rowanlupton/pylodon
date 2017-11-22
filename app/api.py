@@ -74,10 +74,9 @@ class inbox(Resource):
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
         accept = createAccept(r, to)
-        signed_accept = sign_object(u, accept)
         headers = sign_headers(u, API_CONTENT_HEADERS)
 
-        requests.post(to, json=signed_accept, headers=headers)
+        requests.post(to, json=accept, headers=headers)
         return 202
 
       elif r['type'] == 'Accept':
