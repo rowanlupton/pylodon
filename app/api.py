@@ -70,8 +70,9 @@ class inbox(Resource):
 
       elif r['type'] == 'Follow':
         print('received Follow')
-        if r['actor'] in u['followers_coll']:
-          return 400
+        if 'followers_coll' in u:
+          if r['actor'] in u['followers_coll']:
+            return 400
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['object'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
         accept = createAccept(r, to)
