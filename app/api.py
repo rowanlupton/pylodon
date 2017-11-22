@@ -67,7 +67,6 @@ class inbox(Resource):
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
 
       elif r['type'] == 'Follow':
-        print('received Follow')
         if 'followers_coll' in u:
           if r['actor'] in u['followers_coll']:
             return 400
