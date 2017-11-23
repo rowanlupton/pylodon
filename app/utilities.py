@@ -11,16 +11,20 @@ from webfinger import finger
 from werkzeug.http import http_date, parse_date
 import datetime, json, requests
 
+context = [
+            'https://www.w3.org/ns/activitystreams',
+            {
+              'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
+              'sensitive': 'as:sensitive'
+              }
+          ],
 
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
   user =   {  
             'id': request.url_root+'api/'+handle, 
-            '@context': [
-                          'https://www.w3.org/ns/activitystreams',
-                          {'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers'}
-                        ],
+            '@context': context,
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+request.host,
@@ -77,7 +81,7 @@ def createPost(content, handle, to, cc):
   create =  {
             'id': id+'/activity',
             'type': 'Create',
-            '@context': vocab.Create().types_expanded,
+            '@context': context,
             'actor': u['id'],
             'published': time,
             'to': to,
@@ -87,11 +91,13 @@ def createPost(content, handle, to, cc):
                         'type': 'Note',
                         'summary': None,
                         'content': content,
+                        'inReplyTo': None,
                         'published': time,
                         'url': note_url,
                         'attributedTo': u['id'],
                         'to': to,
-                        'cc': cc
+                        'cc': cc,
+                        'sensitive': False
                       },
             'signature': {
               'created': time,
@@ -107,25 +113,19 @@ def createLike(actorAcct, post):
     for t in post['to']:
       to.append(t)
   return vocab.Like(
-                    context="https://www.w3.org/ns/activitystreams",
+                    context=context,
                     actor=actorAcct,
                     to=to,
                     object=post['id'])
 def createFollow(actorAcct, otherUser):
   return vocab.Follow(
                       id=None,
-                      context="https://www.w3.org/ns/activitystreams",
+                      context=context,
                       actor=actorAcct,
                       object=vocab.User(otherUser['id']))
 def createAccept(followObj, to):
   acceptObj = {
-                "@context": [
-                  "https://www.w3.org/ns/activitystreams",
-                  {
-                    "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
-                    "sensitive": "as:sensitive"
-                  }
-                ],
+                "@context": context,
                 'type': 'Accept',
                 'to': to,
                 'object': followObj
