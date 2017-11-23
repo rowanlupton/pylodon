@@ -180,7 +180,8 @@ class feed(Resource):
             to.append(get_address_from_webfinger(cc))
 
         mongo.db.posts.insert_one(r)
-        print('to: '+to)
+        for t in to:
+          print('to: '+t)
 
       if r['type'] == 'Like':
         if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
