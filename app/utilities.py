@@ -58,6 +58,13 @@ def find_user_or_404(handle):
     abort(404)
   else:
     return u
+def find_post_or_404(handle, post_id):
+  id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
+  p = mongo.db.posts.find_one({'id': id}, {'_id': False})
+  if not p:
+    abort(404)
+  else:
+    return p
 def get_logged_in_user():
   u = mongo.db.users.find_one({'id': current_user.get_id()})
   if not u:

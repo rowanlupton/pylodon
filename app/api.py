@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, find_post_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -278,6 +278,20 @@ class user(Resource):
     return user, sign_headers(u, API_CONTENT_HEADERS)
     abort(406)
 
+class get_post(Resource):
+  def get(self, handle, post_id):
+    post = find_post_or_404(handle, post_id)
+    if check_accept_headers(request):
+      return post['object']
+    return 'template yet to be written'
+
+class get_post_activity(Resource):
+  def get(self, handle, post_id):  
+    post = find_post_or_404(handle, post_id)
+    if check_accept_headers(request):
+      return post
+    return 'template yet to be written'
+
 # url handling
 rest_api.add_resource(following, '/api/<string:handle>/following')
 rest_api.add_resource(followers, '/api/<string:handle>/followers')
@@ -285,3 +299,5 @@ rest_api.add_resource(liked, '/api/<string:handle>/liked')
 rest_api.add_resource(inbox, '/api/<string:handle>/inbox')
 rest_api.add_resource(feed, '/api/<string:handle>/feed')
 rest_api.add_resource(user, '/api/<string:handle>')
+rest_api.add_resource(get_post, '/api/<string:handle>/<string:post_id>')
+rest_api.add_resource(get_post_activity, '/api/<string:handle>/<string:post_id>/activity')
