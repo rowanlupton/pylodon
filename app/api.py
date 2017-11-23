@@ -241,7 +241,7 @@ class feed(Resource):
 
       for t in to:
         user = requests.get(t, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-        if inbox in user:
+        if 'inbox' in user:
           inbox = user['inbox']
         else:
           inbox = t
