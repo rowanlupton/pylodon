@@ -1,5 +1,5 @@
 from app import mongo
-from config import API_ACCEPT_HEADERS
+from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
 from .crypto import generate_keys
 
 from activipy import vocab
@@ -11,16 +11,12 @@ from webfinger import finger
 from werkzeug.http import http_date, parse_date
 import datetime, json, requests
 
-
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
   user =   {  
             'id': request.url_root+'api/'+handle, 
-            '@context': [
-                          'https://www.w3.org/ns/activitystreams',
-                          {'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers'}
-                        ],
+            '@context': DEFAULT_CONTEXT,
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+request.host,
@@ -52,14 +48,18 @@ def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
   if not u:
     abort(404)
-  else:
-    return u
+  return u
+def find_post_or_404(handle, post_id):
+  id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
+  p = mongo.db.posts.find_one({'id': id}, {'_id': False})
+  if not p:
+    abort(404)
+  return p
 def get_logged_in_user():
   u = mongo.db.users.find_one({'id': current_user.get_id()})
   if not u:
     abort(404)
-  else:
-    return u
+  return u
 
 
 def get_time():
@@ -77,7 +77,7 @@ def createPost(content, handle, to, cc):
   create =  {
             'id': id+'/activity',
             'type': 'Create',
-            'context': vocab.Create().types_expanded,
+            '@context': DEFAULT_CONTEXT,
             'actor': u['id'],
             'published': time,
             'to': to,
@@ -87,11 +87,13 @@ def createPost(content, handle, to, cc):
                         'type': 'Note',
                         'summary': None,
                         'content': content,
+                        'inReplyTo': None,
                         'published': time,
                         'url': note_url,
                         'attributedTo': u['id'],
                         'to': to,
-                        'cc': cc
+                        'cc': cc,
+                        'sensitive': False
                       },
             'signature': {
               'created': time,
@@ -103,29 +105,24 @@ def createPost(content, handle, to, cc):
   return json.dumps(create)
 def createLike(actorAcct, post):
   to = post['attributedTo']
-  if to in post:
+  if posts.get('to'):
     for t in post['to']:
       to.append(t)
+      
   return vocab.Like(
-                    context="https://www.w3.org/ns/activitystreams",
+                    context=DEFAULT_CONTEXT,
                     actor=actorAcct,
                     to=to,
                     object=post['id'])
 def createFollow(actorAcct, otherUser):
   return vocab.Follow(
                       id=None,
-                      context="https://www.w3.org/ns/activitystreams",
+                      context=DEFAULT_CONTEXT,
                       actor=actorAcct,
                       object=vocab.User(otherUser['id']))
 def createAccept(followObj, to):
   acceptObj = {
-                "@context": [
-                  "https://www.w3.org/ns/activitystreams",
-                  {
-                    "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
-                    "sensitive": "as:sensitive"
-                  }
-                ],
+                "@context": DEFAULT_CONTEXT,
                 'type': 'Accept',
                 'to': to,
                 'object': followObj
@@ -141,14 +138,14 @@ def createReject(followObj, to):
 
 # API
 def check_accept_headers(request):
-  if request.headers.get('accept'):
-    if (request.headers['accept'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['accept'] == "application/ld+json; profile='https://www.w3.org/ns/activitystreams'") or (request.headers['accept'] == 'application/activity+json'):
-      return True
+  accept = request.headers.get('accept')
+  if accept and (accept in VALID_HEADERS):
+    return True
   return False
 def check_content_headers(request):
-  if request.headers.get('Content-Type'):
-    if (request.headers['Content-Type'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['Content-Type'] == "application/ld+json; profile='https://www.w3.org/ns/activitystreams'") or (request.headers['Content-Type'] == 'application/activity+json'):
-      return True
+  content_type = request.headers.get('Content-Type')
+  if content_type and (content_type in VALID_HEADERS):
+    return True
   return False
 def sign_headers(u, headers):
   key_id = u['publicKey']['id']
@@ -174,7 +171,9 @@ def sign_object(u, obj):
   return auth_object
 
 def get_address_format(addr):
-  if addr.startswith('acct:'):
+  if (addr.startswith('acct:') or
+      addr.startswith('@') or
+      addr == 'check for webfinger via regex'):
     addr = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
     
     return get_address_from_webfinger(addr)
@@ -187,4 +186,4 @@ def get_address_from_webfinger(acct, box='inbox'):
   u = requests.get(user, headers=API_ACCEPT_HEADERS).json()
   address = u[box]
 
-  return address
+  return user

@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, find_post_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -17,23 +17,19 @@ api = Blueprint('api', __name__, template_folder='templates')
 
 class following(Resource):
   def get(self, handle):
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      if 'following_coll' in u:
-        return u['following_coll']
-      return []
+      return u.get('following_coll', [])
     abort(406)
 
 class followers(Resource):
   def get(self, handle):
     print('followers get')
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      if 'followers_coll' in u:
-        return u['followers_coll']
-      return []
+      return u.get('followers_coll', [])
     abort(406)
 
 class liked(Resource):
@@ -51,14 +47,14 @@ class liked(Resource):
 class inbox(Resource):
   def get(self, handle):
     print('inbox get')
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
   def post(self, handle):
     print('inbox post')
-    if True: #check_content_headers(request):
+    if check_content_headers(request):
       u = find_user_or_404(handle)
       r = request.get_json()
 
@@ -67,9 +63,10 @@ class inbox(Resource):
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
 
       elif r['type'] == 'Follow':
-        if 'followers_coll' in u:
-          if r['actor'] in u['followers_coll']:
+        if u.get('followers_coll'):
+          if u['followers_coll'].get('actor'):
             return 400
+
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
         accept = createAccept(r, to)
@@ -84,6 +81,7 @@ class inbox(Resource):
         return 202
 
       elif r['type'] == 'Create':
+        # this needs more stuff, like creating a user if necessary
         print('received Create')
         print(r)
         if not mongo.db.posts.find({'id': r['id']}):
@@ -92,23 +90,19 @@ class inbox(Resource):
 
       else:
         print('other type')
+        print(r)
       abort(400)
     abort(400)
 
 class feed(Resource):
   def get(self, handle):
     print('feed get')
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
       items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
-      context = ["https://www.w3.org/ns/activitystreams"]
-      context.append( {
-                        'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
-                        'sensitive': 'as:sensitive'
-                      })
       resp =  {
-                '@context': context,
+                '@context': DEFAULT_CONTEXT,
                 'id': u['outbox'],
                 'type': 'OrderedCollection',
                 'totalItems': len(items),
@@ -120,7 +114,7 @@ class feed(Resource):
 
   def post(self, handle):
     print('feed post')
-    if True: #check_content_headers(request):
+    if check_content_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
       to = []
@@ -129,14 +123,15 @@ class feed(Resource):
       if r['type'] == 'Note':
         print('Note')
 
+        # per spec, all addressing should be done by the client, so this needs to change
         to = []
-        if 'to' in r:
+        if r.get('to'):
           for t in r['to']:
             if t.startswith('acct:'):
               t = get_address_from_webfinger(t)
             to.append(t)
         cc = []
-        if 'cc' in r:
+        if r.get('cc')
           for c in r['cc']:
             if c.startswith('acct:'):
               c = get_address_from_webfinger(c)
@@ -164,27 +159,28 @@ class feed(Resource):
 
         content = r['object']['content']
 
-        headers=sign_headers(u, API_CONTENT_HEADERS)
-
-        if 'followers_coll' in u:
+        if u.get('followers_coll'):
           for follower in u['followers_coll']:
-            f = requests.get(follower, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-            to.append(f['inbox'])
+            to.append(follower)
 
         for t in r['to']:
           if t.startswith('acct:'):
-            t = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-            to.append(t['inbox'])
+            t = get_address_from_webfinger(t)
+            to.append(t)
         for cc in r['cc']:
           if cc.startswith('acct:'):
+            print('cc: '+get_address_from_webfinger(cc))
             to.append(get_address_from_webfinger(cc))
 
         mongo.db.posts.insert_one(r)
+        # remove the _id object that pymongo added because it screws up later
+        r.pop('_id')
 
-      if r['type'] == 'Like':
+      elif r['type'] == 'Like':
         if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
           mongo.db.posts.update({'id': r['object']['id']}, {'$push': {'likes': u['acct']}})
 
+        # again, addressing should be done by the client
         if 'to' in r['object']:
           for t in r['object.to']:
             if t.startswith('acct:'):
@@ -198,48 +194,54 @@ class feed(Resource):
             else:
               to.append(c)
 
-      if r['type'] == 'Follow':
+      elif r['type'] == 'Follow':
         if r['object']['id'] not in u['following_coll']:
           followed_user = requests.get(r['object']['id']).json()
 
           to.append(followed_user['id'])
 
-      if r['type'] == 'Update':
+      elif r['type'] == 'Update':
         ### update user object on other servers
         followers = u['followers_coll']
 
         for f in followers:
           to.append(f)
 
-      if r['type'] == 'Delete':
+      elif r['type'] == 'Delete':
         ### notify other servers that an object has been deleted
         followers = u['followers_coll']
 
         for f in followers:
           to.append(f)
 
-      if r['type'] == 'Add':
+      elif r['type'] == 'Add':
         ### 
         pass
 
-      if r['type'] == 'Remove':
+      elif r['type'] == 'Remove':
         ### 
         pass
 
-      if r['type'] == 'Announce':
+      elif r['type'] == 'Announce':
         ### share
         pass
 
-      if r['type'] == 'Block':
+      elif r['type'] == 'Block':
         ### 
         pass
 
-      if r['type'] == 'Undo':
+      elif r['type'] == 'Undo':
         ### 
         pass
 
       for t in to:
-        requests.post(t, data=r, headers=sign_headers(u, API_CONTENT_HEADERS))
+        user = requests.get(t, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+        if user.get('inbox'):
+          inbox = user['inbox']
+        else:
+          inbox = t
+        print('to: '+inbox)
+        requests.post(inbox, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
     abort(400)
 
@@ -271,6 +273,20 @@ class user(Resource):
     return user, sign_headers(u, API_CONTENT_HEADERS)
     abort(406)
 
+class get_post(Resource):
+  def get(self, handle, post_id):
+    post = find_post_or_404(handle, post_id)
+    if check_accept_headers(request):
+      return post['object']
+    return 'template yet to be written'
+
+class get_post_activity(Resource):
+  def get(self, handle, post_id):  
+    post = find_post_or_404(handle, post_id)
+    if check_accept_headers(request):
+      return post
+    return 'template yet to be written'
+
 # url handling
 rest_api.add_resource(following, '/api/<string:handle>/following')
 rest_api.add_resource(followers, '/api/<string:handle>/followers')
@@ -278,3 +294,5 @@ rest_api.add_resource(liked, '/api/<string:handle>/liked')
 rest_api.add_resource(inbox, '/api/<string:handle>/inbox')
 rest_api.add_resource(feed, '/api/<string:handle>/feed')
 rest_api.add_resource(user, '/api/<string:handle>')
+rest_api.add_resource(get_post, '/api/<string:handle>/<string:post_id>')
+rest_api.add_resource(get_post_activity, '/api/<string:handle>/<string:post_id>/activity')

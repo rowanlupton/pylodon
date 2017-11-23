@@ -48,7 +48,7 @@ def compose():
   if form.validate_on_submit():
     u = get_logged_in_user()
 
-    to = ['https://www.w3.org/ns/activitystreams#Public', u['outbox']]
+    to = ['https://www.w3.org/ns/activitystreams#Public', u['followers_coll']]
     cc = []
     if 'followers_coll' in u:
       for f in u['followers_coll']:
