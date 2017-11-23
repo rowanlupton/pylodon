@@ -187,4 +187,4 @@ def get_address_from_webfinger(acct, box='inbox'):
   u = requests.get(user, headers=API_ACCEPT_HEADERS).json()
   # address = u[box]
 
-  return address
+  return user
