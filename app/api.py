@@ -165,8 +165,6 @@ class feed(Resource):
 
         content = r['object']['content']
 
-        headers=sign_headers(u, API_CONTENT_HEADERS)
-
         if 'followers_coll' in u:
           for follower in u['followers_coll']:
             f = requests.get(follower, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
@@ -182,7 +180,7 @@ class feed(Resource):
 
         mongo.db.posts.insert_one(r)
 
-      if r['type'] == 'Like':
+      elif r['type'] == 'Like':
         if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
           mongo.db.posts.update({'id': r['object']['id']}, {'$push': {'likes': u['acct']}})
 
@@ -199,43 +197,43 @@ class feed(Resource):
             else:
               to.append(c)
 
-      if r['type'] == 'Follow':
+      elif r['type'] == 'Follow':
         if r['object']['id'] not in u['following_coll']:
           followed_user = requests.get(r['object']['id']).json()
 
           to.append(followed_user['id'])
 
-      if r['type'] == 'Update':
+      elif r['type'] == 'Update':
         ### update user object on other servers
         followers = u['followers_coll']
 
         for f in followers:
           to.append(f)
 
-      if r['type'] == 'Delete':
+      elif r['type'] == 'Delete':
         ### notify other servers that an object has been deleted
         followers = u['followers_coll']
 
         for f in followers:
           to.append(f)
 
-      if r['type'] == 'Add':
+      elif r['type'] == 'Add':
         ### 
         pass
 
-      if r['type'] == 'Remove':
+      elif r['type'] == 'Remove':
         ### 
         pass
 
-      if r['type'] == 'Announce':
+      elif r['type'] == 'Announce':
         ### share
         pass
 
-      if r['type'] == 'Block':
+      elif r['type'] == 'Block':
         ### 
         pass
 
-      if r['type'] == 'Undo':
+      elif r['type'] == 'Undo':
         ### 
         pass
 
