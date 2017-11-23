@@ -18,6 +18,9 @@ context = [
               'sensitive': 'as:sensitive'
               }
           ],
+valid_headers = ( 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"', 
+            "application/ld+json; profile='https://www.w3.org/ns/activitystreams'", 
+            'application/activity+json')
 
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
@@ -56,21 +59,18 @@ def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
   if not u:
     abort(404)
-  else:
-    return u
+  return u
 def find_post_or_404(handle, post_id):
   id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
   p = mongo.db.posts.find_one({'id': id}, {'_id': False})
   if not p:
     abort(404)
-  else:
-    return p
+  return p
 def get_logged_in_user():
   u = mongo.db.users.find_one({'id': current_user.get_id()})
   if not u:
     abort(404)
-  else:
-    return u
+  return u
 
 
 def get_time():
@@ -116,9 +116,10 @@ def createPost(content, handle, to, cc):
   return json.dumps(create)
 def createLike(actorAcct, post):
   to = post['attributedTo']
-  if to in post:
+  if posts.get('to'):
     for t in post['to']:
       to.append(t)
+      
   return vocab.Like(
                     context=context,
                     actor=actorAcct,
@@ -148,9 +149,9 @@ def createReject(followObj, to):
 
 # API
 def check_accept_headers(request):
-  if request.headers.get('accept'):
-    if (request.headers['accept'] == 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"') or (request.headers['accept'] == "application/ld+json; profile='https://www.w3.org/ns/activitystreams'") or (request.headers['accept'] == 'application/activity+json'):
-      return True
+  accept = request.headers.get('accept')
+  if accept and (accept in valid_headers):
+    return True
   return False
 def check_content_headers(request):
   if request.headers.get('Content-Type'):
