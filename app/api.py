@@ -167,8 +167,7 @@ class feed(Resource):
 
         if 'followers_coll' in u:
           for follower in u['followers_coll']:
-            f = requests.get(follower, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-            to.append(f)
+            to.append(follower)
 
         for t in r['to']:
           if t.startswith('acct:'):
