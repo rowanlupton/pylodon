@@ -172,10 +172,12 @@ class feed(Resource):
 
         for t in r['to']:
           if t.startswith('acct:'):
-            t = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-            to.append(t['inbox'])
+            t = get_address_from_webfinger(t)
+            to.append(t)
         for cc in r['cc']:
+          print(get_address_from_webfinger(cc))
           if cc.startswith('acct:'):
+            print('cc: '+get_address_from_webfinger(cc))
             to.append(get_address_from_webfinger(cc))
 
         mongo.db.posts.insert_one(r)
@@ -189,21 +191,15 @@ class feed(Resource):
         if 'to' in r['object']:
           for t in r['object.to']:
             if t.startswith('acct:'):
-              addr = get_address_from_webfinger(t)
-              inbox = requests.get(addr, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
-              to.append(inbox)
+              to.append(get_address_from_webfinger(t))
             else:
-              inbox = requests.get(addr, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
-              to.append(inbox)
+              to.append(t)
         if 'cc' in r['object']:
           for c in r['object.cc']:
             if c.startswith('acct:'):
-              addr = get_address_from_webfinger(c)
-              inbox = requests.get(addr, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
-              to.append(inbox)
+              to.append(get_address_from_webfinger(c))
             else:
-              inbox = requests.get(c, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
-              to.append(inbox)
+              to.append(c)
 
       elif r['type'] == 'Follow':
         if r['object']['id'] not in u['following_coll']:
@@ -245,9 +241,13 @@ class feed(Resource):
         ### 
         pass
 
-      print('here: '+str(r))
       for t in to:
-        requests.post(t, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
+        user = requests.get(t, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+        if inbox in user:
+          inbox = user['inbox']
+        else:
+          inbox = t
+        requests.post(inbox, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
     abort(400)
 
