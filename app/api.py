@@ -189,15 +189,21 @@ class feed(Resource):
         if 'to' in r['object']:
           for t in r['object.to']:
             if t.startswith('acct:'):
-              to.append(get_address_from_webfinger(t))
+              addr = get_address_from_webfinger(t)
+              inbox = requests.get(addr, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
+              to.append(inbox)
             else:
-              to.append(t)
+              inbox = requests.get(addr, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
+              to.append(inbox)
         if 'cc' in r['object']:
           for c in r['object.cc']:
             if c.startswith('acct:'):
-              to.append(get_address_from_webfinger(c))
+              addr = get_address_from_webfinger(c)
+              inbox = requests.get(addr, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
+              to.append(inbox)
             else:
-              to.append(c)
+              inbox = requests.get(c, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
+              to.append(inbox)
 
       elif r['type'] == 'Follow':
         if r['object']['id'] not in u['following_coll']:
