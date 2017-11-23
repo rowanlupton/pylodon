@@ -123,7 +123,6 @@ class feed(Resource):
     print('feed post')
     if True: #check_content_headers(request):
       r = request.get_json()
-      print('here first'+str(r))
       u = find_user_or_404(handle)
       to = []
       
@@ -181,8 +180,7 @@ class feed(Resource):
 
         mongo.db.posts.insert_one(r)
         # remove the _id object that pymongo added because it screws up later
-        for item in r:
-          del item['_id']
+        r.pop('_id')
 
       elif r['type'] == 'Like':
         if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
@@ -241,6 +239,7 @@ class feed(Resource):
         ### 
         pass
 
+      print('here: '+str(r))
       for t in to:
         requests.post(t, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
