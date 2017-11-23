@@ -17,23 +17,19 @@ api = Blueprint('api', __name__, template_folder='templates')
 
 class following(Resource):
   def get(self, handle):
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      if 'following_coll' in u:
-        return u['following_coll']
-      return []
+      return u.get('following_coll', [])
     abort(406)
 
 class followers(Resource):
   def get(self, handle):
     print('followers get')
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      if 'followers_coll' in u:
-        return u['followers_coll']
-      return []
+      return u.get('followers_coll', [])
     abort(406)
 
 class liked(Resource):
@@ -51,14 +47,14 @@ class liked(Resource):
 class inbox(Resource):
   def get(self, handle):
     print('inbox get')
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
   def post(self, handle):
     print('inbox post')
-    if True: #check_content_headers(request):
+    if check_content_headers(request):
       u = find_user_or_404(handle)
       r = request.get_json()
 
@@ -67,9 +63,10 @@ class inbox(Resource):
         mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
 
       elif r['type'] == 'Follow':
-        if 'followers_coll' in u:
-          if r['actor'] in u['followers_coll']:
+        if u.get('followers_coll'):
+          if u['followers_coll'].get('actor'):
             return 400
+
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
         accept = createAccept(r, to)
@@ -84,6 +81,7 @@ class inbox(Resource):
         return 202
 
       elif r['type'] == 'Create':
+        # this needs more stuff, like creating a user if necessary
         print('received Create')
         print(r)
         if not mongo.db.posts.find({'id': r['id']}):
@@ -99,17 +97,12 @@ class inbox(Resource):
 class feed(Resource):
   def get(self, handle):
     print('feed get')
-    if True: #check_accept_headers(request):
+    if check_accept_headers(request):
       u = find_user_or_404(handle)
 
       items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
-      context = ["https://www.w3.org/ns/activitystreams"]
-      context.append( {
-                        'manuallyApprovesFollowers': 'as:manuallyApprovesFollowers',
-                        'sensitive': 'as:sensitive'
-                      })
       resp =  {
-                '@context': context,
+                '@context': DEFAULT_CONTEXT,
                 'id': u['outbox'],
                 'type': 'OrderedCollection',
                 'totalItems': len(items),
@@ -121,7 +114,7 @@ class feed(Resource):
 
   def post(self, handle):
     print('feed post')
-    if True: #check_content_headers(request):
+    if check_content_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
       to = []
@@ -130,14 +123,15 @@ class feed(Resource):
       if r['type'] == 'Note':
         print('Note')
 
+        # per spec, all addressing should be done by the client, so this needs to change
         to = []
-        if 'to' in r:
+        if r.get('to'):
           for t in r['to']:
             if t.startswith('acct:'):
               t = get_address_from_webfinger(t)
             to.append(t)
         cc = []
-        if 'cc' in r:
+        if r.get('cc')
           for c in r['cc']:
             if c.startswith('acct:'):
               c = get_address_from_webfinger(c)
@@ -165,7 +159,7 @@ class feed(Resource):
 
         content = r['object']['content']
 
-        if 'followers_coll' in u:
+        if u.get('followers_coll'):
           for follower in u['followers_coll']:
             to.append(follower)
 
@@ -186,6 +180,7 @@ class feed(Resource):
         if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
           mongo.db.posts.update({'id': r['object']['id']}, {'$push': {'likes': u['acct']}})
 
+        # again, addressing should be done by the client
         if 'to' in r['object']:
           for t in r['object.to']:
             if t.startswith('acct:'):
@@ -241,7 +236,7 @@ class feed(Resource):
 
       for t in to:
         user = requests.get(t, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-        if 'inbox' in user:
+        if user.get('inbox'):
           inbox = user['inbox']
         else:
           inbox = t
