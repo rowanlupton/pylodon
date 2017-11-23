@@ -245,6 +245,7 @@ class feed(Resource):
           inbox = user['inbox']
         else:
           inbox = t
+        print('to: '+inbox)
         requests.post(inbox, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
     abort(400)
