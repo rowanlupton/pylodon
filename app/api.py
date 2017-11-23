@@ -92,6 +92,7 @@ class inbox(Resource):
 
       else:
         print('other type')
+        print(r)
       abort(400)
     abort(400)
 
@@ -180,8 +181,6 @@ class feed(Resource):
             to.append(get_address_from_webfinger(cc))
 
         mongo.db.posts.insert_one(r)
-        for t in to:
-          print('to: '+t)
 
       if r['type'] == 'Like':
         if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
@@ -241,7 +240,6 @@ class feed(Resource):
         pass
 
       for t in to:
-        print('t: ',t)
         requests.post(t, data=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
     abort(400)
