@@ -238,7 +238,7 @@ class feed(Resource):
         pass
 
       for t in to:
-        requests.post(t, data=r, headers=sign_headers(u, API_CONTENT_HEADERS))
+        requests.post(t, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
     abort(400)
 
