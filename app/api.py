@@ -131,7 +131,7 @@ class feed(Resource):
               t = get_address_from_webfinger(t)
             to.append(t)
         cc = []
-        if r.get('cc')
+        if r.get('cc'):
           for c in r['cc']:
             if c.startswith('acct:'):
               c = get_address_from_webfinger(c)
