@@ -13,7 +13,7 @@ import requests, json
 from urllib.parse import unquote
 # from webfinger import finger
 
-app.register_blueprint(api.api)
+app.register_blueprint(api.api, subdomain='api')
 app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known')
 
 ###################### SET-UP ######################
@@ -26,10 +26,6 @@ def load_user(handle):
 
 
 #################### MISCELLANEA ####################
-
-@app.route('/', subdomain='api')
-def foo():
-  return 'hello'
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
@@ -123,7 +119,7 @@ def register():
                 email=form.email.data, 
                 displayName=form.displayName.data, 
                 password=form.password.data)
-      http_code = requests.post(url_for('new_user'), json=j, headers=API_CONTENT_HEADERS).json()
+      http_code = requests.post(url_for('api.new_user'), json=j, headers=API_CONTENT_HEADERS).json()
       if http_code is 200:
         return redirect(request.args.get("next") or url_for('index'))
       elif http_code is 409:

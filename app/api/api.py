@@ -14,7 +14,8 @@ from webfinger import finger
 
 import json, requests
 
-api = Blueprint('api', __name__, template_folder='templates', subdomain='api')
+api = Blueprint('api', __name__, template_folder='templates')
+print('registered api')
 
 class following(Resource):
   def get(self, handle):
@@ -307,12 +308,9 @@ class new_user(Resource):
       return 409
     abort(406) 
 
-# @api.route('/', methods=['GET', 'POST'], subdomain='api')
-def index():
+@api.route('/')
+def foo():
   return 'hello'
-  posts = mongo.db.posts.find()
-
-  return render_template('index.html', posts=posts, mongo=mongo)
 
 # url handling
 rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
