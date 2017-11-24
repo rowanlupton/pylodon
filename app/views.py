@@ -27,6 +27,10 @@ def load_user(handle):
 
 #################### MISCELLANEA ####################
 
+@app.route('/', subdomain='api')
+def foo():
+  return 'hello'
+
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
