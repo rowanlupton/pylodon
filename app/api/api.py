@@ -306,6 +306,12 @@ class new_user(Resource):
       return 409
     abort(406) 
 
+@api.route('/', methods=['GET', 'POST'])
+def index():
+  posts = mongo.db.posts.find()
+
+  return render_template('index.html', posts=posts, mongo=mongo)
+
 # url handling
 rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
 rest_api.add_resource(followers, '/<string:handle>/followers', subdomain='api')
