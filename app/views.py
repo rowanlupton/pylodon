@@ -27,12 +27,8 @@ def load_user(handle):
 
 #################### MISCELLANEA ####################
 
-@app.route('/')
-def verification_thing():
-  return 'heroku-domain-verification=2rbywctntkzdvag9ixbgqriz01am975pcyw0jbqqx3q'
-
-# @app.route('/', methods=['GET', 'POST'])
-# @login_required
+@app.route('/', methods=['GET', 'POST'])
+@login_required
 def index():
   posts = mongo.db.posts.find()
 
