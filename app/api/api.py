@@ -250,6 +250,7 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
+    print('get user')
     if check_accept_headers(request):
       u = find_user_or_404(handle)
 
