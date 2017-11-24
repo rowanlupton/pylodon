@@ -97,5 +97,6 @@ def get_address_from_webfinger(acct, box='inbox'):
 def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
   if not u:
+    print('user not found')
     abort(404)
   return u
