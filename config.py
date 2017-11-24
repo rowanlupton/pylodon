@@ -2,6 +2,8 @@ import os
 from pymongo import MongoClient
 from werkzeug.http import http_date
 
+SERVER_NAME = os.environ['server_name']
+
 WTF_CSRF_ENABLED = True
 SECRET_KEY = os.environ['secret_key']
 DB_NAME = 'Cluster0'

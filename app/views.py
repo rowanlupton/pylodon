@@ -1,8 +1,9 @@
-from app import app, lm, api, mongo, webfinger
+from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
+from .api import api
+from .api.users import User
 from .forms import userLogin, userRegister, composePost
-from .users import User
-from .utilities import find_user_or_404, get_logged_in_user, createPost, return_new_user, createLike
+from .utilities import find_user_or_404, get_logged_in_user, createPost, createLike
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
@@ -12,7 +13,7 @@ import requests, json
 from urllib.parse import unquote
 # from webfinger import finger
 
-app.register_blueprint(api.api)
+app.register_blueprint(api.api, subdomain='api')
 app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known')
 
 ###################### SET-UP ######################
@@ -48,7 +49,10 @@ def compose():
   if form.validate_on_submit():
     u = get_logged_in_user()
 
-    to = ['https://www.w3.org/ns/activitystreams#Public', u['followers_coll']]
+    if u.get('followers_coll'):
+      to = ['https://www.w3.org/ns/activitystreams#Public', u['followers_coll']]
+    else:
+      to = ['https://www.w3.org/ns/activitystreams#Public']
     cc = []
     if 'followers_coll' in u:
       for f in u['followers_coll']:
@@ -111,14 +115,17 @@ def register():
   form = userRegister()
   if form.validate_on_submit():
     if form.password.data == form.passwordConfirm.data:
-      if mongo.db.users.find({"acct": form.handle.data}) != None:
-        passwordHash = User.hash_password(form.password.data)
-        putData = return_new_user(form.handle.data, form.displayName.data, form.email.data, passwordHash)
-        mongo.db.users.insert_one(putData)
+      j = dict( handle=form.handle.data, 
+                email=form.email.data, 
+                displayName=form.displayName.data, 
+                password=form.password.data)
+      http_code = requests.post(url_for('new_user'), json=j, headers=API_CONTENT_HEADERS).json()
+      if http_code is 200:
         return redirect(request.args.get("next") or url_for('index'))
-      else:
+      elif http_code is 409:
         flash("username taken")
         return render_template('registration.html', form=form, mongo=mongo)
+        
     else:
       flash("passwords did not match")
       return render_template('registration.html', form=form, mongo=mongo)
