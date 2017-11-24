@@ -307,7 +307,7 @@ class new_user(Resource):
       return 409
     abort(406) 
 
-@api.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'], subdomain='api')
 def index():
   return 'hello'
   posts = mongo.db.posts.find()
