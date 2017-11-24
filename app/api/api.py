@@ -16,6 +16,8 @@ import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
 
+print('got api')
+
 class following(Resource):
   def get(self, handle):
     if check_accept_headers(request):
