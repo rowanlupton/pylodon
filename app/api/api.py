@@ -314,4 +314,4 @@ rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api', endpoint='
 rest_api.add_resource(user, '/<string:handle>', subdomain='api', endpoint='user')
 rest_api.add_resource(get_post, '/<string:handle>/<string:post_id>', subdomain='api', endpoint='get_post')
 rest_api.add_resource(get_post_activity, '/<string:handle>/<string:post_id>/activity', subdomain='api', endpoint='get_post_activity')
-rest_api.add_resource(new_user, '/new_user', subdomain='api', endpoint='new_user')
+rest_api.add_resource(new_user, '/new_user', subdomain='api')
