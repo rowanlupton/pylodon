@@ -2,7 +2,8 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, createAccept, createFollow, createLike, createPost, createReject, find_user_or_404, find_post_or_404, get_address_from_webfinger, get_logged_in_user, get_time, sign_headers, sign_object
+from .users import User
+from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_address_from_webfinger, get_time, return_new_user, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -131,7 +132,7 @@ class feed(Resource):
               t = get_address_from_webfinger(t)
             to.append(t)
         cc = []
-        if r.get('cc')
+        if r.get('cc'):
           for c in r['cc']:
             if c.startswith('acct:'):
               c = get_address_from_webfinger(c)
@@ -247,30 +248,30 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    # if check_accept_headers(request):
-    u = find_user_or_404(handle)
+    if check_accept_headers(request):
+      u = find_user_or_404(handle)
 
-    if request.args.get('get') == 'main-key':
-      return u['publicKey']['publicKeyPem'].decode('utf-8')
+      if request.args.get('get') == 'main-key':
+        return u['publicKey']['publicKeyPem'].decode('utf-8')
 
-    user =  {
-             '@context': u['@context'],
-             'id': u['id'],
-             'followers': u['followers'],
-             'following': u['following'],
-             'icon': {'type': 'Image', 'url': u['avatar']},
-             'inbox': u['inbox'],
-             'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
-             'name': u['name'],
-             'outbox': u['outbox'],
-             'preferredUsername': u['username'],
-             'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
-             'summary': '',
-             'type': u['type'],
-             'url': u['url']
-            }
+      user =  {
+               '@context': u['@context'],
+               'id': u['id'],
+               'followers': u['followers'],
+               'following': u['following'],
+               'icon': {'type': 'Image', 'url': u['avatar']},
+               'inbox': u['inbox'],
+               'manuallyApprovesFollowers': u['manuallyApprovesFollowers'],
+               'name': u['name'],
+               'outbox': u['outbox'],
+               'preferredUsername': u['username'],
+               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+               'summary': '',
+               'type': u['type'],
+               'url': u['url']
+              }
 
-    return user, sign_headers(u, API_CONTENT_HEADERS)
+      return user, sign_headers(u, API_CONTENT_HEADERS)
     abort(406)
 
 class get_post(Resource):
@@ -287,12 +288,30 @@ class get_post_activity(Resource):
       return post
     return 'template yet to be written'
 
+class new_user(Resource):
+  def get(self):
+    return 403
+  def post(self):
+    if check_content_headers(request):
+      user = request.get_json()
+      if not {'acct': user['handle']} in mongo.db.users.find(): # this is bad for performance reasons
+        passwordHash = User.hash_password(user['password'])
+        putData = return_new_user(handle=user['handle'], 
+                                  displayName=user['displayName'], 
+                                  email=user['email'], 
+                                  passwordHash=passwordHash)
+        mongo.db.users.insert_one(putData)
+        return 200
+      return 409
+    abort(406) 
+
 # url handling
-rest_api.add_resource(following, '/api/<string:handle>/following')
-rest_api.add_resource(followers, '/api/<string:handle>/followers')
-rest_api.add_resource(liked, '/api/<string:handle>/liked')
-rest_api.add_resource(inbox, '/api/<string:handle>/inbox')
-rest_api.add_resource(feed, '/api/<string:handle>/feed')
-rest_api.add_resource(user, '/api/<string:handle>')
-rest_api.add_resource(get_post, '/api/<string:handle>/<string:post_id>')
-rest_api.add_resource(get_post_activity, '/api/<string:handle>/<string:post_id>/activity')
+rest_api.add_resource(following, '/<string:handle>/following', subdomain='api', endpoint='following')
+rest_api.add_resource(followers, '/<string:handle>/followers', subdomain='api', endpoint='followers')
+rest_api.add_resource(liked, '/<string:handle>/liked', subdomain='api', endpoint='liked')
+rest_api.add_resource(inbox, '/<string:handle>/inbox', subdomain='api', endpoint='inbox')
+rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api', endpoint='feed')
+rest_api.add_resource(user, '/<string:handle>', subdomain='api', endpoint='user')
+rest_api.add_resource(get_post, '/<string:handle>/<string:post_id>', subdomain='api', endpoint='get_post')
+rest_api.add_resource(get_post_activity, '/<string:handle>/<string:post_id>/activity', subdomain='api', endpoint='get_post_activity')
+rest_api.add_resource(new_user, '/new_user', subdomain='api', endpoint='new_user')
