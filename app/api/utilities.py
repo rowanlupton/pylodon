@@ -2,7 +2,7 @@ from app import mongo
 from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
 from ..crypto import generate_keys
 
-from flask import request
+from flask import abort, request
 from httpsig import HeaderSigner, Signer
 from webfinger import finger
 from werkzeug.http import http_date
