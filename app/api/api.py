@@ -14,9 +14,7 @@ from webfinger import finger
 
 import json, requests
 
-api = Blueprint('api', __name__, template_folder='templates')
-
-print('got api')
+api = Blueprint('api', __name__, template_folder='templates', subdomain='api')
 
 class following(Resource):
   def get(self, handle):
