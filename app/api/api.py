@@ -300,6 +300,7 @@ class new_user(Resource):
                                   displayName=user['displayName'], 
                                   email=user['email'], 
                                   passwordHash=passwordHash)
+        print(putData)
         mongo.db.users.insert_one(putData)
         return 200
       return 409
