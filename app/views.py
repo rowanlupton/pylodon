@@ -119,7 +119,7 @@ def register():
                 email=form.email.data, 
                 displayName=form.displayName.data, 
                 password=form.password.data)
-      http_code = requests.post(url_for('api.new_user'), json=j, headers=API_CONTENT_HEADERS).json()
+      http_code = requests.post(url_for('new_user'), json=j, headers=API_CONTENT_HEADERS).json()
       if http_code is 200:
         return redirect(request.args.get("next") or url_for('index'))
       elif http_code is 409:
