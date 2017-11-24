@@ -13,7 +13,7 @@ import requests, json
 from urllib.parse import unquote
 # from webfinger import finger
 
-# app.register_blueprint(api.api, subdomain='api')
+app.register_blueprint(api.api, subdomain='api')
 app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known')
 
 ###################### SET-UP ######################
