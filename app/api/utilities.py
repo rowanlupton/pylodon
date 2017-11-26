@@ -1,5 +1,5 @@
 from app import mongo
-from config import API_ACCEPT_HEADERS, API_NAME, VALID_HEADERS, DEFAULT_CONTEXT
+from config import API_ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS, DEFAULT_CONTEXT
 from ..crypto import generate_keys
 
 from flask import abort, request
