@@ -24,6 +24,7 @@ Flask-PyMongo==0.5.1
 Flask-RESTful==0.3.6
 Flask-Security==3.0.0
 Flask-Sentinel==0.0.7
+Flask-SSLify==0.1.5
 Flask-WebSub==0.1.5
 Flask-WTF==0.14.2
 future==0.16.0
