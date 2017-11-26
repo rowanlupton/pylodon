@@ -71,12 +71,9 @@ class inbox(Resource):
 
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
-        print('to: '+to)
         accept = createAccept(r, to)
         headers = sign_headers(u, API_CONTENT_HEADERS)
 
-        print('accept: '+str(accept))
-        print('headers: '+str(headers))
         requests.post(to, json=accept, headers=headers)
         return 202
 
