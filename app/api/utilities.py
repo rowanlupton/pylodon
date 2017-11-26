@@ -45,19 +45,15 @@ def return_new_user(handle, displayName, email, passwordHash):
           }
 def check_accept_headers(request):
   accept = request.headers.get('accept').split(",")
-  print('accept: '+str(accept))
-  print('VALID_HEADERS: '+str(VALID_HEADERS))
   for h in VALID_HEADERS:
     if h in accept:
       return True
   return False
-  # if accept and (accept in VALID_HEADERS):
-    # return True
-    # return False
 def check_content_headers(request):
-  content_type = request.headers.get('Content-Type')
-  if content_type and (content_type in VALID_HEADERS):
-    return True
+  content_type = request.headers.get('content-type').split(",")
+  for h in VALID_HEADERS:
+    if h in accept:
+      return True
   return False
 def sign_headers(u, headers):
   key_id = u['publicKey']['id']
