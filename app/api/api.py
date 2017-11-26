@@ -74,7 +74,7 @@ class inbox(Resource):
         accept = createAccept(r, to)
         headers = sign_headers(u, API_CONTENT_HEADERS)
 
-        requests.post(to, json=accept, headers=headers)
+        requests.post(to, json=json.dumps(accept), headers=headers)
         return 202
 
       elif r['type'] == 'Accept':
@@ -92,7 +92,7 @@ class inbox(Resource):
 
       else:
         print('other type')
-        print(r.json()['type'])
+        print(r['type'])
       abort(400)
     abort(400)
 
