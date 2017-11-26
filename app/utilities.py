@@ -48,6 +48,7 @@ def createPost(content, handle, to, cc):
                         'cc': cc,
                         'sensitive': False
                       },
+            'url': note_url+'/activity'
             'signature': {
               'created': time,
               'creator': u['id']+'?get=main-key',

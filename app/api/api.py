@@ -282,7 +282,7 @@ class get_post(Resource):
     post = find_post_or_404(handle, post_id)
     if check_accept_headers(request):
       return post['object']
-    return 'template yet to be written'
+    abort(406)
 
 class get_post_activity(Resource):
   def get(self, handle, post_id):  
