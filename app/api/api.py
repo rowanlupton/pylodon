@@ -251,8 +251,9 @@ class user(Resource):
   def get(self, handle):
     print('get user')
     if check_accept_headers(request):
+      print('checked headers')
       u = find_user_or_404(handle)
-
+      print(u)
       if request.args.get('get') == 'main-key':
         return u['publicKey']['publicKeyPem'].decode('utf-8')
 
@@ -275,7 +276,7 @@ class user(Resource):
                'url': u['url']
               }
 
-      return Response(json.dumps(user), headers=sign_headers(u, API_CONTENT_HEADERS))
+      return Response(user, headers=sign_headers(u, API_CONTENT_HEADERS))
     abort(406)
 
 class get_post(Resource):
