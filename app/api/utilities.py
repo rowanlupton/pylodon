@@ -14,7 +14,7 @@ def get_time():
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
-  user_api_uri = 'https://'+API_NAME+'/u/'+handle
+  user_api_uri = 'https://'+API_NAME+'/'+handle
 
   return  {  
             'id': user_api_uri, 
