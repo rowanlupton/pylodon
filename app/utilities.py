@@ -1,5 +1,5 @@
 from app import mongo
-from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
+from config import API_ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS, DEFAULT_CONTEXT
 from .crypto import generate_keys
 from .api.utilities import find_user_or_404, get_time, sign_object
 
@@ -29,8 +29,8 @@ def createPost(content, handle, to, cc):
   u = find_user_or_404(handle)
   
   post_number = str(u['metrics']['post_count'])
-  id = request.url_root+'api/'+u['username']+'/posts/'+post_number
-  note_url = request.url_root+'@'+u['username']+'/'+post_number
+  id = 'https://'+API_NAME+'/'+u['username']+'/posts/'+post_number
+  note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
   
   time = get_time()
 
