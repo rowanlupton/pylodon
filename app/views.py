@@ -78,12 +78,13 @@ def viewFeed(handle):
   r = requests.get(u['outbox'], headers=API_ACCEPT_HEADERS).json()
   return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
 
-@app.route('/<handle>/<postID>')
+@app.route('/@<handle>/<postID>')
 def viewPost(handle, postID):
   p = mongo.db.posts.find_one({'@id': 'https://'+SERVER_NAME+'/@'+handle+'/'+postID})
+  return str(p)
   return render_template('feed.html', posts=p, mongo=mongo)
 
-@app.route('/<handle>/<postID>/like')
+@app.route('/@<handle>/<postID>/like')
 @login_required
 def likePost(handle, postID):
   loggedin_u = get_logged_in_user()
