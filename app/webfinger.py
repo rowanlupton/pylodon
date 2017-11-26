@@ -1,7 +1,7 @@
 import pprint
 
 from app import app, mongo
-from config import API_CONTENT_HEADERS, 
+from config import API_CONTENT_HEADERS
 from .api.utilities import sign_headers
 
 from dicttoxml import dicttoxml
