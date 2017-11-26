@@ -315,12 +315,12 @@ def foo():
   return 'this is the api for my smilodon instance'
 
 # url handling
-rest_api.add_resource(following, '/u/<string:handle>/following', subdomain='api')
-rest_api.add_resource(followers, '/u/<string:handle>/followers', subdomain='api')
-rest_api.add_resource(liked, '/u/<string:handle>/liked', subdomain='api')
-rest_api.add_resource(inbox, '/u/<string:handle>/inbox', subdomain='api')
-rest_api.add_resource(feed, '/u/<string:handle>/feed', subdomain='api')
-rest_api.add_resource(user, '/u/<string:handle>/')
-rest_api.add_resource(get_post, '/u/<string:handle>/<string:post_id>', subdomain='api')
-rest_api.add_resource(get_post_activity, '/u/<string:handle>/<string:post_id>/activity', subdomain='api')
+rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
+rest_api.add_resource(followers, '/<string:handle>/followers', subdomain='api')
+rest_api.add_resource(liked, '/<string:handle>/liked', subdomain='api')
+rest_api.add_resource(inbox, '/<string:handle>/inbox', subdomain='api')
+rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api')
+rest_api.add_resource(user, '/<string:handle>/', subdomain='api')
+rest_api.add_resource(get_post, '/<string:handle>/<int:post_id>', subdomain='api')
+rest_api.add_resource(get_post_activity, '/<string:handle>/<int:post_id>/activity', subdomain='api')
 rest_api.add_resource(new_user, '/new_user', subdomain='api')
