@@ -45,6 +45,8 @@ def return_new_user(handle, displayName, email, passwordHash):
           }
 def check_accept_headers(request):
   accept = request.headers.get('accept')
+  print('accept: '+accept)
+  print('VALID_HEADERS: '+VALID_HEADERS)
   if accept and (accept in VALID_HEADERS):
     return True
   return False
