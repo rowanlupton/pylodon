@@ -49,16 +49,15 @@ def compose():
   if form.validate_on_submit():
     u = get_logged_in_user()
 
+    to = ['https://www.w3.org/ns/activitystreams#Public']
     if u.get('followers_coll'):
-      to = ['https://www.w3.org/ns/activitystreams#Public', u['followers_coll']]
-    else:
-      to = ['https://www.w3.org/ns/activitystreams#Public']
+      for t in u['followers_coll']:
+        to.append(t)
     cc = []
-    if 'followers_coll' in u:
-      for f in u['followers_coll']:
-        cc.append(f)
     if form.to.data:
-      cc.append(form.to.data)
+      field = form.to.data.split(',')
+      for f in field:
+        cc.append(f)
 
     create = createPost(form.text.data, u['username'], to, cc)
 
