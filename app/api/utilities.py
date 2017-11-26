@@ -52,7 +52,7 @@ def check_accept_headers(request):
 def check_content_headers(request):
   content_type = request.headers.get('content-type').split(",")
   for h in VALID_HEADERS:
-    if h in accept:
+    if h in content_type:
       return True
   return False
 def sign_headers(u, headers):
