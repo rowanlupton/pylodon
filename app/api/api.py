@@ -257,7 +257,7 @@ class user(Resource):
         return u['publicKey']['publicKeyPem'].decode('utf-8')
 
       user =  {
-               '@context': u['@context'],
+               '@context': DEFAULT_CONTEXT,
                'id': u['id'],
                'followers': u['followers'],
                'following': u['following'],
@@ -267,7 +267,9 @@ class user(Resource):
                'name': u['name'],
                'outbox': u['outbox'],
                'preferredUsername': u['username'],
-               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+               'publicKey': { 'id': u['id']+'#main-key', 
+                              'owner': u['id'], 
+                              'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
                'summary': '',
                'type': u['type'],
                'url': u['url']
