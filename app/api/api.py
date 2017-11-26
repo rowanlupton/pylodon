@@ -66,7 +66,7 @@ class inbox(Resource):
 
       elif r['type'] == 'Follow':
         if u.get('followers_coll'):
-          if u['followers_coll'].get('actor'):
+          if 'actor' in u['followers_coll']:
             return 400
 
         mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
