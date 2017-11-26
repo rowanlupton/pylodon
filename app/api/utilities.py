@@ -44,7 +44,7 @@ def return_new_user(handle, displayName, email, passwordHash):
             'privateKey': private
           }
 def check_accept_headers(request):
-  if request.headers.get('accept')
+  if request.headers.get('accept'):
     accept = request.headers.get('accept').split(",")
     for h in VALID_HEADERS:
       if h in accept:
