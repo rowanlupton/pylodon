@@ -80,7 +80,7 @@ def viewFeed(handle):
 
 @app.route('/@<handle>/<postID>')
 def viewPost(handle, postID):
-  p = mongo.db.posts.find_one({'@id': 'https://'+SERVER_NAME+'/@'+handle+'/'+postID})
+  p = mongo.db.posts.find_one({'@id': 'https://'+API_NAME+'/'+handle+'/posts/'+postID})
   return str(p)
   return render_template('feed.html', posts=p, mongo=mongo)
 
