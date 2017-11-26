@@ -25,7 +25,7 @@ def get_user_info(**kwargs):
   resp = {
           'subject': 'acct:'+u['acct'],
           'aliases': [
-            u['url']
+            u['url'],
             u['id']
           ],
           'properties': {
