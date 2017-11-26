@@ -1,5 +1,5 @@
-from app import api_name, mongo
-from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
+from app import mongo
+from config import API_ACCEPT_HEADERS, API_NAME, VALID_HEADERS, DEFAULT_CONTEXT
 from ..crypto import generate_keys
 
 from flask import abort, request
@@ -14,7 +14,7 @@ def get_time():
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
-  user_uri = api_name+'/'+handle
+  user_uri = API_NAME+'/'+handle
 
   return  {  
             'id': user_uri, 

@@ -1,5 +1,5 @@
-from app import app, api_name, lm, mongo, webfinger
-from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
+from app import app, lm, mongo, webfinger
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME
 from .api import api
 from .api.users import User
 from .forms import userLogin, userRegister, composePost
