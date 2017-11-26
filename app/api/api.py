@@ -1,6 +1,6 @@
 # thanks to https://github.com/snarfed for the authorization -> signature headers hack
 
-from app import mongo, rest_api
+from app import api_name, mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
 from .users import User
 from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_address_from_webfinger, get_time, return_new_user, sign_headers, sign_object

@@ -1,4 +1,4 @@
-from app import mongo
+from app import api_name, mongo
 from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
 from ..crypto import generate_keys
 
