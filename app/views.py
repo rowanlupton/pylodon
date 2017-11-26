@@ -1,4 +1,4 @@
-from app import app, lm, mongo, webfinger
+from app import app, api_name, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
 from .api import api
 from .api.users import User
