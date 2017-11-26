@@ -257,7 +257,7 @@ class user(Resource):
         return u['publicKey']['publicKeyPem'].decode('utf-8')
 
       user =  {
-               '@context': DEFAULT_CONTEXT,
+               '@context': u['@context'],
                'id': u['id'],
                'followers': u['followers'],
                'following': u['following'],
@@ -275,7 +275,7 @@ class user(Resource):
                'url': u['url']
               }
 
-      return user, sign_headers(u, API_CONTENT_HEADERS)
+      return Response(json.dumps(user), headers=sign_headers(u, API_CONTENT_HEADERS))
     abort(406)
 
 class get_post(Resource):
