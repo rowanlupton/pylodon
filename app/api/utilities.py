@@ -104,6 +104,12 @@ def find_user_or_404(handle):
     print('user not found')
     abort(404)
   return u
+def find_post_or_404(handle, post_id):
+  id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
+  p = mongo.db.posts.find_one({'id': id}, {'_id': False})
+  if not p:
+    abort(404)
+  return p
 
 def createAccept(followObj, to):
   acceptObj = {
