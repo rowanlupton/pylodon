@@ -22,7 +22,7 @@ def createPost(content, handle, to, cc):
   u = find_user_or_404(handle)
   
   post_number = str(u['metrics']['post_count'])
-  id = 'https://'+API_NAME+'/'+u['username']+'/posts/'+post_number
+  id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
   note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
   
   time = get_time()
