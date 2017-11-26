@@ -92,7 +92,7 @@ class inbox(Resource):
 
       else:
         print('other type')
-        print(r)
+        print(r.json()['type'])
       abort(400)
     abort(400)
 
