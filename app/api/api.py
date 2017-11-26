@@ -296,7 +296,9 @@ class new_user(Resource):
   def post(self):
     if check_content_headers(request):
       user = request.get_json()
-      if not {'acct': user['handle']} in mongo.db.users.find(): # this is bad for performance reasons
+      if mongo.db.users.find_one('username': user['handle']): # this is bad for performance reasons
+        return 409
+      else:
         passwordHash = User.hash_password(user['password'])
         putData = return_new_user(handle=user['handle'], 
                                   displayName=user['displayName'], 
@@ -305,12 +307,12 @@ class new_user(Resource):
         print(putData)
         mongo.db.users.insert_one(putData)
         return 200
-      return 409
+      
     abort(406) 
 
 @api.route('/')
 def foo():
-  return 'hello'
+  return 'this is the api for my smilodon instance'
 
 # url handling
 rest_api.add_resource(following, '/u/<string:handle>/following', subdomain='api')
