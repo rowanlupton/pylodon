@@ -14,31 +14,31 @@ def get_time():
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
-  user_uri = 'https://'+API_NAME+'/'+handle
+  user_api_uri = 'https://'+API_NAME+'/'+handle
 
   return  {  
-            'id': user_uri, 
+            'id': user_api_uri, 
             '@context': DEFAULT_CONTEXT,
             'type': 'Person', 
             'username': handle,
             'acct': handle+'@'+SERVER_NAME,
-            'url': SERVER_NAME+'@'+handle,
+            'url': 'https://'+SERVER_NAME+'/@'+handle,
             'name': displayName, 
             'email': email, 
             'password': passwordHash,
             'manuallyApprovesFollowers': False,
             'avatar': None,
             'header': None,
-            'following': user_uri+'/following', 
-            'followers': user_uri+'/followers', 
-            'liked': user_uri+'/liked', 
-            'inbox': user_uri+'/inbox', 
-            'outbox': user_uri+'/feed',
+            'following': user_api_uri+'/following', 
+            'followers': user_api_uri+'/followers', 
+            'liked': user_api_uri+'/liked', 
+            'inbox': user_api_uri+'/inbox', 
+            'outbox': user_api_uri+'/feed',
             'metrics': {'post_count': 0},
             'created_at': get_time(),
             'publicKey': {
-                          'id': user_uri+'#main-key',
-                          'owner': user_uri,
+                          'id': user_api_uri+'#main-key',
+                          'owner': user_api_uri,
                           'publicKeyPem': public
                           },
             'privateKey': private
