@@ -80,18 +80,3 @@ def createFollow(actorAcct, otherUser):
                       context=DEFAULT_CONTEXT,
                       actor=actorAcct,
                       object=vocab.User(otherUser['id']))
-def createAccept(followObj, to):
-  acceptObj = {
-                "@context": DEFAULT_CONTEXT,
-                'type': 'Accept',
-                'to': to,
-                'object': followObj
-              }
-  return acceptObj
-def createReject(followObj, to):
-  rejectObj = {
-                'type': 'Reject',
-                'to': to,
-                'object': followObj
-              }
-  return rejectObj

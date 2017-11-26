@@ -102,3 +102,19 @@ def find_user_or_404(handle):
     print('user not found')
     abort(404)
   return u
+
+def createAccept(followObj, to):
+  acceptObj = {
+                "@context": DEFAULT_CONTEXT,
+                'type': 'Accept',
+                'to': to,
+                'object': followObj
+              }
+  return acceptObj
+def createReject(followObj, to):
+  rejectObj = {
+                'type': 'Reject',
+                'to': to,
+                'object': followObj
+              }
+  return rejectObj
