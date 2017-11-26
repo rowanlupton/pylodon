@@ -15,7 +15,6 @@ from webfinger import finger
 import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
-print('registered api')
 
 class following(Resource):
   def get(self, handle):
@@ -249,7 +248,6 @@ class feed(Resource):
 
 class user(Resource):
   def get(self, handle):
-    print('get user')
     if check_accept_headers(request):
       u = find_user_or_404(handle)
 
@@ -302,15 +300,10 @@ class new_user(Resource):
                                   displayName=user['displayName'], 
                                   email=user['email'], 
                                   passwordHash=passwordHash)
-        print(putData)
         mongo.db.users.insert_one(putData)
         return 200
       return 409
     abort(406) 
-
-@api.route('/')
-def foo():
-  return 'hello'
 
 # url handling
 rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
@@ -318,7 +311,7 @@ rest_api.add_resource(followers, '/<string:handle>/followers', subdomain='api')
 rest_api.add_resource(liked, '/<string:handle>/liked', subdomain='api')
 rest_api.add_resource(inbox, '/<string:handle>/inbox', subdomain='api')
 rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api')
-rest_api.add_resource(user, '/user/<string:handle>')
+rest_api.add_resource(user, '/<string:handle>', subdomain='api')
 rest_api.add_resource(get_post, '/<string:handle>/<string:post_id>', subdomain='api')
 rest_api.add_resource(get_post_activity, '/<string:handle>/<string:post_id>/activity', subdomain='api')
 rest_api.add_resource(new_user, '/new_user', subdomain='api')

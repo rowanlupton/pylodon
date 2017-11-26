@@ -2,6 +2,7 @@ import os
 from pymongo import MongoClient
 from werkzeug.http import http_date
 
+API_NAME = os.environ['api_name']
 SERVER_NAME = os.environ['server_name']
 
 WTF_CSRF_ENABLED = True

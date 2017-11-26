@@ -1,5 +1,5 @@
 from app import app, lm, mongo, webfinger
-from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME
 from .api import api
 from .api.users import User
 from .forms import userLogin, userRegister, composePost
@@ -26,6 +26,10 @@ def load_user(handle):
 
 
 #################### MISCELLANEA ####################
+
+@app.route('/', subdomain='api')
+def apiindex():
+  return 'hello this is the api'
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required

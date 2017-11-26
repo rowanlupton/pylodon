@@ -1,5 +1,5 @@
 from app import mongo
-from config import API_ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS, DEFAULT_CONTEXT
+from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
 from ..crypto import generate_keys
 
 from flask import abort, request
@@ -14,15 +14,15 @@ def get_time():
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
 
-  user_uri = 'https://'+API_NAME+'/'+handle
+  user_uri = api_name+'/'+handle
 
   return  {  
             'id': user_uri, 
             '@context': DEFAULT_CONTEXT,
             'type': 'Person', 
             'username': handle,
-            'acct': handle+'@'+SERVER_NAME,
-            'url': SERVER_NAME+'@'+handle,
+            'acct': handle+'@'+server_name,
+            'url': server_name+'@'+handle,
             'name': displayName, 
             'email': email, 
             'password': passwordHash,
@@ -97,6 +97,5 @@ def get_address_from_webfinger(acct, box='inbox'):
 def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
   if not u:
-    print('user not found')
     abort(404)
   return u
