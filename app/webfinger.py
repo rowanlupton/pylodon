@@ -1,7 +1,7 @@
 import pprint
 
 from app import app, mongo
-from config import API_CONTENT_HEADERS
+from config import API_CONTENT_HEADERS, 
 from .api.utilities import sign_headers
 
 from dicttoxml import dicttoxml
@@ -25,8 +25,8 @@ def get_user_info(**kwargs):
   resp = {
           'subject': 'acct:'+u['acct'],
           'aliases': [
-            request.url_root+'@'+u['username'],
-            request.url_root+'api/'+u['username']
+            u['url']
+            u['id']
           ],
           'properties': {
             'http://schema.org/name': u['name']
@@ -34,7 +34,7 @@ def get_user_info(**kwargs):
           'links': [
             {
               'rel': 'http://webfinger.net/rel/profile-page',
-              'href': request.url_root+'@'+u['username']
+              'href': u['url']
             },
             {
               'href': u['id'],
