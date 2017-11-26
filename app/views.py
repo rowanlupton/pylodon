@@ -1,5 +1,5 @@
 from app import app, lm, mongo, webfinger
-from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME, SERVER_NAME
 from .api import api
 from .api.users import User
 from .forms import userLogin, userRegister, composePost
@@ -80,7 +80,7 @@ def viewFeed(handle):
 
 @app.route('/<handle>/<postID>')
 def viewPost(handle, postID):
-  p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
+  p = mongo.db.posts.find_one({'@id': 'https://'+SERVER_NAME+'/'+handle+'/'+postID})
   return render_template('feed.html', posts=p, mongo=mongo)
 
 @app.route('/<handle>/<postID>/like')
