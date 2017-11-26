@@ -320,7 +320,7 @@ rest_api.add_resource(followers, '/u/<string:handle>/followers', subdomain='api'
 rest_api.add_resource(liked, '/u/<string:handle>/liked', subdomain='api')
 rest_api.add_resource(inbox, '/u/<string:handle>/inbox', subdomain='api')
 rest_api.add_resource(feed, '/u/<string:handle>/feed', subdomain='api')
-rest_api.add_resource(user, '/u/<string:handle>')
+rest_api.add_resource(user, '/u/<string:handle>/')
 rest_api.add_resource(get_post, '/u/<string:handle>/<string:post_id>', subdomain='api')
 rest_api.add_resource(get_post_activity, '/u/<string:handle>/<string:post_id>/activity', subdomain='api')
 rest_api.add_resource(new_user, '/new_user', subdomain='api')
