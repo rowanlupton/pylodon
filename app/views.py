@@ -46,6 +46,7 @@ def notifications():
 @app.route('/compose', methods=['GET', 'POST'])
 @login_required
 def compose():
+  u = get_logged_in_user()
   form = composePost()
   if form.validate_on_submit():
     if requests.post(url_for('new_post', json={'object': form.text.data}, headers=sign_headers(u, API_CONTENT_HEADERS))):
