@@ -1,10 +1,9 @@
 from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
 from .api import api
-from .api.utilities import get_logged_in_user
 from .users import User
 from .forms import userLogin, userRegister, composePost
-from .utilities import find_user_or_404, get_address, get_time, create_post, create_like, return_new_user
+from .utilities import find_user_or_404, get_address, get_logged_in_user, get_time, create_post, create_like, return_new_user
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 

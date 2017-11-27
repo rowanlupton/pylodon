@@ -11,11 +11,6 @@ import datetime, requests
 def get_time():
 
   return datetime.datetime.now().isoformat()
-def get_logged_in_user():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
-  if not u:
-    abort(404)
-  return u
 
 def check_accept_headers(request):
   accept = request.headers.get('accept')
