@@ -2,6 +2,7 @@ from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME, SERVER_NAME
 from .api import api
 from .api.users import User
+from .api.utilities import sign_headers
 from .forms import userLogin, userRegister, composePost
 from .utilities import find_user_or_404, get_logged_in_user, createPost, createLike
 from .webfinger import webfinger_find_user
@@ -47,22 +48,10 @@ def notifications():
 def compose():
   form = composePost()
   if form.validate_on_submit():
-    u = get_logged_in_user()
-
-    to = ['https://www.w3.org/ns/activitystreams#Public']
-    if u.get('followers_coll'):
-      for t in u['followers_coll']:
-        to.append(t)
-    cc = []
-    if form.to.data:
-      field = form.to.data.split(',')
-      for f in field:
-        cc.append(f)
-
-    create = createPost(form.text.data, u['username'], to, cc)
-
-    requests.post(u['outbox'], data=create, headers=API_CONTENT_HEADERS)
-    return redirect(request.args.get("next") or url_for('index'))
+    if requests.post(url_for('new_post', json={'object': form.text.data}, headers=sign_headers(u, API_CONTENT_HEADERS))):
+      return redirect(request.args.get("next") or url_for('index'))
+    else:
+      abort(500)
   return render_template('compose.html', form=form, mongo=mongo)
 
 

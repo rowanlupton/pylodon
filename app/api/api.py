@@ -3,7 +3,7 @@
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS, DEFAULT_CONTEXT
 from .users import User
-from .utilities import check_accept_headers, check_content_headers, createAccept, createReject, find_post_or_404, find_user_or_404, get_address_from_webfinger, get_time, return_new_user, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, createAccept, createPost, createReject, find_post_or_404, find_user_or_404, get_address_from_webfinger, get_time, return_new_user, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -15,7 +15,6 @@ from webfinger import finger
 import json, requests
 
 api = Blueprint('api', __name__, template_folder='templates')
-print('registered api')
 
 class following(Resource):
   def get(self, handle):
@@ -283,6 +282,8 @@ class get_post(Resource):
     if check_accept_headers(request):
       return post['object']
     abort(406)
+  def post(self, handle, post_id):
+    abort(501)
 
 class get_post_activity(Resource):
   def get(self, handle, post_id):  
@@ -311,9 +312,72 @@ class new_user(Resource):
       
     abort(406) 
 
-@api.route('/')
-def foo():
-  return 'this is the api for my smilodon instance'
+class new_post(Resource):
+  def get(self, handle):
+    return 403
+  def post(self, handle):
+    """
+    send json object
+    {
+      object: "",
+      privacy: "",
+      to: [],
+      bto: [],
+      cc: [],
+      bcc: [],
+      audience: [],
+      inReplyTo: []
+    }
+    arrays may be empty/not exist
+    """
+
+    abort(501)
+
+    r = request.get_json()
+    u = find_user_or_404(handle)
+
+    post = createPost(r, u)
+
+    destination = []
+    to = ['https://www.w3.org/ns/activitystreams#Public']
+
+    if u.get('followers_coll'):
+      for follower in u['followers_coll']:
+        destination.append(follower)
+
+    if not 'to' in r:
+      r['to'] = []
+    if not 'bto' in r:
+      r['bto'] = []
+    if not 'cc' in r:
+      r['cc'] = []
+    if not 'bcc' in r:
+      r['bcc'] = []
+    if not 'audience' in r:
+      r['audience'] = []
+    if not 'inReplyTo' in r:
+      r['inReplyTo'] = []
+
+    obj = createPost(r, u)
+
+    for to in r['to']
+      destination.append(to)
+    for bto in r['bto']:
+      destination.append(bto)
+    for cc in r['cc']:
+      destination.append(cc)
+    for bcc in r['bcc']:
+      destination.append(bcc)
+    for audience in r['audience']:
+      destination.append(audience)
+    for inReplyTo in r['inReplyTo']:
+      destination.append(inReplyTo)
+
+
+    for d in destination:
+      requests.post(d, json=obj, headers=sign_headers(u, API_CONTENT_HEADERS))
+
+    
 
 # url handling
 rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
@@ -322,6 +386,7 @@ rest_api.add_resource(liked, '/<string:handle>/liked', subdomain='api')
 rest_api.add_resource(inbox, '/<string:handle>/inbox', subdomain='api')
 rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api')
 rest_api.add_resource(user, '/<string:handle>', subdomain='api')
+rest_api.add_resource(new_post, '/<string:handle>/new_post', subdomain='api')
 rest_api.add_resource(get_post, '/<string:handle>/<string:post_id>', subdomain='api')
 rest_api.add_resource(get_post_activity, '/<string:handle>/<string:post_id>/activity', subdomain='api')
 rest_api.add_resource(new_user, '/new_user', subdomain='api')

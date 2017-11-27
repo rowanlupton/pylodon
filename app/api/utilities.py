@@ -111,6 +111,64 @@ def find_post_or_404(handle, post_id):
     abort(404)
   return p
 
+def createPost(r, u):
+  post_number = str(u['metrics']['post_count'])
+  id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
+  note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
+  
+  time = get_time()
+
+  create =  {
+            'id': id+'/activity',
+            'type': 'Create',
+            '@context': DEFAULT_CONTEXT,
+            'actor': u['id'],
+            'published': time,
+            'to': r['to'],
+            'bto': r['bto'],
+            'cc': r['cc'],
+            'bcc': r['bcc'],
+            'audience': r['audience'],
+            'inReplyTo': r['inReplyTo'],
+            'object': {
+                        'id': id,
+                        'type': 'Note',
+                        'summary': None,
+                        'content': content,
+                        'inReplyTo': None,
+                        'published': time,
+                        'url': note_url,
+                        'attributedTo': u['id'],
+                        'to': r['to'],
+                        'cc': r['cc'],
+                        'sensitive': False
+                      },
+            'url': note_url+'/activity',
+            'signature': {
+              'created': time,
+              'creator': u['id']+'?get=main-key',
+              'signatureValue': sign_object(u, content),
+              'type': 'rsa-sha256'
+            }
+          }
+  return json.dumps(create)
+def createLike(actorAcct, post_id):
+  to = post['attributedTo']
+  if posts.get('to'):
+    for t in post['to']:
+      to.append(t)
+      
+  return vocab.Like(
+                    context=DEFAULT_CONTEXT,
+                    actor=actorAcct,
+                    to=to,
+                    object=post['id'])
+def createFollow(actorAcct, otherUser):
+  return vocab.Follow(
+                      id=None,
+                      context=DEFAULT_CONTEXT,
+                      actor=actorAcct,
+                      object=vocab.User(otherUser['id']))
 def createAccept(followObj, to):
   acceptObj = {
                 "@context": DEFAULT_CONTEXT,
@@ -125,4 +183,4 @@ def createReject(followObj, to):
                 'to': to,
                 'object': followObj
               }
-  return rejectObj
+  return rejectOb
