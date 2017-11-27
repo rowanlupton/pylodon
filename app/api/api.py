@@ -2,7 +2,7 @@
 
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_logged_in_user, get_time, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_time, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -49,7 +49,7 @@ class inbox(Resource):
   def get(self, handle):
     print('inbox get')
     if check_accept_headers(request):
-      items = list(mongo.db.posts.find({'to': get_logged_in_user()['id']}, {'_id': False}).sort('published', -1))
+      items = list(mongo.db.posts.find({'to': find_user_or_404(handle)['id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
@@ -116,7 +116,7 @@ class feed(Resource):
   def post(self, handle):
     if check_content_headers(request):
       r = request.get_json()
-      u = get_logged_in_user()
+      u = find_user_or_404(handle)
       
       # if it's a note it turns it into a Create object
       if r['type'] == 'Note':
