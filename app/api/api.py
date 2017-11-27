@@ -353,7 +353,7 @@ class new_post(Resource):
 
     obj = createPost(r, u)
 
-    requests.post(u['feed'], json=obj, headers=sign_headers(u, 'API_CONTENT_HEADERS'))
+    requests.post(u['outbox'], json=obj, headers=sign_headers(u, 'API_CONTENT_HEADERS'))
     
 
 # url handling
