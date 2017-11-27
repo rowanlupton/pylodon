@@ -75,9 +75,12 @@ def get_address(addr, box='inbox'):
         return get_address_from_webfinger(acct=a)
   
   if addr.startswith('http'):
-    inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
-    if inbox:
-      return inbox
+    if addr is not 'https://www.w3.org/ns/activitystreams#Public':
+      try:
+        inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
+        return inbox
+      except AttributeError:
+        return addr
     else:
       return addr
 
