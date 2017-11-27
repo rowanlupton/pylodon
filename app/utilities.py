@@ -61,7 +61,7 @@ def return_new_user(handle, displayName, email, passwordHash):
 def get_address(addr, box='inbox'):
   try:
     if addr.startswith('@'):
-    addr = 'acct:'+addr[1:]
+      addr = 'acct:'+addr[1:]
   except AttributeError:
     for a in addr:
       if a.startswith('@'):
