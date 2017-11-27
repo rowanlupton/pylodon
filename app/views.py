@@ -49,7 +49,7 @@ def compose():
   u = get_logged_in_user()
   form = composePost()
   if form.validate_on_submit():
-    if requests.post(url_for('new_post', json={'object': form.text.data}, headers=sign_headers(u, API_CONTENT_HEADERS))):
+    if requests.post(url_for('new_post', json={'object': form.text.data, 'u': u}, headers=sign_headers(u, API_CONTENT_HEADERS))):
       return redirect(request.args.get("next") or url_for('index'))
     else:
       abort(500)
