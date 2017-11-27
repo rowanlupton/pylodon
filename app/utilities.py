@@ -60,16 +60,21 @@ def return_new_user(handle, displayName, email, passwordHash):
 
 def get_address(addr, box='inbox'):
   try:
+    if addr.startswith('@'):
+    addr = 'acct:'+addr[1:]
+  except AttributeError:
     for a in addr:
       if a.startswith('@'):
         addr = 'acct:'+addr[1:]
-  except:
-    if addr.startswith('@'):
-      addr = 'acct:'+addr[1:]
-  if addr.startswith('acct'):
-    return get_address_from_webfinger(acct=addr, box=box)    
-    
-  elif addr.startswith('http'):
+  try:    
+    if addr.startswith('acct'):
+      return get_address_from_webfinger(acct=addr, box=box)    
+  except AttributeError:
+    for a in addr:
+      if addr.startswith('acct'):
+        return get_address_from_webfinger(acct=a)
+  
+  if addr.startswith('http'):
     inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
     if inbox:
       return inbox
