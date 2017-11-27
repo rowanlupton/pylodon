@@ -2,9 +2,9 @@ from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME, SERVER_NAME
 from .api import api
 from .api.users import User
-from .api.utilities import sign_headers
+from .api.utilities import find_user_or_404, sign_headers
 from .forms import userLogin, userRegister, composePost
-from .utilities import find_user_or_404, get_logged_in_user, createPost, createLike
+from .utilities import get_logged_in_user
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
@@ -74,13 +74,13 @@ def viewPost(handle, postID):
   return str(p)
   return render_template('feed.html', posts=p, mongo=mongo)
 
-@app.route('/@<handle>/<postID>/like')
-@login_required
+# @app.route('/@<handle>/<postID>/like')
+# @login_required
 def likePost(handle, postID):
   loggedin_u = get_logged_in_user()
   u = find_user_or_404(handle)
   p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
-  like = createLike(u['acct'], p)
+  # like = createLike(u['acct'], p)
   requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=API_CONTENT_HEADERS)
   return redirect(request.args.get("next") or url_for('index'))
 
