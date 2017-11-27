@@ -19,11 +19,6 @@ def find_post_or_404(handle, post_id):
   if not p:
     abort(404)
   return p
-def get_logged_in_user():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
-  if not u:
-    abort(404)
-  return u
 
 def return_new_user(handle, displayName, email, passwordHash):
   public, private = generate_keys()
