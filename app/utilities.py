@@ -59,8 +59,13 @@ def return_new_user(handle, displayName, email, passwordHash):
           }
 
 def get_address(addr, box='inbox'):
-  if addr.startswith('@'):
-    addr = 'acct:'+addr[1:]
+  try:
+    for a in addr:
+      if a.startswith('@'):
+        addr = 'acct:'+addr[1:]
+  except:
+    if addr.startswith('@'):
+      addr = 'acct:'+addr[1:]
   if addr.startswith('acct'):
     return get_address_from_webfinger(acct=addr, box=box)    
     
