@@ -345,7 +345,7 @@ class new_post(Resource):
       for follower in u['followers_coll']:
         destination.append(follower)
 
-    if not 'to' in r:
+    if 'to' not in r:
       r['to'] = []
     if not 'bto' in r:
       r['bto'] = []
