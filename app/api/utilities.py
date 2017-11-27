@@ -116,8 +116,6 @@ def createPost(r, u):
   id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
   note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
   
-  print(str(r))
-
   time = get_time()
 
   create =  {
@@ -149,7 +147,7 @@ def createPost(r, u):
             'signature': {
               'created': time,
               'creator': u['id']+'?get=main-key',
-              'signatureValue': sign_object(u, content),
+              'signatureValue': sign_object(u, r['object']),
               'type': 'rsa-sha256'
             }
           }
