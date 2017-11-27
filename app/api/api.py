@@ -339,7 +339,7 @@ class new_post(Resource):
     post = createPost(r, u)
 
     destination = []
-    r['to'] = ['https://www.w3.org/ns/activitystreams#Public']
+    r.update({'to': ['https://www.w3.org/ns/activitystreams#Public']})
 
     if u.get('followers_coll'):
       for follower in u['followers_coll']:
