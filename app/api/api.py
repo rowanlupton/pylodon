@@ -372,10 +372,9 @@ class new_post(Resource):
       destination.append(inReplyTo)
 
 
-    mongo.db.posts.insert_one(obj)
     for d in destination:
       requests.post(d, json=obj, headers=sign_headers(u, API_CONTENT_HEADERS))
-
+    mongo.db.posts.insert_one(obj)
     
 
 # url handling
