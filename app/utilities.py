@@ -109,35 +109,49 @@ def create_post(content, handle, to, cc):
   
   time = get_time()
 
-  create =  {
-            'id': id+'/activity',
-            'type': 'Create',
-            '@context': DEFAULT_CONTEXT,
-            'actor': u['id'],
-            'published': time,
-            'to': to,
-            'cc': cc,
-            'object': {
-                        'id': id,
-                        'type': 'Note',
-                        'summary': None,
-                        'content': content,
-                        'inReplyTo': None,
-                        'published': time,
-                        'url': note_url,
-                        'attributedTo': u['id'],
-                        'to': to,
-                        'cc': cc,
-                        'sensitive': False
-                      },
-            'signature': {
-              'created': time,
-              'creator': u['id']+'?get=main-key',
-              'signatureValue': sign_object(u, content),
-              'type': 'rsa-sha256'
-            }
-          }
-  return json.dumps(create)
+  # create =  {
+  #           'id': id+'/activity',
+  #           'type': 'Create',
+  #           '@context': DEFAULT_CONTEXT,
+  #           'actor': u['id'],
+  #           'published': time,
+  #           'to': to,
+  #           'cc': cc,
+  #           'object': {
+  #                       'id': id,
+  #                       'type': 'Note',
+  #                       'summary': None,
+  #                       'content': content,
+  #                       'inReplyTo': None,
+  #                       'published': time,
+  #                       'url': note_url,
+  #                       'attributedTo': u['id'],
+  #                       'to': to,
+  #                       'cc': cc,
+  #                       'sensitive': False
+  #                     },
+  #           'signature': {
+  #             'created': time,
+  #             'creator': u['id']+'?get=main-key',
+  #             'signatureValue': sign_object(u, content),
+  #             'type': 'rsa-sha256'
+  #           }
+  #         }
+
+  # return json.dumps(create)
+
+  return vocab.Create(
+                      id+'/activity',
+                      actor=vocab.Person(
+                        u['id'],
+                        displayName=u['displayName']),
+                      to=to,
+                      cc=cc,
+                      object=vocab.Note(
+                        id,
+                        url=note_url,
+                        content=content)
+                      )
 def create_like(actorAcct, post):
   to = post['attributedTo']
   if posts.get('to'):
