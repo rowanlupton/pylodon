@@ -331,7 +331,7 @@ class new_post(Resource):
     arrays may be empty/not exist
     """
 
-    abort(501)
+    # abort(501)
 
     r = request.get_json()
     u = find_user_or_404(handle)
