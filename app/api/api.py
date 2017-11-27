@@ -118,7 +118,7 @@ class feed(Resource):
     if check_content_headers(request):
       r = request.get_json()
       u = find_user_or_404(handle)
-      to = []
+      destinastion = []
       
       # if it's a note it turns it into a Create object
       if r['type'] == 'Note':
