@@ -4,7 +4,7 @@ from .api import api
 from .api.utilities import get_logged_in_user
 from .users import User
 from .forms import userLogin, userRegister, composePost
-from .utilities import find_user_or_404, get_address, createPost, createLike, return_new_user
+from .utilities import find_user_or_404, get_address, create_post, create_like, return_new_user
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
@@ -61,7 +61,7 @@ def compose():
       cc.append(get_address(cc))
 
 
-    create = createPost(data['post'], u['username'], to, cc)
+    create = create_post(data['post'], u['username'], to, cc)
 
 
     requests.post(u['outbox'], json=create, headers=API_CONTENT_HEADERS)

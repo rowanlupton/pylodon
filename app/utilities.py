@@ -100,7 +100,7 @@ def get_address_from_webfinger(acct, box):
 
   return user
 
-def createPost(content, handle, to, cc):
+def create_post(content, handle, to, cc):
   u = find_user_or_404(handle)
   
   post_number = str(u['metrics']['post_count'])
@@ -138,7 +138,7 @@ def createPost(content, handle, to, cc):
             }
           }
   return json.dumps(create)
-def createLike(actorAcct, post):
+def create_like(actorAcct, post):
   to = post['attributedTo']
   if posts.get('to'):
     for t in post['to']:
@@ -149,13 +149,13 @@ def createLike(actorAcct, post):
                     actor=actorAcct,
                     to=to,
                     object=post['id'])
-def createFollow(actorAcct, otherUser):
+def create_follow(actorAcct, otherUser):
   return vocab.Follow(
                       id=None,
                       context=DEFAULT_CONTEXT,
                       actor=actorAcct,
                       object=vocab.User(otherUser['id']))
-def createAccept(followObj, to):
+def create_accept(followObj, to):
   acceptObj = {
                 "@context": DEFAULT_CONTEXT,
                 'type': 'Accept',
@@ -163,7 +163,7 @@ def createAccept(followObj, to):
                 'object': followObj
               }
   return acceptObj
-def createReject(followObj, to):
+def create_reject(followObj, to):
   rejectObj = {
                 'type': 'Reject',
                 'to': to,
