@@ -92,7 +92,7 @@ def likePost(handle, postID):
   loggedin_u = get_logged_in_user()
   u = find_user_or_404(handle)
   p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
-  like = createLike(u['acct'], p)
+  like = create_like(u['acct'], p)
   requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=API_CONTENT_HEADERS)
   # return redirect(request.args.get("next") or url_for('index'))
 
