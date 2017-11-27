@@ -336,10 +336,8 @@ class new_post(Resource):
     r = request.get_json()
     u = find_user_or_404(handle)
 
-    post = createPost(r, u)
-
     destination = []
-    r.update({'to': ['https://www.w3.org/ns/activitystreams#Public']})
+    r['to'] = ['https://www.w3.org/ns/activitystreams#Public']
 
     if u.get('followers_coll'):
       for follower in u['followers_coll']:
