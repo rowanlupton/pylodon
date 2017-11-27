@@ -1,5 +1,5 @@
 from app import app, lm, mongo, webfinger
-from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
 from .api import api
 from .users import User
 from .forms import userLogin, userRegister, composePost
@@ -56,7 +56,7 @@ def compose():
     if u.get('followers_coll'):
       for follower in u['followers_coll']:
         to.append(get_address(follower))
-    for cc in data['cc'].split(','):
+    for c in data['cc'].split(','):
       cc.append(get_address(cc))
 
 
