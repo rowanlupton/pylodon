@@ -151,7 +151,7 @@ def createPost(r, u):
               'type': 'rsa-sha256'
             }
           }
-  return json.dumps(create)
+  return create
 def createLike(actorAcct, post_id):
   to = post['attributedTo']
   if posts.get('to'):
