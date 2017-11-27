@@ -359,17 +359,17 @@ class new_post(Resource):
     obj = createPost(r, u)
 
     for to in r['to']:
-      destination.append(get_address_from_webfinger(to))
+      destination.append(get_address_format(to))
     for bto in r['bto']:
-      destination.append(get_address_from_webfinger(bto))
+      destination.append(get_address_format(bto))
     for cc in r['cc']:
-      destination.append(get_address_from_webfinger(cc))
+      destination.append(get_address_format(cc))
     for bcc in r['bcc']:
-      destination.append(get_address_from_webfinger(bcc))
+      destination.append(get_address_format(bcc))
     for audience in r['audience']:
-      destination.append(get_address_from_webfinger(audience))
+      destination.append(get_address_format(audience))
     for inReplyTo in r['inReplyTo']:
-      destination.append(get_address_from_webfinger(inReplyTo))
+      destination.append(get_address_format(inReplyTo))
 
 
     for d in destination:
