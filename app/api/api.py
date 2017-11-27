@@ -346,6 +346,7 @@ class new_post(Resource):
         destination.append(follower)
 
     if 'to' not in r:
+      print('to not in r')
       r['to'] = []
     if 'bto' not in r:
       r['bto'] = []
