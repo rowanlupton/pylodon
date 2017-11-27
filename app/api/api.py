@@ -360,6 +360,8 @@ class new_post(Resource):
     if 'inReplyTo' not in r:
       r['inReplyTo'] = []
 
+    print(str(r))
+
     obj = createPost(r, u)
 
     for to in r['to']:
