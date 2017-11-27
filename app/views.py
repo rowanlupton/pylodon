@@ -3,7 +3,7 @@ from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME
 from .api import api
 from .users import User
 from .forms import userLogin, userRegister, composePost
-from .utilities import find_user_or_404, get_address, get_logged_in_user, createPost, createLike
+from .utilities import find_user_or_404, get_address, get_logged_in_user, createPost, createLike, return_new_user
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
