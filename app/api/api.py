@@ -360,7 +360,7 @@ class new_post(Resource):
 
     obj = createPost(r, u)
 
-    for to in r['to']
+    for to in r['to']:
       destination.append(to)
     for bto in r['bto']:
       destination.append(bto)
