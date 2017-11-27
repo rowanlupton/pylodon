@@ -45,25 +45,6 @@ def sign_object(u, obj):
 
   return auth_object
 
-def get_address_format(addr):
-  if addr.startswith('@'):
-
-  elif addr == 'check for @a@b.c via regex':
-
-  if addr.startswith('acct'):
-    return get_address_from_webfinger(addr)    
-    
-  elif addr.startswith('http'):
-    return addr
-
-def get_address_from_webfinger(acct, box='inbox'):
-  wf = finger(acct)
-  user = wf.rel('self')
-  u = requests.get(user, headers=API_ACCEPT_HEADERS).json()
-  address = u[box]
-
-  return user
-
 def find_user_or_404(handle):
   u = mongo.db.users.find_one({'username': handle})
   if not u:
