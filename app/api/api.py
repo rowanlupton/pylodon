@@ -349,6 +349,7 @@ class new_post(Resource):
       print('to not in r')
       r['to'] = []
     if 'bto' not in r:
+      print('bto not in r')
       r['bto'] = []
     if 'cc' not in r:
       r['cc'] = []
