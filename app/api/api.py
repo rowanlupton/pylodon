@@ -344,10 +344,8 @@ class new_post(Resource):
         destination.append(follower)
 
     if 'to' not in r:
-      print('to not in r')
       r['to'] = []
     if 'bto' not in r:
-      print('bto not in r')
       r['bto'] = []
     if 'cc' not in r:
       r['cc'] = []
@@ -357,8 +355,6 @@ class new_post(Resource):
       r['audience'] = []
     if 'inReplyTo' not in r:
       r['inReplyTo'] = []
-
-    print(str(r))
 
     obj = createPost(r, u)
 

@@ -136,7 +136,7 @@ def createPost(r, u):
                         'id': id,
                         'type': 'Note',
                         'summary': None,
-                        'content': content,
+                        'content': r['object'],
                         'inReplyTo': None,
                         'published': time,
                         'url': note_url,
