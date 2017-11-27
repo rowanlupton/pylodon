@@ -25,6 +25,60 @@ def get_logged_in_user():
     abort(404)
   return u
 
+def return_new_user(handle, displayName, email, passwordHash):
+  public, private = generate_keys()
+
+  user_api_uri = 'https://'+API_NAME+'/'+handle
+
+  return  {  
+            'id': user_api_uri, 
+            '@context': DEFAULT_CONTEXT,
+            'type': 'Person', 
+            'username': handle,
+            'acct': handle+'@'+SERVER_NAME,
+            'url': 'https://'+SERVER_NAME+'/@'+handle,
+            'name': displayName, 
+            'email': email, 
+            'password': passwordHash,
+            'manuallyApprovesFollowers': False,
+            'avatar': None,
+            'header': None,
+            'following': user_api_uri+'/following', 
+            'followers': user_api_uri+'/followers', 
+            'liked': user_api_uri+'/liked', 
+            'inbox': user_api_uri+'/inbox', 
+            'outbox': user_api_uri+'/feed',
+            'metrics': {'post_count': 0},
+            'created_at': get_time(),
+            'publicKey': {
+                          'id': user_api_uri+'#main-key',
+                          'owner': user_api_uri,
+                          'publicKeyPem': public
+                          },
+            'privateKey': private
+          }
+
+def get_address(addr, box='inbox'):
+  if addr.startswith('@'):
+    addr = 'acct:'+addr[1:]
+  if addr.startswith('acct'):
+    return get_address_from_webfinger(acct=addr, box=box)    
+    
+  elif addr.startswith('http'):
+    inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
+    if inbox:
+      return inbox
+    else:
+      return addr
+
+def get_address_from_webfinger(acct, box):
+  wf = finger(acct)
+  user = wf.rel('self')
+  u = requests.get(user, headers=API_ACCEPT_HEADERS).json()
+  address = u[box]
+
+  return user
+
 def createPost(content, handle, to, cc):
   u = find_user_or_404(handle)
   

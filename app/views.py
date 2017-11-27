@@ -1,9 +1,9 @@
 from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME
 from .api import api
-from .api.users import User
+from .users import User
 from .forms import userLogin, userRegister, composePost
-from .utilities import find_user_or_404, get_logged_in_user, createPost, createLike
+from .utilities import find_user_or_404, get_address, get_logged_in_user, createPost, createLike
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
@@ -48,21 +48,21 @@ def compose():
   form = composePost()
   if form.validate_on_submit():
     u = get_logged_in_user()
+    data = dict(cc=form.to.data,
+                post=form.text.data)
+    to = ['https://www.w3.org/ns/activitystreams#Public']
+    cc = []
 
     if u.get('followers_coll'):
-      to = ['https://www.w3.org/ns/activitystreams#Public', u['followers_coll']]
-    else:
-      to = ['https://www.w3.org/ns/activitystreams#Public']
-    cc = []
-    if 'followers_coll' in u:
-      for f in u['followers_coll']:
-        cc.append(f)
-    if form.to.data:
-      cc.append(form.to.data)
+      for follower in u['followers_coll']:
+        to.append(get_address(follower))
+    for cc in data['cc'].split(','):
+      cc.append(get_address(cc))
 
-    create = createPost(form.text.data, u['username'], to, cc)
 
-    requests.post(u['outbox'], data=create, headers=API_CONTENT_HEADERS)
+    create = createPost(data['post'], u['username'], to, cc)
+
+    requests.post(u['outbox'], json=create, headers=API_CONTENT_HEADERS)
     return redirect(request.args.get("next") or url_for('index'))
   return render_template('compose.html', form=form, mongo=mongo)
 
@@ -79,20 +79,20 @@ def viewFeed(handle):
   r = requests.get(u['outbox'], headers=API_ACCEPT_HEADERS).json()
   return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
 
-@app.route('/<handle>/posts/<postID>')
+@app.route('/<handle>/<postID>')
 def viewPost(handle, postID):
   p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
   return render_template('feed.html', posts=p, mongo=mongo)
 
-@app.route('/<handle>/posts/<postID>/like')
-@login_required
+# @app.route('/<handle>/<postID>/like')
+# @login_required
 def likePost(handle, postID):
   loggedin_u = get_logged_in_user()
   u = find_user_or_404(handle)
   p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
   like = createLike(u['acct'], p)
   requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=API_CONTENT_HEADERS)
-  return redirect(request.args.get("next") or url_for('index'))
+  # return redirect(request.args.get("next") or url_for('index'))
 
 ################### LOG IN/OUT ###################
 @app.route('/login', methods=['GET', 'POST'])
@@ -115,23 +115,30 @@ def register():
   form = userRegister()
   if form.validate_on_submit():
     if form.password.data == form.passwordConfirm.data:
-      j = dict( handle=form.handle.data, 
-                email=form.email.data, 
-                displayName=form.displayName.data, 
-                password=form.password.data)
-      http_code = requests.post(url_for('new_user'), json=j, headers=API_CONTENT_HEADERS).json()
-      if http_code is 200:
-        return redirect(request.args.get("next") or url_for('index'))
-      elif http_code is 409:
+      user = dict(handle=form.handle.data, 
+                  email=form.email.data, 
+                  displayName=form.displayName.data, 
+                  password=form.password.data)
+
+      if {'username': user['handle']} in mongo.db.users.find():
         flash("username taken")
         return render_template('registration.html', form=form, mongo=mongo)
-        
+      else:
+        passwordHash = User.hash_password(user['password'])
+        new_user = return_new_user(handle=user['handle'], 
+                                  displayName=user['displayName'], 
+                                  email=user['email'], 
+                                  passwordHash=passwordHash)
+        mongo.db.users.insert_one(new_user)
+        return redirect(request.args.get("next") or url_for('index'))
+
     else:
       flash("passwords did not match")
       return render_template('registration.html', form=form, mongo=mongo)
   return render_template('registration.html', form=form, mongo=mongo)
 
 @app.route('/logout')
+@login_required
 def logout():
   logout_user()
   return redirect(url_for('index'))

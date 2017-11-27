@@ -11,38 +11,7 @@ import datetime, requests
 def get_time():
 
   return datetime.datetime.now().isoformat()
-def return_new_user(handle, displayName, email, passwordHash):
-  public, private = generate_keys()
 
-  user_api_uri = 'https://'+API_NAME+'/'+handle
-
-  return  {  
-            'id': user_api_uri, 
-            '@context': DEFAULT_CONTEXT,
-            'type': 'Person', 
-            'username': handle,
-            'acct': handle+'@'+SERVER_NAME,
-            'url': 'https://'+SERVER_NAME+'/@'+handle,
-            'name': displayName, 
-            'email': email, 
-            'password': passwordHash,
-            'manuallyApprovesFollowers': False,
-            'avatar': None,
-            'header': None,
-            'following': user_api_uri+'/following', 
-            'followers': user_api_uri+'/followers', 
-            'liked': user_api_uri+'/liked', 
-            'inbox': user_api_uri+'/inbox', 
-            'outbox': user_api_uri+'/feed',
-            'metrics': {'post_count': 0},
-            'created_at': get_time(),
-            'publicKey': {
-                          'id': user_api_uri+'#main-key',
-                          'owner': user_api_uri,
-                          'publicKeyPem': public
-                          },
-            'privateKey': private
-          }
 def check_accept_headers(request):
   accept = request.headers.get('accept')
   if accept and (accept in VALID_HEADERS):
@@ -77,12 +46,13 @@ def sign_object(u, obj):
   return auth_object
 
 def get_address_format(addr):
-  if (addr.startswith('acct:') or
-      addr.startswith('@') or
-      addr == 'check for webfinger via regex'):
-    addr = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+  if addr.startswith('@'):
+
+  elif addr == 'check for @a@b.c via regex':
+
+  if addr.startswith('acct'):
+    return get_address_from_webfinger(addr)    
     
-    return get_address_from_webfinger(addr)
   elif addr.startswith('http'):
     return addr
 

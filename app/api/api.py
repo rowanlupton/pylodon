@@ -3,7 +3,7 @@
 from app import mongo, rest_api
 from config import API_ACCEPT_HEADERS, API_CONTENT_HEADERS
 from .users import User
-from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_address_from_webfinger, get_time, return_new_user, sign_headers, sign_object
+from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_address_format, get_address_from_webfinger, get_time, return_new_user, sign_headers, sign_object
 
 from activipy import vocab
 from bson import ObjectId, json_util
@@ -115,11 +115,9 @@ class feed(Resource):
     abort(406)
 
   def post(self, handle):
-    print('feed post')
     if check_content_headers(request):
       r = request.get_json()
-      u = find_user_or_404(handle)
-      to = []
+      u = get_logged_in_user()
       
       # if it's a note it turns it into a Create object
       if r['type'] == 'Note':
@@ -151,7 +149,7 @@ class feed(Resource):
             }
 
       if r['type'] == 'Create':
-        if r['object']['type'] != 'Note':
+        if r['object']['type'] is not 'Note':
           print('not a note')
           abort(403)
 
@@ -166,13 +164,11 @@ class feed(Resource):
             to.append(follower)
 
         for t in r['to']:
-          if t.startswith('acct:'):
-            t = get_address_from_webfinger(t)
-            to.append(t)
+          t = get_address_format(t)
+          to.append(t)
         for cc in r['cc']:
-          if cc.startswith('acct:'):
-            print('cc: '+get_address_from_webfinger(cc))
-            to.append(get_address_from_webfinger(cc))
+          cc = get_address_format(cc)
+          to.append(cc)
 
         mongo.db.posts.insert_one(r)
         # remove the _id object that pymongo added because it screws up later
@@ -288,29 +284,7 @@ class get_post_activity(Resource):
     post = find_post_or_404(handle, post_id)
     if check_accept_headers(request):
       return post
-    return 'template yet to be written'
-
-class new_user(Resource):
-  def get(self):
-    return 403
-  def post(self):
-    if check_content_headers(request):
-      user = request.get_json()
-      if not {'acct': user['handle']} in mongo.db.users.find(): # this is bad for performance reasons
-        passwordHash = User.hash_password(user['password'])
-        putData = return_new_user(handle=user['handle'], 
-                                  displayName=user['displayName'], 
-                                  email=user['email'], 
-                                  passwordHash=passwordHash)
-        print(putData)
-        mongo.db.users.insert_one(putData)
-        return 200
-      return 409
-    abort(406) 
-
-@api.route('/')
-def foo():
-  return 'hello'
+    return 'template yet to be written'    
 
 # url handling
 rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
@@ -321,4 +295,3 @@ rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api')
 rest_api.add_resource(user, '/user/<string:handle>')
 rest_api.add_resource(get_post, '/<string:handle>/<string:post_id>', subdomain='api')
 rest_api.add_resource(get_post_activity, '/<string:handle>/<string:post_id>/activity', subdomain='api')
-rest_api.add_resource(new_user, '/new_user', subdomain='api')
