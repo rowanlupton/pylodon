@@ -152,26 +152,22 @@ class feed(Resource):
       if r['type'] == 'Create':
         if r['object']['type'] != 'Note':
           print('not a note')
-          abort(403)
-
-        print('Create')
+          abort(501)
 
         mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
 
-        content = r['object']['content']
-
-        if u.get('followers_coll'):
-          for follower in u['followers_coll']:
-            to.append(follower)
-
-        for t in r['to']:
-          if t.startswith('acct:'):
-            t = get_address_from_webfinger(t)
-            to.append(t)
+        for to in r['to']:
+          destination.append(get_address_format(to))
+        for bto in r['bto']:
+          destination.append(get_address_format(bto))
         for cc in r['cc']:
-          if cc.startswith('acct:'):
-            print('cc: '+get_address_from_webfinger(cc))
-            to.append(get_address_from_webfinger(cc))
+          destination.append(get_address_format(cc))
+        for bcc in r['bcc']:
+          destination.append(get_address_format(bcc))
+        for audience in r['audience']:
+          destination.append(get_address_format(audience))
+        for inReplyTo in r['inReplyTo']:
+          destination.append(get_address_format(inReplyTo))
 
         mongo.db.posts.insert_one(r)
         # remove the _id object that pymongo added because it screws up later
@@ -235,13 +231,12 @@ class feed(Resource):
         ### 
         pass
 
-      for t in to:
-        user = requests.get(t, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
+      for d in destination:
+        user = requests.get(d, headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
         if user.get('inbox'):
           inbox = user['inbox']
         else:
-          inbox = t
-        print('to: '+inbox)
+          inbox = d
         requests.post(inbox, json=r, headers=sign_headers(u, API_CONTENT_HEADERS))
       return 202
     abort(400)
@@ -358,23 +353,7 @@ class new_post(Resource):
 
     obj = createPost(r, u)
 
-    for to in r['to']:
-      destination.append(get_address_format(to))
-    for bto in r['bto']:
-      destination.append(get_address_format(bto))
-    for cc in r['cc']:
-      destination.append(get_address_format(cc))
-    for bcc in r['bcc']:
-      destination.append(get_address_format(bcc))
-    for audience in r['audience']:
-      destination.append(get_address_format(audience))
-    for inReplyTo in r['inReplyTo']:
-      destination.append(get_address_format(inReplyTo))
-
-
-    for d in destination:
-      requests.post(d, json=obj, headers=sign_headers(u, API_CONTENT_HEADERS))
-    mongo.db.posts.insert_one(obj)
+    requests.post(u['feed'], json=obj, sign_headers(u, 'API_CONTENT_HEADERS'))
     
 
 # url handling
