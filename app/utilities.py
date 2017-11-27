@@ -74,16 +74,29 @@ def get_address(addr, box='inbox'):
       if addr.startswith('acct'):
         return get_address_from_webfinger(acct=a)
   
-  if addr.startswith('http'):
-    if addr is not 'https://www.w3.org/ns/activitystreams#Public':
-      try:
-        inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
-        return inbox
-      except AttributeError:
+  try:
+    if addr.startswith('http'):
+      if addr is not 'https://www.w3.org/ns/activitystreams#Public':
+        try:
+          inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
+          return inbox
+        except AttributeError:
+          return addr
+      else:
         return addr
-    else:
-      return addr
-
+  except AttributeError:
+    for a in addr:
+      if addr.startswith('http'):
+        if addr is not 'https://www.w3.org/ns/activitystreams#Public':
+          try:
+            inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), API_ACCEPT_HEADERS)).json()['inbox']
+            return inbox
+          except AttributeError:
+            return addr
+        else:
+          return addr
+      else:
+        print('not a valid uri')
 def get_address_from_webfinger(acct, box):
   wf = finger(acct)
   user = wf.rel('self')
