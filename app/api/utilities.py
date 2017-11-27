@@ -116,6 +116,8 @@ def createPost(r, u):
   id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
   note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
   
+  print(str(r))
+
   time = get_time()
 
   create =  {
