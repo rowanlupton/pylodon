@@ -339,7 +339,7 @@ class new_post(Resource):
     post = createPost(r, u)
 
     destination = []
-    to = ['https://www.w3.org/ns/activitystreams#Public']
+    r['to'] = ['https://www.w3.org/ns/activitystreams#Public']
 
     if u.get('followers_coll'):
       for follower in u['followers_coll']:
@@ -347,15 +347,15 @@ class new_post(Resource):
 
     if 'to' not in r:
       r['to'] = []
-    if not 'bto' in r:
+    if 'bto' not in r:
       r['bto'] = []
-    if not 'cc' in r:
+    if 'cc' not in r:
       r['cc'] = []
-    if not 'bcc' in r:
+    if 'bcc' not in r:
       r['bcc'] = []
-    if not 'audience' in r:
+    if 'audience' not in r:
       r['audience'] = []
-    if not 'inReplyTo' in r:
+    if 'inReplyTo' not in r:
       r['inReplyTo'] = []
 
     obj = createPost(r, u)
