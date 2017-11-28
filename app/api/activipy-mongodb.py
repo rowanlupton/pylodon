@@ -17,7 +17,7 @@ class JsonMongoDB(object):
     self.db.insert_one(json.dumps(item))
 
   def __delitem__(self, key):
-    self.db.remove({'id': key.encode('utf-8')}, justOne=True)
+    self.db.remove({'id': key.encode('utf-8')})
 
   def __contains__(self, key):
     return (self.db.find({'id': key.encode('utf-8')}).count() > 0)
