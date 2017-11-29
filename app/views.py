@@ -1,5 +1,5 @@
 from app import app, lm, mongo, webfinger
-from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
+from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME, SERVER_NAME
 from .api import api
 from .api.utilities import find_user_or_404, get_time
 from .users import User
@@ -34,6 +34,7 @@ def load_user(handle):
 def index():
   posts = mongo.db.posts.find()
 
+  return posts
   return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/notifications')
@@ -66,8 +67,8 @@ def compose():
     # create = create_post(data['post'], u['username'], to, cc)
 
     post_number = str(u['metrics']['post_count'])
-    id = request.url_root+'api/'+u['username']+'/posts/'+post_number
-    note_url = request.url_root+'@'+u['username']+'/'+post_number
+    id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
+    note_url = 'https://'+SERVER_NAME+'@'+u['username']+'/'+post_number
     
     time = get_time()
 
