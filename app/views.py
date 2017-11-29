@@ -32,9 +32,9 @@ def load_user(handle):
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-  posts = mongo.db.posts.find()
+  posts = mongo.db.posts.find({}, {'_id': False})
 
-  return str(posts)
+  return posts
   return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/notifications')
