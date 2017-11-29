@@ -34,7 +34,7 @@ def load_user(handle):
 def index():
   posts = mongo.db.posts.find()
 
-  return posts
+  return str(posts)
   return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/notifications')
