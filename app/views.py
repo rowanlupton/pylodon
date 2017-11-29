@@ -38,7 +38,7 @@ def index():
 
   for post in posts:
     p.append(post)
-    p.append('<br/>')
+    p.append('<br/><br/><br/>')
 
   return str(p)
   return render_template('index.html', posts=posts, mongo=mongo)
