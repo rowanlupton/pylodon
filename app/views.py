@@ -1,7 +1,7 @@
 from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS, API_NAME, SERVER_NAME
 from .api import api
-from .api.utilities import find_user_or_404, get_time
+from .api.utilities import find_user_or_404, get_time, sign_object
 from .users import User
 from .forms import userLogin, userRegister, composePost
 from .utilities import get_address, get_logged_in_user, create_post, create_like, return_new_user
@@ -88,7 +88,8 @@ def compose():
                       object=vocab.Note(
                         id,
                         url=note_url,
-                        content=data['post'])
+                        content=data['post']),
+                      signature=sign_object(u, data['post'])
                       )
 
     requests.post(u['outbox'], json=create.json(), headers=API_CONTENT_HEADERS)
