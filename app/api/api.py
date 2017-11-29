@@ -122,20 +122,6 @@ class feed(Resource):
       if r['@type'] == 'Note':
         print('Note')
 
-        # per spec, all addressing should be done by the client, so this needs to change
-        to = []
-        if r.get('to'):
-          for t in r['to']:
-            if t.startswith('acct:'):
-              t = get_address_from_webfinger(t)
-            to.append(t)
-        cc = []
-        if r.get('cc'):
-          for c in r['cc']:
-            if c.startswith('acct:'):
-              c = get_address_from_webfinger(c)
-            cc.append(c)
-
         obj = r
         r = {
               'id': obj['@id']+'/activity',
@@ -163,13 +149,6 @@ class feed(Resource):
           for follower in u['followers_coll']:
             to.append(follower)
 
-        for t in r['to']:
-          t = get_address_format(t)
-          to.append(t)
-        for cc in r['cc']:
-          cc = get_address_format(cc)
-          to.append(cc)
-
         mongo.db.posts.insert_one(r)
         # remove the _id object that pymongo added because it screws up later
         r.pop('_id')
@@ -177,20 +156,6 @@ class feed(Resource):
       elif r['@type'] == 'Like':
         if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
           mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
-
-        # again, addressing should be done by the client
-        if 'to' in r['object']:
-          for t in r['object.to']:
-            if t.startswith('acct:'):
-              to.append(get_address_from_webfinger(t))
-            else:
-              to.append(t)
-        if 'cc' in r['object']:
-          for c in r['object.cc']:
-            if c.startswith('acct:'):
-              to.append(get_address_from_webfinger(c))
-            else:
-              to.append(c)
 
       elif r['@type'] == 'Follow':
         if r['object']['@id'] not in u['following_coll']:
