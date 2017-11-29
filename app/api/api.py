@@ -104,8 +104,8 @@ class feed(Resource):
       items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
       resp =  {
                 '@context': DEFAULT_CONTEXT,
-                'id': u['outbox'],
-                'type': 'OrderedCollection',
+                '@id': u['outbox'],
+                '@type': 'OrderedCollection',
                 'totalItems': len(items),
                 'orderedItems': items
               }
@@ -119,7 +119,7 @@ class feed(Resource):
       u = find_user_or_404(handle)
       
       # if it's a note it turns it into a Create object
-      if r['type'] == 'Note':
+      if r['@type'] == 'Note':
         print('Note')
 
         # per spec, all addressing should be done by the client, so this needs to change
@@ -138,7 +138,7 @@ class feed(Resource):
 
         obj = r
         r = {
-              'id': obj['id']+'/activity',
+              'id': obj['@id']+'/activity',
               'type': 'Create',
               'actor': u[id],
               'published': obj['published'],
@@ -147,8 +147,8 @@ class feed(Resource):
               'object': obj.get_json()
             }
 
-      if r['type'] == 'Create':
-        if r['object']['type'] is not 'Note':
+      if r['@type'] == 'Create':
+        if r['object']['@type'] is not 'Note':
           print('not a note')
           abort(403)
 
@@ -173,9 +173,9 @@ class feed(Resource):
         # remove the _id object that pymongo added because it screws up later
         r.pop('_id')
 
-      elif r['type'] == 'Like':
-        if u['acct'] not in mongo.db.posts.find({'id': r['object']['id']})['likes']:
-          mongo.db.posts.update({'id': r['object']['id']}, {'$push': {'likes': u['acct']}})
+      elif r['@type'] == 'Like':
+        if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
+          mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
 
         # again, addressing should be done by the client
         if 'to' in r['object']:
@@ -191,43 +191,43 @@ class feed(Resource):
             else:
               to.append(c)
 
-      elif r['type'] == 'Follow':
-        if r['object']['id'] not in u['following_coll']:
-          followed_user = requests.get(r['object']['id']).json()
+      elif r['@type'] == 'Follow':
+        if r['object']['@id'] not in u['following_coll']:
+          followed_user = requests.get(r['object']['@id']).json()
 
           to.append(followed_user['id'])
 
-      elif r['type'] == 'Update':
+      elif r['@type'] == 'Update':
         ### update user object on other servers
         followers = u['followers_coll']
 
         for f in followers:
           to.append(f)
 
-      elif r['type'] == 'Delete':
+      elif r['@type'] == 'Delete':
         ### notify other servers that an object has been deleted
         followers = u['followers_coll']
 
         for f in followers:
           to.append(f)
 
-      elif r['type'] == 'Add':
+      elif r['@type'] == 'Add':
         ### 
         pass
 
-      elif r['type'] == 'Remove':
+      elif r['@type'] == 'Remove':
         ### 
         pass
 
-      elif r['type'] == 'Announce':
+      elif r['@type'] == 'Announce':
         ### share
         pass
 
-      elif r['type'] == 'Block':
+      elif r['@type'] == 'Block':
         ### 
         pass
 
-      elif r['type'] == 'Undo':
+      elif r['@type'] == 'Undo':
         ### 
         pass
 
