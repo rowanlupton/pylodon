@@ -75,7 +75,7 @@ def compose():
                       id+'/activity',
                       actor=vocab.Person(
                         u['id'],
-                        displayName=u['displayName']),
+                        displayName=u['name']),
                       to=to,
                       cc=cc,
                       object=vocab.Note(
