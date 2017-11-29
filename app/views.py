@@ -1,9 +1,10 @@
 from app import app, lm, mongo, webfinger
 from config import API_CONTENT_HEADERS, API_ACCEPT_HEADERS
 from .api import api
+from .api.utilities import find_user_or_404, get_time
 from .users import User
 from .forms import userLogin, userRegister, composePost
-from .utilities import find_user_or_404, get_address, get_logged_in_user, get_time, create_post, create_like, return_new_user
+from .utilities import get_address, get_logged_in_user, create_post, create_like, return_new_user
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
@@ -61,7 +62,7 @@ def compose():
 
 
 
-    create = create_post(data['post'], u['username'], to, cc)
+    # create = create_post(data['post'], u['username'], to, cc)
 
     post_number = str(u['metrics']['post_count'])
     id = request.url_root+'api/'+u['username']+'/posts/'+post_number
@@ -69,6 +70,18 @@ def compose():
     
     time = get_time()
 
+    create = vocab.Create(
+                      id+'/activity',
+                      actor=vocab.Person(
+                        u['id'],
+                        displayName=u['displayName']),
+                      to=to,
+                      cc=cc,
+                      object=vocab.Note(
+                        id,
+                        url=note_url,
+                        content=content)
+                      )
 
     requests.post(u['outbox'], json=create, headers=API_CONTENT_HEADERS)
     return redirect(request.args.get("next") or url_for('index'))
