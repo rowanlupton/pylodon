@@ -39,7 +39,7 @@ class liked(Resource):
       u = find_user_or_404(handle)
       likes = []
 
-      for post in mongo.db.posts.find({'object.liked_coll': u['id']}):
+      for post in mongo.db.posts.find({'object.liked_coll': u['@id']}):
         likes.append(post['object'])
 
       return likes
@@ -49,7 +49,7 @@ class inbox(Resource):
   def get(self, handle):
     print('inbox get')
     if check_accept_headers(request):
-      items = list(mongo.db.posts.find({'to': find_user_or_404(handle)['id']}, {'_id': False}).sort('published', -1))
+      items = list(mongo.db.posts.find({'to': find_user_or_404(handle)['@id']}, {'_id': False}).sort('published', -1))
 
       return items
     abort(406)
@@ -68,7 +68,7 @@ class inbox(Resource):
           if u['followers_coll'].get('actor'):
             return 400
 
-        mongo.db.users.update_one({'id': u['id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
+        mongo.db.users.update_one({'id': u['@id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
         to = requests.get(r['actor'], headers=sign_headers(u, API_ACCEPT_HEADERS)).json()['inbox']
         accept = createAccept(r, to)
         headers = sign_headers(u, API_CONTENT_HEADERS)
@@ -78,14 +78,14 @@ class inbox(Resource):
 
       elif r['type'] == 'Accept':
         print('received Accept')
-        mongo.db.users.update_one({'id': u['id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
+        mongo.db.users.update_one({'id': u['@id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
         return 202
 
       elif r['type'] == 'Create':
         # this needs more stuff, like creating a user if necessary
         print('received Create')
         print(r)
-        if not mongo.db.posts.find({'id': r['id']}):
+        if not mongo.db.posts.find({'id': r['@id']}):
           mongo.db.posts.insert_one(r['object'].json())
           return 202
 
@@ -101,7 +101,7 @@ class feed(Resource):
     if check_accept_headers(request):
       u = find_user_or_404(handle)
 
-      items = list(mongo.db.posts.find({'object.attributedTo': u['id']},{'_id': False}).sort('published', -1))
+      items = list(mongo.db.posts.find({'object.attributedTo': u['@id']},{'_id': False}).sort('published', -1))
       resp =  {
                 '@context': DEFAULT_CONTEXT,
                 '@id': u['outbox'],
@@ -161,7 +161,7 @@ class feed(Resource):
         if r['object']['@id'] not in u['following_coll']:
           followed_user = requests.get(r['object']['@id']).json()
 
-          to.append(followed_user['id'])
+          to.append(followed_user['@id'])
 
       elif r['@type'] == 'Update':
         ### update user object on other servers
@@ -219,7 +219,7 @@ class user(Resource):
 
       user =  {
                '@context': u['@context'],
-               'id': u['id'],
+               'id': u['@id'],
                'followers': u['followers'],
                'following': u['following'],
                'icon': {'type': 'Image', 'url': u['avatar']},
@@ -228,7 +228,7 @@ class user(Resource):
                'name': u['name'],
                'outbox': u['outbox'],
                'preferredUsername': u['username'],
-               'publicKey': {'id': u['id']+'#main-key', 'owner': u['id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
+               'publicKey': {'id': u['@id']+'#main-key', 'owner': u['@id'], 'publicKeyPem': u['publicKey']['publicKeyPem'].decode('utf-8')},
                'summary': '',
                'type': u['type'],
                'url': u['url']

@@ -17,7 +17,7 @@ def get_logged_in_user():
   if not u:
     abort(404)
   return u
-
+  
 def find_post_or_404(handle, post_id):
   id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
   p = mongo.db.posts.find_one({'id': id}, {'_id': False})
@@ -114,10 +114,41 @@ def create_post(content, handle, to, cc):
   
   time = get_time()
 
+  # create =  {
+  #           'id': id+'/activity',
+  #           'type': 'Create',
+  #           '@context': DEFAULT_CONTEXT,
+  #           'actor': u['@id'],
+  #           'published': time,
+  #           'to': to,
+  #           'cc': cc,
+  #           'object': {
+  #                       'id': id,
+  #                       'type': 'Note',
+  #                       'summary': None,
+  #                       'content': content,
+  #                       'inReplyTo': None,
+  #                       'published': time,
+  #                       'url': note_url,
+  #                       'attributedTo': u['@id'],
+  #                       'to': to,
+  #                       'cc': cc,
+  #                       'sensitive': False
+  #                     },
+  #           'signature': {
+  #             'created': time,
+  #             'creator': u['@id']+'?get=main-key',
+  #             'signatureValue': sign_object(u, content),
+  #             'type': 'rsa-sha256'
+  #           }
+  #         }
+
+  # return json.dumps(create)
+
   return vocab.Create(
                       id+'/activity',
                       actor=vocab.Person(
-                        u['id'],
+                        u['@id'],
                         displayName=u['displayName']),
                       to=to,
                       cc=cc,
@@ -136,13 +167,13 @@ def create_like(actorAcct, post):
                     context=DEFAULT_CONTEXT,
                     actor=actorAcct,
                     to=to,
-                    object=post['id'])
+                    object=post['@id'])
 def create_follow(actorAcct, otherUser):
   return vocab.Follow(
                       id=None,
                       context=DEFAULT_CONTEXT,
                       actor=actorAcct,
-                      object=vocab.User(otherUser['id']))
+                      object=vocab.User(otherUser['@id']))
 def create_accept(followObj, to):
   acceptObj = {
                 "@context": DEFAULT_CONTEXT,

@@ -23,7 +23,7 @@ def check_content_headers(request):
     return True
   return False
 def sign_headers(u, headers):
-  key_id = u['publicKey']['id']
+  key_id = u['publicKey']['@id']
   secret = u['privateKey']
 
   hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
@@ -37,7 +37,7 @@ def sign_headers(u, headers):
 
   return auth
 def sign_object(u, obj):
-  key_id = u['publicKey']['id']
+  key_id = u['publicKey']['@id']
   secret = u['privateKey']
 
   hs = Signer(secret=secret, algorithm="rsa-sha256")
