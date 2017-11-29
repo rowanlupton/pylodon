@@ -40,7 +40,7 @@ def index():
     p.append(post)
     p.append('\n')
 
-  return str(posts)
+  return str(p)
   return render_template('index.html', posts=posts, mongo=mongo)
 
 @app.route('/notifications')
