@@ -74,7 +74,7 @@ def compose():
 
     post_number = str(u['metrics']['post_count'])
     id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
-    note_url = 'https://'+SERVER_NAME+'@'+u['username']+'/'+post_number
+    note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
     
     time = get_time()
 
@@ -89,7 +89,10 @@ def compose():
                         id,
                         url=note_url,
                         content=data['post']),
-                      signature=sign_object(u, data['post'])
+                      signature=dict( created=time,
+                                      creator=u['@id']+'?get=main-key',
+                                      signatureValue=sign_object(u, data['post']),
+                                      type='rsa-sha256')
                       )
 
     requests.post(u['outbox'], json=create.json(), headers=API_CONTENT_HEADERS)
