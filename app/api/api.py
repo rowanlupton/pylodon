@@ -148,7 +148,7 @@ class feed(Resource):
             }
 
       if r['@type'] == 'Create':
-        if r['object']['@type'] is not 'Note':
+        if r['object']['@type'] != 'Note':
           print(str(r))
           print('not a note')
           abort(403)
