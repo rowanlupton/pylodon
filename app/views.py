@@ -8,6 +8,7 @@ from .utilities import get_address, get_logged_in_user, create_post, create_like
 from .webfinger import webfinger_find_user
 # from .emails import lostPassword, checkToken
 
+from activipy import vocab
 from flask import Flask, render_template, request, session, flash, redirect, url_for, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 import requests, json
