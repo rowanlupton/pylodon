@@ -24,7 +24,7 @@ def load_user(handle):
     u = mongo.db.users.find_one({"username": handle})
     if not u:
         return None
-    return User(u['id'])
+    return User(u['@id'])
 
 
 #################### MISCELLANEA ####################
@@ -81,7 +81,7 @@ def compose():
     create = vocab.Create(
                       id+'/activity',
                       actor=vocab.Person(
-                        u['id'],
+                        u['@id'],
                         displayName=u['name']),
                       to=to,
                       cc=cc,
