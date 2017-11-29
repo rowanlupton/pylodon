@@ -81,7 +81,7 @@ def compose():
                       object=vocab.Note(
                         id,
                         url=note_url,
-                        content=content)
+                        content=data['post'])
                       )
 
     requests.post(u['outbox'], json=create, headers=API_CONTENT_HEADERS)
