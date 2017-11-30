@@ -1,6 +1,7 @@
 import os
 
 API_NAME = os.environ['api_name']
+API_URI = os.environ['api_uri']
 SERVER_NAME = os.environ['server_name']
 
 WTF_CSRF_ENABLED = True

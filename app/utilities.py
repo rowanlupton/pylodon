@@ -4,13 +4,10 @@ from .crypto import generate_keys
 from .api.utilities import find_user_or_404, get_time, sign_object
 
 from activipy import vocab
-from flask import abort, request, url_for
+from flask import abort, request
 from flask_login import current_user
-from httpsig import HeaderSigner, Signer
-from httpsig.requests_auth import HTTPSignatureAuth
 from webfinger import finger
-from werkzeug.http import http_date, parse_date
-import datetime, json, requests
+import requests
 
 
 def get_logged_in_user():

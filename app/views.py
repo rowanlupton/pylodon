@@ -1,5 +1,5 @@
 from app import app, lm, mongo, webfinger
-from config import CONTENT_HEADERS, ACCEPT_HEADERS, API_NAME, SERVER_NAME
+from config import CONTENT_HEADERS, ACCEPT_HEADERS, API_NAME, API_URI, SERVER_NAME
 from .api import api
 from .api.utilities import find_user_or_404, get_time, sign_object
 from .users import User
@@ -171,15 +171,19 @@ def register():
                 flash("username taken")
                 return render_template('registration.html', form=form, mongo=mongo)
             else:
-                passwordHash = User.hash_password(user['password'])
-                new_user = return_new_user(
-                    handle=user['handle'],
-                    displayName=user['displayName'],
-                    email=user['email'],
-                    passwordHash=passwordHash)
+                user_api_uri = API_URI+'/'+user['handle']
+                new_user = vocab.Person(
+                    user_api_uri,
+                    following=user_api_uri+'/following',
+                    followers=user_api_uri+'/followers',
+                    liked=user_api_uri+'/likes',
+                    inbox=user_api_uri+'/inbox',
+                    outbox=user_api_uri+'/feed',
+                    preferredUsername=user['displayName'],
+                    passwordHash=User.hash_password(user['password'])
+                    )
                 mongo.db.users.insert_one(new_user)
             return redirect(request.args.get("next") or url_for('index'))
-
         else:
             flash("passwords did not match")
             return render_template('registration.html', form=form, mongo=mongo)
