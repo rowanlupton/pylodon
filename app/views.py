@@ -182,7 +182,7 @@ def register():
                     preferredUsername=user['displayName'],
                     passwordHash=User.hash_password(user['password'])
                     )
-                mongo.db.users.insert_one(new_user)
+                mongo.db.users.insert_one(new_user.json())
             return redirect(request.args.get("next") or url_for('index'))
         else:
             flash("passwords did not match")
