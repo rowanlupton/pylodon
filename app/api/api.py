@@ -1,13 +1,11 @@
 # thanks to https://github.com/snarfed for the authorization -> signature headers hack
 
 from app import mongo, rest_api
-from config import ACCEPT_HEADERS, CONTENT_HEADERS
-from .utilities import check_accept_headers, check_content_headers, find_user_or_404, get_time, sign_headers
+from .utilities import accept_headers, check_accept_headers, check_content_headers, content_headers, find_post, find_user
 
-from activipy import vocab
-from flask import abort, Blueprint, jsonify, make_response, redirect, request, Response
+from activipy import core, vocab
+from flask import abort, Blueprint, request, Response
 from flask_restful import Resource
-from urllib.parse import unquote
 
 import json
 import requests
@@ -19,7 +17,7 @@ print('registered api')
 class following(Resource):
     def get(self, handle):
         if check_accept_headers(request):
-            u = find_user_or_404(handle)
+            u = find_user(handle)
 
             return u.get('following_coll', [])
         abort(406)
@@ -29,7 +27,7 @@ class followers(Resource):
     def get(self, handle):
         print('followers get')
         if check_accept_headers(request):
-            u = find_user_or_404(handle)
+            u = find_user(handle)
 
             return u.get('followers_coll', [])
         abort(406)
@@ -38,7 +36,7 @@ class followers(Resource):
 class liked(Resource):
     def get(self, handle):
         if check_accept_headers(request):
-            u = find_user_or_404(handle)
+            u = find_user(handle)
             likes = []
 
             for post in mongo.db.posts.find({'object.liked_coll': u['@id']}):
@@ -52,7 +50,7 @@ class inbox(Resource):
     def get(self, handle):
         print('inbox get')
         if check_accept_headers(request):
-            items = list(mongo.db.posts.find({'to': find_user_or_404(handle)['@id']}, {'_id': False}).sort('published', -1))
+            items = list(mongo.db.posts.find({'to': find_user(handle)['@id']}, {'_id': False}).sort('published', -1))
 
             return items
         abort(406)
@@ -60,7 +58,7 @@ class inbox(Resource):
     def post(self, handle):
         print('inbox post')
         if check_content_headers(request):
-            u = find_user_or_404(handle)
+            u = find_user(handle)
             r = request.get_json()
 
             if r['@type'] == 'Like':
@@ -73,9 +71,11 @@ class inbox(Resource):
                         return 400
 
                 mongo.db.users.update_one({'id': u['@id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-                to = requests.get(r['actor'], headers=sign_headers(u, ACCEPT_HEADERS)).json()['inbox']
-                accept = createAccept(r, to)
-                headers = sign_headers(u, CONTENT_HEADERS)
+                to = requests.get(r['actor'], headers=accept_headers(u)).json()['inbox']
+                accept = vocab.accept(
+                                to=to,
+                                object=r.get_json()).json()
+                headers = content_headers(u)
 
                 requests.post(to, json=accept, headers=headers)
                 return 202
@@ -104,41 +104,40 @@ class feed(Resource):
     def get(self, handle):
         print('feed get')
         if check_accept_headers(request):
-            u = find_user_or_404(handle)
+            u = find_user(handle)
 
-            items = list(mongo.db.posts.find({'object.attributedTo': u['@id']},{'_id': False}).sort('published', -1))
-            resp = {
-                    '@context': 'DEFAULT_CONTEXT',
-                    '@id': u['outbox'],
-                    '@type': 'OrderedCollection',
-                    'totalItems': len(items),
-                    'orderedItems': items
-                }
+            items = list(mongo.db.posts.find({'object.attributedTo': u['@id']}, {'_id': False}).sort('published', -1))
+            
+            resp = vocab.OrderedCollection(
+                u['outbox'],
+                totalItems=len(items),
+                orderedItems=items)
 
-            return Response(json.dumps(resp), headers=sign_headers(u, CONTENT_HEADERS))
+            return Response(json=resp.json(), headers=content_headers(u))
         abort(406)
 
     def post(self, handle):
         if check_content_headers(request):
-            r = request.get_json()
-            u = find_user_or_404(handle)
+            r = core.ASObj(request.get_json(), vocab.BasicEnv)
+            u = find_user(handle)
 
             # if it's a note it turns it into a Create object
-            if r['@type'] == 'Note':
+            if 'Note' in r.types:
                 print('Note')
 
-                obj = r
-                r = {
-                            'id': obj['@id']+'/activity',
-                            'type': 'Create',
-                            'actor': u[id],
-                            'published': obj['published'],
-                            'to': to,
-                            'cc': cc,
-                            'object': obj.get_json()
-                        }
+                obj = r.get_json()
+                r = vocab.Create(
+                    obj['@id']+'/activity',
+                    actor=u['@id'],
+                    published=obj['published'],
+                    to=obj['to'],
+                    bto=obj['bto'],
+                    cc=obj['cc'],
+                    bcc=obj['bcc'],
+                    audience=obj['audience'],
+                    obj=obj)
 
-            if r['@type'] == 'Create':
+            if 'Create' in r.types:
                 if r['object']['@type'] != 'Note':
                     print(str(r))
                     print('not a note')
@@ -148,76 +147,61 @@ class feed(Resource):
 
                 mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
 
-                content = r['object']['content']
-
-                if u.get('followers_coll'):
-                    for follower in u['followers_coll']:
-                        to.append(follower)
-
-                mongo.db.posts.insert_one(r)
-                # remove the _id object that pymongo added because it screws up later
-                r.pop('_id')
-
-            elif r['@type'] == 'Like':
+            elif 'Like' in r.types:
                 if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
                     mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
 
-            elif r['@type'] == 'Follow':
-                if r['object']['@id'] not in u['following_coll']:
-                    followed_user = requests.get(r['object']['@id']).json()
+            elif 'Follow' in r.types:
+                pass
 
-                    to.append(followed_user['@id'])
-
-            elif r['@type'] == 'Update':
+            elif 'Update' in r.types:
                 """
                 update user object on other servers
                 """
-                followers = u['followers_coll']
+                pass
 
-                for f in followers:
-                    to.append(f)
-
-            elif r['@type'] == 'Delete':
+            elif 'Delete' in r.types:
                 """
                 notify other servers that an object has been deleted
                 """
-                followers = u['followers_coll']
+                pass
 
-                for f in followers:
-                    to.append(f)
-
-            elif r['@type'] == 'Add':
+            elif 'Add' in r.types:
                 """
                 """
                 pass
 
-            elif r['@type'] == 'Remove':
+            elif 'Remove' in r.types:
                 """
                 """
                 pass
 
-            elif r['@type'] == 'Announce':
+            elif 'Announce' in r.types:
                 """
                 """
                 pass
 
-            elif r['@type'] == 'Block':
+            elif 'Block' in r.types:
                 """
                 """
                 pass
 
-            elif r['@type'] == 'Undo':
-                ### 
+            elif 'Undo' in r.types:
+                """
+                """
                 pass
 
-            for t in to:
-                user = requests.get(t, headers=sign_headers(u, ACCEPT_HEADERS)).json()
-                if user.get('inbox'):
-                    inbox = user['inbox']
-                else:
-                    inbox = t
-                print('to: '+inbox)
-                requests.post(inbox, json=r, headers=sign_headers(u, CONTENT_HEADERS))
+            recipients = []
+            r = r.json()
+
+            for group in ['to', 'bto', 'cc', 'bcc', 'audience']:
+                addresses = r.get(group, [])
+                recipients.extend(addresses)
+
+            for address in addresses:
+                requests.post(address, json=r, headers=content_headers(u))
+            mongo.db.posts.insert_one(r)
+
             return 202
         abort(400)
 
@@ -226,7 +210,7 @@ class user(Resource):
     def get(self, handle):
         print('get user')
         if check_accept_headers(request):
-            u = find_user_or_404(handle)
+            u = find_user(handle)
 
             if request.args.get('get') == 'main-key':
                 return u['publicKey']['publicKeyPem'].decode('utf-8')
@@ -248,24 +232,24 @@ class user(Resource):
                     'url': u['url']
                 }
 
-            return user, sign_headers(u, CONTENT_HEADERS)
+            return user, content_headers(u)
         abort(406)
 
 
 class get_post(Resource):
     def get(self, handle, post_id):
-        post = find_post_or_404(handle, post_id)
+        post = find_post(handle, post_id)
         if check_accept_headers(request):
             return post['object']
         return 'template yet to be written'
 
 
 class get_post_activity(Resource):
-    def get(self, handle, post_id):  
-        post = find_post_or_404(handle, post_id)
+    def get(self, handle, post_id):
+        post = find_post(handle, post_id)
         if check_accept_headers(request):
             return post
-        return 'template yet to be written'    
+        return 'template yet to be written'
 
 
 # url handling

@@ -1,5 +1,5 @@
 from app import mongo
-from .api.utilities import sign_headers
+from .api.utilities import sign_headers, content_headers
 from config import CONTENT_HEADERS
 
 # from dicttoxml import dicttoxml
@@ -47,7 +47,7 @@ def get_user_info(**kwargs):
             resp_xml = render_template('webfinger_user.xml', resp=resp)
             content_type = 'application/xrd+xml'
             response = Response(resp_xml, mimetype=content_type)
-            response.headers = sign_headers(u, {'Content-Type': content_type})
+            response.headers = content_headers(u)
             return response
 
     resp = jsonify(resp)

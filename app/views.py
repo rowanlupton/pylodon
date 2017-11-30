@@ -1,14 +1,14 @@
 from app import app, lm, mongo, webfinger
-from config import CONTENT_HEADERS, ACCEPT_HEADERS, API_NAME, API_URI, SERVER_NAME
+from config import ACCEPT_HEADERS
 from .api import api
-from .api.utilities import find_user_or_404, get_time, sign_object
+from .api.utilities import content_headers, find_user
 from .forms import userLogin, userRegister, composePost
-from .utilities import get_address, get_logged_in_user, create_like, create_user
+from .users import User
+from .utilities import get_address, get_logged_in_user, create_like, create_post, create_user
 # from .emails import lostPassword, checkToken
 
-from activipy import vocab
-from flask import render_template, request, flash, redirect, url_for, abort
-from flask_login import login_user, logout_user, login_required, current_user
+from flask import render_template, request, flash, redirect, url_for
+from flask_login import login_user, logout_user, login_required
 import requests
 import json
 from urllib.parse import unquote
@@ -51,7 +51,7 @@ def index():
 @login_required
 def notifications():
     u = get_logged_in_user()
-    r = requests.get(u['inbox'], headers=CONTENT_HEADERS)
+    r = requests.get(u['inbox'], headers=content_headers(u))
 
     return render_template('index.html', posts=r.json()['items'], mongo=mongo)
 
@@ -62,44 +62,22 @@ def compose():
     form = composePost()
     if form.validate_on_submit():
         u = get_logged_in_user()
-        data = dict(cc=form.to.data,
-                    post=form.text.data)
-        to = ['https://www.w3.org/ns/activitystreams#Public']
-        cc = []
+        data = dict(
+            to=form.to.data,
+            post=form.text.data)
+        addresses = dict(
+            to=['https://www.w3.org/ns/activitystreams#Public'],
+            bto=[],
+            cc=[u['followers']],
+            bcc=[],
+            audience=[])
 
-        if u.get('followers_coll'):
-            for follower in u['followers_coll']:
-                to.append(get_address(follower))
-        for c in data['cc'].split(','):
-            cc.append(get_address(cc))
+        for t in data['to'].split(','):
+            addresses['to'].append(get_address(t))
 
-        # create = create_post(data['post'], u['username'], to, cc)
+        create = create_post(u, data['post'], addresses)
 
-        post_number = str(u['metrics']['post_count'])
-        id = 'https://'+API_NAME+'/'+u['username']+'/'+post_number
-        note_url = 'https://'+SERVER_NAME+'/@'+u['username']+'/'+post_number
-
-        time = get_time()
-
-        create = vocab.Create(
-                            id+'/activity',
-                            actor=vocab.Person(
-                                u['@id'],
-                                displayName=u['name']),
-                            to=to,
-                            cc=cc,
-                            object=vocab.Note(
-                                id,
-                                url=note_url,
-                                content=data['post']),
-                            signature=dict(
-                                created=time,
-                                creator=u['@id']+'?get=main-key',
-                                signatureValue=sign_object(u, data['post']),
-                                type='rsa-sha256')
-                          )
-
-        requests.post(u['outbox'], json=create.json(), headers=CONTENT_HEADERS)
+        requests.post(u['outbox'], json=create.json(), headers=content_headers(u))
         return redirect(request.args.get("next") or url_for('index'))
     return render_template('compose.html', form=form, mongo=mongo)
 
@@ -114,7 +92,7 @@ def redirectToViewFeed(handle):
 
 @app.route('/@<handle>')
 def viewFeed(handle):
-    u = find_user_or_404(handle)
+    u = find_user(handle)
     r = requests.get(u['outbox'], headers=ACCEPT_HEADERS).json()
     return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
 
@@ -129,10 +107,10 @@ def viewPost(handle, postID):
 # @login_required
 def likePost(handle, postID):
     loggedin_u = get_logged_in_user()
-    u = find_user_or_404(handle)
+    u = find_user(handle)
     p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
     like = create_like(u['acct'], p)
-    requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=CONTENT_HEADERS)
+    requests.post(loggedin_u['outbox'], data=json.dumps(like.json()), headers=content_headers(u))
     # return redirect(request.args.get("next") or url_for('index'))
 
 
@@ -144,7 +122,7 @@ def login():
     if form.validate_on_submit():
         password = form.password.data
         handle = form.handle.data
-        user = find_user_or_404(handle)
+        user = find_user(handle)
         if user and User.validate_login(user['password'], password):
             user_obj = User(user['username'])
             login_user(user_obj)

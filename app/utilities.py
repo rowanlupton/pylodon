@@ -1,29 +1,20 @@
 from app import mongo
-from config import ACCEPT_HEADERS, API_NAME, API_URI, SERVER_NAME
+from config import ACCEPT_HEADERS, API_URI, SERVER_NAME, SERVER_URI
 from .crypto import generate_keys
-from .api.utilities import find_user_or_404, get_time, sign_object
+from .api.utilities import get_time, sign_object, content_headers, accept_headers
 from .users import User
 
 from activipy import vocab
-from flask import abort, request
 from flask_login import current_user
 from webfinger import finger
 import requests
 
 
 def get_logged_in_user():
-    u = mongo.db.users.find_one({'id': current_user.get_id()})
+    u = mongo.db.users.find_one({'@id': current_user.get_id()})
     if not u:
-        abort(404)
+        return None
     return u
-
-
-def find_post_or_404(handle, post_id):
-    id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
-    p = mongo.db.posts.find_one({'id': id}, {'_id': False})
-    if not p:
-        abort(404)
-    return p
 
 
 def get_address(addr, box='inbox'):
@@ -36,7 +27,7 @@ def get_address(addr, box='inbox'):
                 addr = 'acct:'+addr[1:]
     try:
         if addr.startswith('acct'):
-            return get_address_from_webfinger(acct=addr, box=box)    
+            return get_address_from_webfinger(acct=addr, box=box)
     except AttributeError:
         for a in addr:
             if addr.startswith('acct'):
@@ -46,7 +37,7 @@ def get_address(addr, box='inbox'):
         if addr.startswith('http'):
             if addr is not 'https://www.w3.org/ns/activitystreams#Public':
                 try:
-                    inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), ACCEPT_HEADERS)).json()['inbox']
+                    inbox = requests.get(addr, accept_headers(get_logged_in_user())).json()['inbox']
                     return inbox
                 except AttributeError:
                     return addr
@@ -57,7 +48,7 @@ def get_address(addr, box='inbox'):
             if addr.startswith('http'):
                 if addr is not 'https://www.w3.org/ns/activitystreams#Public':
                     try:
-                        inbox = requests.get(addr, headers=sign_headers(get_logged_in_user(), ACCEPT_HEADERS)).json()['inbox']
+                        inbox = requests.get(addr, headers=accept_headers(get_logged_in_user())).json()['inbox']
                         return inbox
                     except AttributeError:
                         return addr
@@ -83,8 +74,8 @@ def create_user(user):
     return vocab.Person(
                     user_api_uri,
                     username=user['handle'],
-                    acct=user['handle']+SERVER_NAME,
-                    url=SERVER_NAME+'/@'+user['handle'],
+                    acct=user['handle']+'@'+SERVER_NAME,
+                    url=SERVER_URI+'/@'+user['handle'],
                     preferredUsername=user['displayName'],
                     email=user['email'],
                     following=user_api_uri+'/following',
@@ -94,66 +85,56 @@ def create_user(user):
                     outbox=user_api_uri+'/feed',
                     metrics=dict(post_count=0),
                     created_at=get_time(),
-                    passwordHash=User.hash_password(user['password']),
-                    publicKey=dict(
-                        id=user_api_uri+'#main-key',
+                    password=User.hash_password(user['password']),
+                    publicKey=vocab.Object(
+                        user_api_uri+'#main-key',
+                        type='publicKey',
                         owner=user_api_uri,
                         publicKeyPem=public),
                     privateKey=private)
 
 
-def create_post(content, handle, to, cc):
-    u = find_user_or_404(handle)
+def create_post(u, content, addresses):
+    user_api_uri = API_URI+'/'+u['username']
 
     post_number = str(u['metrics']['post_count'])
-    id = request.url_root+'api/'+u['username']+'/posts/'+post_number
-    note_url = request.url_root+'@'+u['username']+'/'+post_number
+    id = user_api_uri+'/posts/'+post_number
+    note_url = SERVER_URI+'/@'+u['username']+'/'+post_number
 
     time = get_time()
-
-    # create =  {
-    #           'id': id+'/activity',
-    #           'type': 'Create',
-    #           '@context': 'DEFAULT_CONTEXT',
-    #           'actor': u['@id'],
-    #           'published': time,
-    #           'to': to,
-    #           'cc': cc,
-    #           'object': {
-    #                       'id': id,
-    #                       'type': 'Note',
-    #                       'summary': None,
-    #                       'content': content,
-    #                       'inReplyTo': None,
-    #                       'published': time,
-    #                       'url': note_url,
-    #                       'attributedTo': u['@id'],
-    #                       'to': to,
-    #                       'cc': cc,
-    #                       'sensitive': False
-    #                     },
-    #           'signature': {
-    #             'created': time,
-    #             'creator': u['@id']+'?get=main-key',
-    #             'signatureValue': sign_object(u, content),
-    #             'type': 'rsa-sha256'
-    #           }
-    #         }
-
-    # return json.dumps(create)
 
     return vocab.Create(
                         id+'/activity',
                         actor=vocab.Person(
                             u['@id'],
-                            displayName=u['displayName']),
-                        to=to,
-                        cc=cc,
+                            preferredUsername=u['preferredUsername']),
+                        published=time,
+                        to=addresses['to'],
+                        bto=addresses['bto'],
+                        cc=addresses['cc'],
+                        bcc=addresses['bcc'],
+                        audience=addresses['audience'],
                         object=vocab.Note(
                             id,
+                            published=time,
                             url=note_url,
-                            content=content)
-                        )
+                            # summary=summary,
+                            # inReplyTo=inReplyTo,
+                            to=addresses['to'],
+                            bto=addresses['bto'],
+                            cc=addresses['cc'],
+                            bcc=addresses['bcc'],
+                            audience=addresses['audience'],
+                            attributedTo=vocab.Person(
+                                u['@id'],
+                                preferredUsername=u['preferredUsername']),
+                            # sensitive=sensitive,
+                            content=content),
+                        signature=dict(
+                            created=time,
+                            creator=u['@id']+'?get=main-key',
+                            signatureValue=sign_object(u, content),
+                            type='rsa-sha256'))
 
 
 def create_like(actorAcct, post):

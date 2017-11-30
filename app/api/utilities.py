@@ -1,27 +1,25 @@
 from app import mongo
-from config import API_NAME, SERVER_NAME, VALID_HEADERS
-from ..crypto import generate_keys
+from config import VALID_HEADERS, API_URI, ACCEPT_HEADERS, CONTENT_HEADERS
 
-from flask import abort, request
+from flask import abort
 from httpsig import HeaderSigner, Signer
-from webfinger import finger
 from werkzeug.http import http_date
-import datetime, requests
+import datetime
 
 
 def get_time():
     return datetime.datetime.now().isoformat()
 
 
-def check_accept_headers(request):
-    accept = request.headers.get('accept')
+def check_accept_headers(r):
+    accept = r.headers.get('accept')
     if accept and (accept in VALID_HEADERS):
         return True
     return False
 
 
-def check_content_headers(request):
-    content_type = request.headers.get('Content-Type')
+def check_content_headers(r):
+    content_type = r.headers.get('Content-Type')
     if content_type and (content_type in VALID_HEADERS):
         return True
     return False
@@ -43,6 +41,14 @@ def sign_headers(u, headers):
     return auth
 
 
+def content_headers(u):
+    return sign_headers(u, CONTENT_HEADERS)
+
+
+def accept_headers(u):
+    return sign_headers(u, ACCEPT_HEADERS)
+
+
 def sign_object(u, obj):
     # key_id = u['publicKey']['@id']
     secret = u['privateKey']
@@ -53,9 +59,18 @@ def sign_object(u, obj):
     return auth_object
 
 
-def find_user_or_404(handle):
+def find_user(handle):
     u = mongo.db.users.find_one({'username': handle})
     if not u:
         print('user not found')
-        abort(404)
+        return None
     return u
+
+
+def find_post(handle, post_id):
+    user_api_uri = API_URI+'/'+handle
+    id = user_api_uri+'/'+post_id
+    p = mongo.db.posts.find_one({'object.id': id}, {'_id': False})
+    if not p:
+        abort(404)
+    return p
