@@ -1,97 +1,177 @@
 from app import mongo
-from config import API_ACCEPT_HEADERS, VALID_HEADERS, DEFAULT_CONTEXT
+from config import ACCEPT_HEADERS, API_URI, SERVER_NAME, SERVER_URI
 from .crypto import generate_keys
-from .api.utilities import find_user_or_404, get_time, sign_object
+from .api.utilities import get_time, sign_object, content_headers, accept_headers
+from .users import User
 
 from activipy import vocab
-from flask import abort, request, url_for
 from flask_login import current_user
-from httpsig import HeaderSigner, Signer
-from httpsig.requests_auth import HTTPSignatureAuth
 from webfinger import finger
-from werkzeug.http import http_date, parse_date
-import datetime, json, requests
+import requests
 
 
-def find_post_or_404(handle, post_id):
-  id = request.url_root+'api/'+handle+'/'+post_id+'/activity'
-  p = mongo.db.posts.find_one({'id': id}, {'_id': False})
-  if not p:
-    abort(404)
-  return p
 def get_logged_in_user():
-  u = mongo.db.users.find_one({'id': current_user.get_id()})
-  if not u:
-    abort(404)
-  return u
+    u = mongo.db.users.find_one({'@id': current_user.get_id()})
+    if not u:
+        return None
+    return u
 
-def createPost(content, handle, to, cc):
-  u = find_user_or_404(handle)
-  
-  post_number = str(u['metrics']['post_count'])
-  id = request.url_root+'api/'+u['username']+'/posts/'+post_number
-  note_url = request.url_root+'@'+u['username']+'/'+post_number
-  
-  time = get_time()
 
-  create =  {
-            'id': id+'/activity',
-            'type': 'Create',
-            '@context': DEFAULT_CONTEXT,
-            'actor': u['id'],
-            'published': time,
-            'to': to,
-            'cc': cc,
-            'object': {
-                        'id': id,
-                        'type': 'Note',
-                        'summary': None,
-                        'content': content,
-                        'inReplyTo': None,
-                        'published': time,
-                        'url': note_url,
-                        'attributedTo': u['id'],
-                        'to': to,
-                        'cc': cc,
-                        'sensitive': False
-                      },
-            'signature': {
-              'created': time,
-              'creator': u['id']+'?get=main-key',
-              'signatureValue': sign_object(u, content),
-              'type': 'rsa-sha256'
-            }
-          }
-  return json.dumps(create)
-def createLike(actorAcct, post):
-  to = post['attributedTo']
-  if posts.get('to'):
-    for t in post['to']:
-      to.append(t)
-      
-  return vocab.Like(
-                    context=DEFAULT_CONTEXT,
+def get_address(addr, box='inbox'):
+    try:
+        if addr.startswith('@'):
+            addr = 'acct:'+addr[1:]
+    except AttributeError:
+        for a in addr:
+            if a.startswith('@'):
+                addr = 'acct:'+addr[1:]
+    try:
+        if addr.startswith('acct'):
+            return get_address_from_webfinger(acct=addr, box=box)
+    except AttributeError:
+        for a in addr:
+            if addr.startswith('acct'):
+                return get_address_from_webfinger(acct=a)
+
+    try:
+        if addr.startswith('http'):
+            if addr is not 'https://www.w3.org/ns/activitystreams#Public':
+                try:
+                    inbox = requests.get(addr, accept_headers(get_logged_in_user())).json()['inbox']
+                    return inbox
+                except AttributeError:
+                    return addr
+        else:
+            return addr
+    except AttributeError:
+        for a in addr:
+            if addr.startswith('http'):
+                if addr is not 'https://www.w3.org/ns/activitystreams#Public':
+                    try:
+                        inbox = requests.get(addr, headers=accept_headers(get_logged_in_user())).json()['inbox']
+                        return inbox
+                    except AttributeError:
+                        return addr
+                else:
+                    return addr
+            else:
+                print('not a valid uri')
+
+
+def get_address_from_webfinger(acct, box):
+    wf = finger(acct)
+    user = wf.rel('self')
+    u = requests.get(user, headers=ACCEPT_HEADERS).json()
+
+    return u[box]
+
+
+def create_user(user):
+    public, private = generate_keys()
+
+    user_api_uri = API_URI+'/'+user['handle']
+
+    return vocab.Person(
+                    user_api_uri,
+                    username=user['handle'],
+                    acct=user['handle']+'@'+SERVER_NAME,
+                    url=SERVER_URI+'/@'+user['handle'],
+                    preferredUsername=user['displayName'],
+                    email=user['email'],
+                    following=user_api_uri+'/following',
+                    followers=user_api_uri+'/followers',
+                    liked=user_api_uri+'/likes',
+                    inbox=user_api_uri+'/inbox',
+                    outbox=user_api_uri+'/feed',
+                    metrics=dict(post_count=0),
+                    created_at=get_time(),
+                    password=User.hash_password(user['password']),
+                    publicKey=vocab.Object(
+                        user_api_uri+'#main-key',
+                        type='publicKey',
+                        owner=user_api_uri,
+                        publicKeyPem=public),
+                    privateKey=private)
+
+
+def create_post(u, content, addresses):
+    user_api_uri = API_URI+'/'+u['username']
+
+    post_number = str(u['metrics']['post_count'])
+    id = user_api_uri+'/posts/'+post_number
+    note_url = SERVER_URI+'/@'+u['username']+'/'+post_number
+
+    time = get_time()
+
+    return vocab.Create(
+                        id+'/activity',
+                        actor=vocab.Person(
+                            u['@id'],
+                            preferredUsername=u['preferredUsername']),
+                        published=time,
+                        to=addresses['to'],
+                        bto=addresses['bto'],
+                        cc=addresses['cc'],
+                        bcc=addresses['bcc'],
+                        audience=addresses['audience'],
+                        object=vocab.Note(
+                            id,
+                            published=time,
+                            url=note_url,
+                            # summary=summary,
+                            # inReplyTo=inReplyTo,
+                            to=addresses['to'],
+                            bto=addresses['bto'],
+                            cc=addresses['cc'],
+                            bcc=addresses['bcc'],
+                            audience=addresses['audience'],
+                            attributedTo=vocab.Person(
+                                u['@id'],
+                                preferredUsername=u['preferredUsername']),
+                            # sensitive=sensitive,
+                            content=content),
+                        signature=dict(
+                            created=time,
+                            creator=u['@id']+'?get=main-key',
+                            signatureValue=sign_object(u, content),
+                            type='rsa-sha256'))
+
+
+def create_like(actorAcct, post):
+    to = post['attributedTo']
+    if post.get('to'):
+        for t in post['to']:
+            to.append(t)
+
+    return vocab.Like(
+                    context='DEFAULT_CONTEXT',
                     actor=actorAcct,
                     to=to,
-                    object=post['id'])
-def createFollow(actorAcct, otherUser):
-  return vocab.Follow(
+                    object=post['@id'])
+
+
+def create_follow(actorAcct, otherUser):
+    return vocab.Follow(
                       id=None,
-                      context=DEFAULT_CONTEXT,
+                      context='DEFAULT_CONTEXT',
                       actor=actorAcct,
-                      object=vocab.User(otherUser['id']))
-def createAccept(followObj, to):
-  acceptObj = {
-                "@context": DEFAULT_CONTEXT,
+                      object=vocab.User(otherUser['@id']))
+
+
+def create_accept(followObj, to):
+    acceptObj = {
+                "@context": 'DEFAULT_CONTEXT',
                 'type': 'Accept',
                 'to': to,
                 'object': followObj
               }
-  return acceptObj
-def createReject(followObj, to):
-  rejectObj = {
+    return acceptObj
+
+
+def create_reject(followObj, to):
+    rejectObj = {
                 'type': 'Reject',
                 'to': to,
                 'object': followObj
               }
-  return rejectObj
+    return rejectObj

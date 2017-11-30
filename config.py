@@ -1,9 +1,9 @@
 import os
-from pymongo import MongoClient
-from werkzeug.http import http_date
 
 API_NAME = os.environ['api_name']
+API_URI = os.environ['api_uri']
 SERVER_NAME = os.environ['server_name']
+SERVER_URI = os.environ['server_uri']
 
 WTF_CSRF_ENABLED = True
 SECRET_KEY = os.environ['secret_key']
@@ -13,20 +13,13 @@ MONGO_URI = 'mongodb://rowanlupton:'+os.environ['mongodb-password']+'@cluster0-s
 MONGO_DBNAME = 'Cluster0'
 
 valid_header = 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
-API_CONTENT_HEADERS = {'Content-Type': valid_header}
-API_ACCEPT_HEADERS = {'Accept': valid_header}
+CONTENT_HEADERS = {'Content-Type': valid_header}
+ACCEPT_HEADERS = {'Accept': valid_header}
 # specified by ActivityPub/ActivityStreams
-VALID_HEADERS = ( 
-  'application/ld+json; profile="https://www.w3.org/ns/activitystreams"', 
-  "application/ld+json; profile='https://www.w3.org/ns/activitystreams'", 
-  'application/activity+json')
-DEFAULT_CONTEXT = [
-										"https://www.w3.org/ns/activitystreams",
-										{
-											"manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
-											'sensitive': 'as:sensitive'
-										}
-									]
+VALID_HEADERS = (
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+    'application/ld+json; profile=\https://www.w3.org/ns/activitystreams\'',
+    'application/activity+json')
 
 
 # email server
@@ -39,5 +32,3 @@ MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 
 # administrator list
 ADMINS = ['rowanlupton@icloud.com']
-
-

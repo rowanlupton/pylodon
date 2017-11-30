@@ -1,102 +1,76 @@
 from app import mongo
-from config import API_ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS, DEFAULT_CONTEXT
-from ..crypto import generate_keys
+from config import VALID_HEADERS, API_URI, ACCEPT_HEADERS, CONTENT_HEADERS
 
-from flask import abort, request
+from flask import abort
 from httpsig import HeaderSigner, Signer
-from webfinger import finger
 from werkzeug.http import http_date
-import datetime, requests
+import datetime
+
 
 def get_time():
+    return datetime.datetime.now().isoformat()
 
-  return datetime.datetime.now().isoformat()
-def return_new_user(handle, displayName, email, passwordHash):
-  public, private = generate_keys()
 
-  user_api_uri = 'https://'+API_NAME+'/'+handle
+def check_accept_headers(r):
+    accept = r.headers.get('accept')
+    if accept and (accept in VALID_HEADERS):
+        return True
+    return False
 
-  return  {  
-            'id': user_api_uri, 
-            '@context': DEFAULT_CONTEXT,
-            'type': 'Person', 
-            'username': handle,
-            'acct': handle+'@'+SERVER_NAME,
-            'url': 'https://'+SERVER_NAME+'/@'+handle,
-            'name': displayName, 
-            'email': email, 
-            'password': passwordHash,
-            'manuallyApprovesFollowers': False,
-            'avatar': None,
-            'header': None,
-            'following': user_api_uri+'/following', 
-            'followers': user_api_uri+'/followers', 
-            'liked': user_api_uri+'/liked', 
-            'inbox': user_api_uri+'/inbox', 
-            'outbox': user_api_uri+'/feed',
-            'metrics': {'post_count': 0},
-            'created_at': get_time(),
-            'publicKey': {
-                          'id': user_api_uri+'#main-key',
-                          'owner': user_api_uri,
-                          'publicKeyPem': public
-                          },
-            'privateKey': private
-          }
-def check_accept_headers(request):
-  accept = request.headers.get('accept')
-  if accept and (accept in VALID_HEADERS):
-    return True
-  return False
-def check_content_headers(request):
-  content_type = request.headers.get('Content-Type')
-  if content_type and (content_type in VALID_HEADERS):
-    return True
-  return False
+
+def check_content_headers(r):
+    content_type = r.headers.get('Content-Type')
+    if content_type and (content_type in VALID_HEADERS):
+        return True
+    return False
+
+
 def sign_headers(u, headers):
-  key_id = u['publicKey']['id']
-  secret = u['privateKey']
+    key_id = u['publicKey']['@id']
+    secret = u['privateKey']
 
-  hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
-  auth = hs.sign({"Date": http_date()})
+    hs = HeaderSigner(key_id, secret, algorithm='rsa-sha256')
+    auth = hs.sign({"Date": http_date()})
 
-  auth['Signature'] = auth.pop('authorization')
-  assert auth['Signature'].startswith('Signature ')
-  auth['Signature'] = auth['Signature'][len('Signature '):]
+    auth['Signature'] = auth.pop('authorization')
+    assert auth['Signature'].startswith('Signature ')
+    auth['Signature'] = auth['Signature'][len('Signature '):]
 
-  auth.update(headers)
+    auth.update(headers)
 
-  return auth
+    return auth
+
+
+def content_headers(u):
+    return sign_headers(u, CONTENT_HEADERS)
+
+
+def accept_headers(u):
+    return sign_headers(u, ACCEPT_HEADERS)
+
+
 def sign_object(u, obj):
-  key_id = u['publicKey']['id']
-  secret = u['privateKey']
+    # key_id = u['publicKey']['@id']
+    secret = u['privateKey']
 
-  hs = Signer(secret=secret, algorithm="rsa-sha256")
-  auth_object = hs._sign(obj)
+    hs = Signer(secret=secret, algorithm="rsa-sha256")
+    auth_object = hs._sign(obj)
 
-  return auth_object
+    return auth_object
 
-def get_address_format(addr):
-  if (addr.startswith('acct:') or
-      addr.startswith('@') or
-      addr == 'check for webfinger via regex'):
-    addr = requests.get(get_address_from_webfinger(t), headers=sign_headers(u, API_ACCEPT_HEADERS)).json()
-    
-    return get_address_from_webfinger(addr)
-  elif addr.startswith('http'):
-    return addr
 
-def get_address_from_webfinger(acct, box='inbox'):
-  wf = finger(acct)
-  user = wf.rel('self')
-  u = requests.get(user, headers=API_ACCEPT_HEADERS).json()
-  address = u[box]
+def find_user(handle):
+    u = mongo.db.users.find_one({'username': handle})
+    if not u:
+        print('user not found')
+        return None
+    return u
 
-  return user
 
-def find_user_or_404(handle):
-  u = mongo.db.users.find_one({'username': handle})
-  if not u:
-    print('user not found')
-    abort(404)
-  return u
+def find_post(handle, post_id):
+    user_api_uri = API_URI+'/'+handle
+    id = user_api_uri+'/'+post_id
+    p = mongo.db.posts.find_one({'object.id': id}, {'_id': False})
+    if not p:
+        abort(404)
+    return p
