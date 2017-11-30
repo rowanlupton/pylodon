@@ -108,7 +108,7 @@ class feed(Resource):
 
             items = list(mongo.db.posts.find({'object.attributedTo': u['@id']},{'_id': False}).sort('published', -1))
             resp = {
-                    '@context': DEFAULT_CONTEXT,
+                    '@context': 'DEFAULT_CONTEXT',
                     '@id': u['outbox'],
                     '@type': 'OrderedCollection',
                     'totalItems': len(items),

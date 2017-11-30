@@ -1,5 +1,5 @@
 from app import mongo
-from config import ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS, DEFAULT_CONTEXT
+from config import ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS
 from .crypto import generate_keys
 from .api.utilities import find_user_or_404, get_time, sign_object
 
@@ -32,7 +32,7 @@ def return_new_user(handle, displayName, email, passwordHash):
 
     return {
             'id': user_api_uri,
-            '@context': DEFAULT_CONTEXT,
+            '@context': 'DEFAULT_CONTEXT',
             'type': 'Person',
             'username': handle,
             'acct': handle+'@'+SERVER_NAME,
@@ -120,7 +120,7 @@ def create_post(content, handle, to, cc):
     # create =  {
     #           'id': id+'/activity',
     #           'type': 'Create',
-    #           '@context': DEFAULT_CONTEXT,
+    #           '@context': 'DEFAULT_CONTEXT',
     #           'actor': u['@id'],
     #           'published': time,
     #           'to': to,
@@ -169,7 +169,7 @@ def create_like(actorAcct, post):
             to.append(t)
 
     return vocab.Like(
-                    context=DEFAULT_CONTEXT,
+                    context='DEFAULT_CONTEXT',
                     actor=actorAcct,
                     to=to,
                     object=post['@id'])
@@ -178,14 +178,14 @@ def create_like(actorAcct, post):
 def create_follow(actorAcct, otherUser):
     return vocab.Follow(
                       id=None,
-                      context=DEFAULT_CONTEXT,
+                      context='DEFAULT_CONTEXT',
                       actor=actorAcct,
                       object=vocab.User(otherUser['@id']))
 
 
 def create_accept(followObj, to):
     acceptObj = {
-                "@context": DEFAULT_CONTEXT,
+                "@context": 'DEFAULT_CONTEXT',
                 'type': 'Accept',
                 'to': to,
                 'object': followObj

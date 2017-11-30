@@ -23,7 +23,6 @@ app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known')
 
 # SET-UP
 
-
 @lm.user_loader
 def load_user(handle):
     u = mongo.db.users.find_one({"username": handle})
@@ -139,6 +138,7 @@ def likePost(handle, postID):
 
 
 # LOG IN/OUT
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = userLogin()
