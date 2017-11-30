@@ -1,7 +1,8 @@
 from app import mongo
-from config import ACCEPT_HEADERS, API_NAME, SERVER_NAME, VALID_HEADERS
+from config import ACCEPT_HEADERS, API_NAME, API_URI, SERVER_NAME
 from .crypto import generate_keys
 from .api.utilities import find_user_or_404, get_time, sign_object
+from .users import User
 
 from activipy import vocab
 from flask import abort, request
@@ -23,40 +24,6 @@ def find_post_or_404(handle, post_id):
     if not p:
         abort(404)
     return p
-
-
-def return_new_user(handle, displayName, email, passwordHash):
-    public, private = generate_keys()
-
-    user_api_uri = 'https://'+API_NAME+'/'+handle
-
-    return {
-            'id': user_api_uri,
-            '@context': 'DEFAULT_CONTEXT',
-            'type': 'Person',
-            'username': handle,
-            'acct': handle+'@'+SERVER_NAME,
-            'url': 'https://'+SERVER_NAME+'/@'+handle,
-            'name': displayName,
-            'email': email,
-            'password': passwordHash,
-            'manuallyApprovesFollowers': False,
-            'avatar': None,
-            'header': None,
-            'following': user_api_uri+'/following',
-            'followers': user_api_uri+'/followers',
-            'liked': user_api_uri+'/liked',
-            'inbox': user_api_uri+'/inbox',
-            'outbox': user_api_uri+'/feed',
-            'metrics': {'post_count': 0},
-            'created_at': get_time(),
-            'publicKey': {
-                          'id': user_api_uri+'#main-key',
-                          'owner': user_api_uri,
-                          'publicKeyPem': public
-                          },
-            'privateKey': private
-          }
 
 
 def get_address(addr, box='inbox'):
@@ -106,6 +73,33 @@ def get_address_from_webfinger(acct, box):
     u = requests.get(user, headers=ACCEPT_HEADERS).json()
 
     return u[box]
+
+
+def create_user(user):
+    public, private = generate_keys()
+
+    user_api_uri = API_URI+'/'+user['handle']
+
+    return vocab.Person(
+                    user_api_uri,
+                    username=user['handle'],
+                    acct=user['handle']+SERVER_NAME,
+                    url=SERVER_NAME+'/@'+user['handle'],
+                    preferredUsername=user['displayName'],
+                    email=user['email'],
+                    following=user_api_uri+'/following',
+                    followers=user_api_uri+'/followers',
+                    liked=user_api_uri+'/likes',
+                    inbox=user_api_uri+'/inbox',
+                    outbox=user_api_uri+'/feed',
+                    metrics=dict(post_count=0),
+                    created_at=get_time(),
+                    passwordHash=User.hash_password(user['password']),
+                    publicKey=dict(
+                        id=user_api_uri+'#main-key',
+                        owner=user_api_uri,
+                        publicKeyPem=public),
+                    privateKey=private)
 
 
 def create_post(content, handle, to, cc):
