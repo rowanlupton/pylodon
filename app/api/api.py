@@ -17,7 +17,7 @@ def check_headers_before_request():
     """
     will abort with an appropriate HTTP error code if headers are wrong
     """
-
+    print(checked_headers)
     if STRICT_HEADERS:
         check_headers(request=request)
 
