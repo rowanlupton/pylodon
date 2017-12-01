@@ -1,5 +1,3 @@
-# thanks to https://github.com/snarfed for the authorization -> signature headers hack
-
 from app import mongo, rest_api
 from .config import STRICT_HEADERS
 from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
@@ -27,7 +25,7 @@ def check_headers_before_request():
 class following(Resource):
     def get(self, handle):
         """
-        returns a Collection of all Actors' @ids who follow a given Actor
+        returns a Collection of all Actors' @ids who follow given Actor
         """
         u = find_user(handle)
 
@@ -37,6 +35,7 @@ class following(Resource):
 class followers(Resource):
     def get(self, handle):
         """
+        returns a Collection of all Actors' @ids who follow given Actor
         """
         print('followers get')
         u = find_user(handle)
@@ -47,6 +46,7 @@ class followers(Resource):
 class liked(Resource):
     def get(self, handle):
         """
+        returns a Collection of Objects that given Actor has Liked
         """
         u = find_user(handle)
         likes = []
@@ -60,6 +60,8 @@ class liked(Resource):
 class inbox(Resource):
     def get(self, handle):
         """
+        think of this as the "Home" feed on mastodon. returns all Objects
+        addressed to the user. this should require authentication
         """
         print('inbox get')
         items = list(mongo.db.posts.find({'to': find_user(handle)['@id']}, {'_id': False}).sort('published', -1))
@@ -68,6 +70,9 @@ class inbox(Resource):
 
     def post(self, handle):
         """
+        deduplicates requests, and adds them to the database. in some cases
+        (e.g. Follow requests) it automatically responds, pending fuller API
+        and UI implementation
         """
         print('inbox post')
         u = find_user(handle)
@@ -114,6 +119,8 @@ class inbox(Resource):
 class feed(Resource):
     def get(self, handle):
         """
+        per AP spec, returns a reverse-chronological OrderedCollection of
+        items in the outbox, pending privacy settings
         """
         print('feed get')
         u = find_user(handle)
@@ -129,6 +136,8 @@ class feed(Resource):
 
     def post(self, handle):
         """
+        adds objects that it receives to mongodb and sends them along
+        to appropriate Actor inboxes
         """
         r = core.ASObj(request.get_json(), vocab.BasicEnv)
         u = find_user(handle)
@@ -220,7 +229,8 @@ class feed(Resource):
 class user(Resource):
     def get(self, handle):
         """
-        returns either the user's public key or a Person object with key info removed
+        returns either the user's public key or a Person object with
+        sensitive info removed
         """
         u = find_user(handle)
 
