@@ -22,6 +22,12 @@ def check_headers_before_request():
         check_headers(request=request)
 
 
+@api.before_request
+def add_at_prefix():
+    r = request.get_json()
+    print(r)
+
+
 class following(Resource):
     def get(self, handle):
         """
@@ -258,14 +264,18 @@ class get_post(Resource):
     def get(self, handle, post_id):
         """
         """
-        return find_post(handle, post_id)['object']
+        post = find_post(handle, post_id)['object']
+        headers = content_headers(find_user(handle))
+        return Response(post, headers=headers)
 
 
 class get_post_activity(Resource):
     def get(self, handle, post_id):
         """
         """
-        return find_post(handle, post_id)
+        post = find_post(handle, post_id)
+        headers = content_headers(find_user(handle))
+        return Response(post, headers=headers)
 
 
 # url handling
