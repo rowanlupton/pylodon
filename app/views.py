@@ -24,6 +24,8 @@ app.register_blueprint(webfinger.webfinger, url_prefix='/.well-known')
 
 @lm.user_loader
 def load_user(handle):
+    """
+    """
     u = mongo.db.users.find_one({"username": handle})
     if not u:
         return None
@@ -35,6 +37,8 @@ def load_user(handle):
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+    """
+    """
     posts = mongo.db.posts.find({}, {'_id': False})
 
     p = []
@@ -50,6 +54,8 @@ def index():
 @app.route('/notifications')
 @login_required
 def notifications():
+    """
+    """
     u = get_logged_in_user()
     r = requests.get(u['inbox'], headers=content_headers(u))
 
@@ -59,6 +65,8 @@ def notifications():
 @app.route('/compose', methods=['GET', 'POST'])
 @login_required
 def compose():
+    """
+    """
     form = composePost()
     if form.validate_on_submit():
         u = get_logged_in_user()
@@ -86,12 +94,15 @@ def compose():
 
 @app.route('/<handle>')
 def redirectToViewFeed(handle):
-
+    """
+    """
     return redirect(unquote(url_for('viewFeed', handle=handle)))
 
 
 @app.route('/@<handle>')
 def viewFeed(handle):
+    """
+    """
     u = find_user(handle)
     r = requests.get(u['outbox'], headers=ACCEPT_HEADERS).json()
     return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
@@ -99,6 +110,8 @@ def viewFeed(handle):
 
 @app.route('/<handle>/<postID>')
 def viewPost(handle, postID):
+    """
+    """
     p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
     return render_template('feed.html', posts=p, mongo=mongo)
 
@@ -106,6 +119,8 @@ def viewPost(handle, postID):
 # @app.route('/<handle>/<postID>/like')
 # @login_required
 def likePost(handle, postID):
+    """
+    """
     loggedin_u = get_logged_in_user()
     u = find_user(handle)
     p = mongo.db.posts.find_one({'@id': request.url_root+handle+'/posts/'+postID})
@@ -118,6 +133,8 @@ def likePost(handle, postID):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    """
     form = userLogin()
     if form.validate_on_submit():
         password = form.password.data
@@ -135,6 +152,8 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    """
     form = userRegister()
     if form.validate_on_submit():
         if form.password.data == form.passwordConfirm.data:
@@ -159,5 +178,7 @@ def register():
 @app.route('/logout')
 @login_required
 def logout():
+    """
+    """
     logout_user()
     return redirect(url_for('index'))

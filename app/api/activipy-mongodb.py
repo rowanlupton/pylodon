@@ -3,65 +3,68 @@ from app import mongo
 
 from activipy import core, vocab
 
+
 class JsonMongoDB(object):
-  """
-  json wrapper around a mongo database
-  """
-  def __init__(self, db):
-    self.db = db
+    """
+    json wrapper around a mongo database
+    """
+    def __init__(self, db):
+        self.db = db
 
-  def __getitem__(self, key):
-    return self.db.find_one({'id': key.encode('utf-8')}, {'_id': False})
+    def __getitem__(self, key):
+        return self.db.find_one({'id': key.encode('utf-8')}, {'_id': False})
 
-  def __setitem__(self, item):
-    self.db.insert_one(json.dumps(item))
+    def __setitem__(self, item):
+        self.db.insert_one(json.dumps(item))
 
-  def __delitem__(self, key):
-    self.db.remove({'id': key.encode('utf-8')})
+    def __delitem__(self, key):
+        self.db.remove({'id': key.encode('utf-8')})
 
-  def __contains__(self, key):
-    return (self.db.find({'id': key.encode('utf-8')}).count() > 0)
+    def __contains__(self, key):
+        return (self.db.find({'id': key.encode('utf-8')}).count() > 0)
 
-  @classmethod
-  def get(self, key, default=None):
-  	try:
-  		return self.db.find_one({'id': key}, {'_id': False})
-    except:
-      return default()
+    @classmethod
+    def get(self, key, default=None):
+        try:
+            return self.db.find_one({'id': key}, {'_id': False})
+        except:
+            return default()
 
-  def fetch_asobj(self, env):
-		return core.ASObj(self[id], env)
+    def fetch_asobj(self, env):
+        return core.ASObj(self[id], env)
 
 
 def mongo_fetch(id, db, env):
-    return core.ASObj(db[id], env)
+        return core.ASObj(db[id], env)
+
 
 def mongo_insert(asobj, db):
-    assert asobj.id is not None
-    new_val = asobj.json()
-    db.insert_one(new_val)
-    # db[asobj.id] = new_val
-    return new_val
+        assert asobj.id is not None
+        new_val = asobj.json()
+        db.insert_one(new_val)
+        # db[asobj.id] = new_val
+        return new_val
+
 
 def mongo_remove(asobj, db):
-    assert asobj.id is not None
-    db.remove({'id': asobj.id})
+        assert asobj.id is not None
+        db.remove({'id': asobj.id})
 
 
 mongo_insert_method = core.MethodId(
-    "insert", "Save object to the MongoDB store.",
-    core.handle_one)
+        "insert", "Save object to the MongoDB store.",
+        core.handle_one)
 mongo_remove_method = core.MethodId(
-    "remove", "Delete object from the MongoDB store.",
-    core.handle_one)
+        "remove", "Delete object from the MongoDB store.",
+        core.handle_one)
 
 MongoDBEnv = core.Environment(
-    vocabs=[vocab.CoreVocab],
-    methods={
-        (mongo_insert_method, vocab.Object): mongo_insert,
-        (mongo_remove_method, vocab.Object): mongo_remove},
-    shortids=core.shortids_from_vocab(vocab.CoreVocab),
-    c_accessors=core.shortids_from_vocab(vocab.CoreVocab))
+        vocabs=[vocab.CoreVocab],
+        methods={
+                (mongo_insert_method, vocab.Object): mongo_insert,
+                (mongo_remove_method, vocab.Object): mongo_remove},
+        shortids=core.shortids_from_vocab(vocab.CoreVocab),
+        c_accessors=core.shortids_from_vocab(vocab.CoreVocab))
 
 
 # def mongo_activity_normalized_save(asobj, db):

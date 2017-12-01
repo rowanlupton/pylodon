@@ -1,7 +1,7 @@
 from app import mongo
 from config import ACCEPT_HEADERS, API_URI, SERVER_NAME, SERVER_URI
 from .crypto import generate_keys
-from .api.utilities import get_time, sign_object, content_headers, accept_headers
+from .api.utilities import get_time, sign_object, accept_headers
 from .users import User
 
 from activipy import vocab
@@ -11,6 +11,8 @@ import requests
 
 
 def get_logged_in_user():
+    """
+    """
     u = mongo.db.users.find_one({'@id': current_user.get_id()})
     if not u:
         return None
@@ -18,6 +20,8 @@ def get_logged_in_user():
 
 
 def get_address(addr, box='inbox'):
+    """
+    """
     try:
         if addr.startswith('@'):
             addr = 'acct:'+addr[1:]
@@ -59,6 +63,8 @@ def get_address(addr, box='inbox'):
 
 
 def get_address_from_webfinger(acct, box):
+    """
+    """
     wf = finger(acct)
     user = wf.rel('self')
     u = requests.get(user, headers=ACCEPT_HEADERS).json()
@@ -67,6 +73,8 @@ def get_address_from_webfinger(acct, box):
 
 
 def create_user(user):
+    """
+    """
     public, private = generate_keys()
 
     user_api_uri = API_URI+'/'+user['handle']
@@ -95,6 +103,8 @@ def create_user(user):
 
 
 def create_post(u, content, addresses):
+    """
+    """
     user_api_uri = API_URI+'/'+u['username']
 
     post_number = str(u['metrics']['post_count'])
@@ -138,6 +148,8 @@ def create_post(u, content, addresses):
 
 
 def create_like(actorAcct, post):
+    """
+    """
     to = post['attributedTo']
     if post.get('to'):
         for t in post['to']:
@@ -151,6 +163,8 @@ def create_like(actorAcct, post):
 
 
 def create_follow(actorAcct, otherUser):
+    """
+    """
     return vocab.Follow(
                       id=None,
                       context='DEFAULT_CONTEXT',
@@ -159,6 +173,8 @@ def create_follow(actorAcct, otherUser):
 
 
 def create_accept(followObj, to):
+    """
+    """
     acceptObj = {
                 "@context": 'DEFAULT_CONTEXT',
                 'type': 'Accept',
@@ -169,6 +185,8 @@ def create_accept(followObj, to):
 
 
 def create_reject(followObj, to):
+    """
+    """
     rejectObj = {
                 'type': 'Reject',
                 'to': to,
