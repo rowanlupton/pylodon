@@ -13,7 +13,7 @@ Docs:
 
 Update `config.py` with your MongoDB credentials/URIs (be sure to get the full URI connection string from the "Connect Your Application" dialog), your email address in the `ADMINS` list and some dummy mail server credentials.
 
-Create a `.env` file (or otherwise configure environment variables) for your MongoDB password, API key, and other sensitive variables, based on `.env.example`. `server_name` _must_ be set to the host/port at which you'll be accessing the server; for example, for local testing you might set it to `smilodon.localhost:5000` and add `127.0.0.1 smilodon.localhost` to your `hosts` file.
+Create a `.env` file (or otherwise configure environment variables) for your MongoDB password, API key, and other sensitive variables, based on `.env.example`. `server_name` _must_ be set to the host/port at which you'll be accessing the server; for example, for local testing you might set it to `smilodon.localhost:5000` and add `127.0.0.1 smilodon.localhost` to your `hosts` file. server_uri should be the full address and protocol that it will be found at, e.g. https://smilodon.social.
 
 For local development, you may wish to disable SSLify (in `app/__init__.py`), to access the server over HTTP rather than HTTPS.
 

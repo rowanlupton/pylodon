@@ -1,0 +1,130 @@
+Metadata-Version: 2.0
+Name: Flask-Security
+Version: 3.0.0
+Summary: Simple security for Flask apps.
+Home-page: https://github.com/mattupstate/flask-security
+Author: Matt Wright
+Author-email: matt@nobien.net
+License: MIT
+Keywords: flask security
+Platform: any
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Development Status :: 4 - Beta
+Requires-Dist: Flask (>=0.11)
+Requires-Dist: Flask-Login (>=0.3.0)
+Requires-Dist: Flask-Mail (>=0.7.3)
+Requires-Dist: Flask-Principal (>=0.3.3)
+Requires-Dist: Flask-WTF (>=0.13.1)
+Requires-Dist: Flask-BabelEx (>=0.9.3)
+Requires-Dist: itsdangerous (>=0.21)
+Requires-Dist: passlib (>=1.7)
+Provides-Extra: all
+Requires-Dist: Flask-Sphinx-Themes (>=1.0.1); extra == 'all'
+Requires-Dist: Sphinx (>=1.4.2); extra == 'all'
+Requires-Dist: Flask-CLI (>=0.4.0); extra == 'all'
+Requires-Dist: Flask-Mongoengine (>=0.7.0); extra == 'all'
+Requires-Dist: Flask-Peewee (>=0.6.5); extra == 'all'
+Requires-Dist: Flask-SQLAlchemy (>=1.0); extra == 'all'
+Requires-Dist: bcrypt (>=1.0.2); extra == 'all'
+Requires-Dist: check-manifest (>=0.25); extra == 'all'
+Requires-Dist: coverage (>=4.0); extra == 'all'
+Requires-Dist: isort (>=4.2.2); extra == 'all'
+Requires-Dist: mock (>=1.3.0); extra == 'all'
+Requires-Dist: mongoengine (>=0.10.0); extra == 'all'
+Requires-Dist: pony (>=0.7.1); extra == 'all'
+Requires-Dist: pydocstyle (>=1.0.0); extra == 'all'
+Requires-Dist: pytest-cache (>=1.0); extra == 'all'
+Requires-Dist: pytest-cov (>=2.4.0); extra == 'all'
+Requires-Dist: pytest-flakes (>=1.0.1); extra == 'all'
+Requires-Dist: pytest-pep8 (>=1.0.6); extra == 'all'
+Requires-Dist: pytest-translations (>=1.0.4); extra == 'all'
+Requires-Dist: pytest (>=3.0.5); extra == 'all'
+Requires-Dist: sqlalchemy (>=0.8.0); extra == 'all'
+Requires-Dist: Flask-Sphinx-Themes (>=1.0.1); extra == 'all'
+Requires-Dist: Sphinx (>=1.4.2); extra == 'all'
+Requires-Dist: Flask-CLI (>=0.4.0); extra == 'all'
+Requires-Dist: Flask-Mongoengine (>=0.7.0); extra == 'all'
+Requires-Dist: Flask-Peewee (>=0.6.5); extra == 'all'
+Requires-Dist: Flask-SQLAlchemy (>=1.0); extra == 'all'
+Requires-Dist: bcrypt (>=1.0.2); extra == 'all'
+Requires-Dist: check-manifest (>=0.25); extra == 'all'
+Requires-Dist: coverage (>=4.0); extra == 'all'
+Requires-Dist: isort (>=4.2.2); extra == 'all'
+Requires-Dist: mock (>=1.3.0); extra == 'all'
+Requires-Dist: mongoengine (>=0.10.0); extra == 'all'
+Requires-Dist: pony (>=0.7.1); extra == 'all'
+Requires-Dist: pydocstyle (>=1.0.0); extra == 'all'
+Requires-Dist: pytest-cache (>=1.0); extra == 'all'
+Requires-Dist: pytest-cov (>=2.4.0); extra == 'all'
+Requires-Dist: pytest-flakes (>=1.0.1); extra == 'all'
+Requires-Dist: pytest-pep8 (>=1.0.6); extra == 'all'
+Requires-Dist: pytest-translations (>=1.0.4); extra == 'all'
+Requires-Dist: pytest (>=3.0.5); extra == 'all'
+Requires-Dist: sqlalchemy (>=0.8.0); extra == 'all'
+Provides-Extra: docs
+Requires-Dist: Flask-Sphinx-Themes (>=1.0.1); extra == 'docs'
+Requires-Dist: Sphinx (>=1.4.2); extra == 'docs'
+Provides-Extra: tests
+Requires-Dist: Flask-CLI (>=0.4.0); extra == 'tests'
+Requires-Dist: Flask-Mongoengine (>=0.7.0); extra == 'tests'
+Requires-Dist: Flask-Peewee (>=0.6.5); extra == 'tests'
+Requires-Dist: Flask-SQLAlchemy (>=1.0); extra == 'tests'
+Requires-Dist: bcrypt (>=1.0.2); extra == 'tests'
+Requires-Dist: check-manifest (>=0.25); extra == 'tests'
+Requires-Dist: coverage (>=4.0); extra == 'tests'
+Requires-Dist: isort (>=4.2.2); extra == 'tests'
+Requires-Dist: mock (>=1.3.0); extra == 'tests'
+Requires-Dist: mongoengine (>=0.10.0); extra == 'tests'
+Requires-Dist: pony (>=0.7.1); extra == 'tests'
+Requires-Dist: pydocstyle (>=1.0.0); extra == 'tests'
+Requires-Dist: pytest-cache (>=1.0); extra == 'tests'
+Requires-Dist: pytest-cov (>=2.4.0); extra == 'tests'
+Requires-Dist: pytest-flakes (>=1.0.1); extra == 'tests'
+Requires-Dist: pytest-pep8 (>=1.0.6); extra == 'tests'
+Requires-Dist: pytest-translations (>=1.0.4); extra == 'tests'
+Requires-Dist: pytest (>=3.0.5); extra == 'tests'
+Requires-Dist: sqlalchemy (>=0.8.0); extra == 'tests'
+
+Flask-Security
+===================
+
+.. image:: https://img.shields.io/travis/mattupstate/flask-security.svg
+    :target: https://travis-ci.org/mattupstate/flask-security
+
+.. image:: https://img.shields.io/coveralls/mattupstate/flask-security.svg
+    :target: https://coveralls.io/r/mattupstate/flask-security
+
+.. image:: https://img.shields.io/github/tag/mattupstate/flask-security.svg
+    :target: https://github.com/mattupstate/flask-security/releases
+
+.. image:: https://img.shields.io/pypi/dm/flask-security.svg
+    :target: https://pypi.python.org/pypi/flask-security
+    :alt: Downloads
+
+.. image:: https://img.shields.io/github/license/mattupstate/flask-security.svg
+    :target: https://github.com/mattupstate/flask-security/blob/master/LICENSE
+    :alt: License
+
+It quickly adds security features to your Flask application.
+
+Resources
+---------
+
+- `Documentation <https://flask-security.readthedocs.io/>`_
+- `Issue Tracker <https://github.com/mattupstate/flask-security/issues>`_
+- `Code <https://github.com/mattupstate/flask-security/>`_
+
+

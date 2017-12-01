@@ -1,0 +1,3 @@
+[console_scripts]
+oidc-register = flask_oidc.registration_util:main
+

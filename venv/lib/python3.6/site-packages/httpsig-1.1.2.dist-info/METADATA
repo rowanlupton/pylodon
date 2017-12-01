@@ -1,0 +1,223 @@
+Metadata-Version: 2.0
+Name: httpsig
+Version: 1.1.2
+Summary: Secure HTTP request signing using the HTTP Signature draft specification
+Home-page: https://github.com/ahknight/httpsig
+Author: Adam Knight
+Author-email: adam@movq.us
+License: MIT
+Keywords: http,authorization,api,web
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: pycrypto
+Requires-Dist: six
+
+httpsig
+=======
+
+.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=master
+    :target: https://travis-ci.org/ahknight/httpsig
+
+.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
+    :target: https://travis-ci.org/ahknight/httpsig
+
+Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 3`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
+
+See the original project_, original Python module_, original spec_, and `current IETF draft`_ for more details on the signing scheme.
+
+.. _project: https://github.com/joyent/node-http-signature
+.. _module: https://github.com/zzsnzmn/py-http-signature
+.. _spec: https://github.com/joyent/node-http-signature/blob/master/http_signing.md
+.. _`current IETF draft`: https://datatracker.ietf.org/doc/draft-cavage-http-signatures/
+.. _`Draft 3`: http://tools.ietf.org/html/draft-cavage-http-signatures-03
+
+Requirements
+------------
+
+* Python 2.7, 3.2, 3.3, 3.4
+* PyCrypto_
+
+Optional:
+
+* requests_
+
+.. _PyCrypto: https://pypi.python.org/pypi/pycrypto
+.. _requests: https://pypi.python.org/pypi/requests
+
+Usage
+-----
+
+Real documentation is forthcoming, but for now this should get you started.
+
+For simple raw signing:
+
+.. code:: python
+
+    import httpsig
+
+    secret = open('rsa_private.pem', 'rb').read()
+
+    sig_maker = httpsig.Signer(secret=secret, algorithm='rsa-sha256')
+    sig_maker.sign('hello world!')
+
+For general use with web frameworks:
+
+.. code:: python
+
+    import httpsig
+
+    key_id = "Some Key ID"
+    secret = b'some big secret'
+
+    hs = httpsig.HeaderSigner(key_id, secret, algorithm="hmac-sha256", headers=['(request-target)', 'host', 'date'])
+    signed_headers_dict = hs.sign({"Date": "Tue, 01 Jan 2014 01:01:01 GMT", "Host": "example.com"}, method="GET", path="/api/1/object/1")
+
+For use with requests:
+
+.. code:: python
+
+    import json
+    import requests
+    from httpsig.requests_auth import HTTPSignatureAuth
+
+    secret = open('rsa_private.pem', 'rb').read()
+
+    auth = HTTPSignatureAuth(key_id='Test', secret=secret)
+    z = requests.get('https://api.example.com/path/to/endpoint', 
+                             auth=auth, headers={'X-Api-Version': '~6.5'})
+
+Class initialization parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note that keys and secrets should be bytes objects.  At attempt will be made to convert them, but if that fails then exceptions will be thrown.
+
+.. code:: python
+
+    httpsig.Signer(secret, algorithm='rsa-sha256')
+
+``secret``, in the case of an RSA signature, is a string containing private RSA pem. In the case of HMAC, it is a secret password.  
+``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``, 
+``hmac-sha512``.
+
+
+.. code:: python
+
+    httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None)
+
+``key_id`` is the label by which the server system knows your RSA signature or password.  
+``headers`` is the list of HTTP headers that are concatenated and used as signing objects. By default it is the specification's minimum, the ``Date`` HTTP header.  
+``secret`` and ``algorithm`` are as above.
+
+Tests
+-----
+
+To run tests::
+
+    python setup.py test
+
+or::
+
+    tox
+
+License
+-------
+
+Both this module and the original module_ are licensed under the MIT license.
+
+
+httpsig Changes
+---------------
+
+1.1.2 (2015-Feb-11)
+-------------------
+
+* HMAC verification is now constant-time.
+
+1.1.1 (2015-Feb-11)
+-------------------
+
+* (pulled)
+
+1.1.0 (2014-Jul-24)
+-------------------
+
+* Changed "(request-line)" to "(request-target)" to comply with Draft 3.
+
+1.0.3 (2014-Jul-09)
+-------------------
+
+* Unified the default signing algo under one setting. Setting httpsig.sign.DEFAULT_SIGN_ALGORITHM changes it for all future instances.
+* Handle invalid params a little better.
+
+1.0.2 (2014-Jul-02)
+-------------------
+
+* Ensure we treat headers as ASCII strings.
+* Handle a case in the authorization header where there's garbage (non-keypairs) after the method name.
+
+1.0.1 (2014-Jul-02)
+~~~~~~~~~~~~~~~~~~~
+
+* Python 3 support (2.7 + 3.2-3.4)
+* Updated tox and Travis CI configs to test the supported Python versions.
+* Updated README.
+
+1.0.0 (2014-Jul-01)
+~~~~~~~~~~~~~~~~~~~
+* Written against http://tools.ietf.org/html/draft-cavage-http-signatures-02
+* Added "setup.py test" and tox support.
+* Added sign/verify unit tests for all currently-supported algorithms.
+* HeaderSigner and HeaderVerifier now share the same message-building logic.
+* The HTTP method in the message is now properly lower-case.
+* Resolved unit test failures.
+* Updated Verifier and HeaderVerifier to handle verifying both RSA and HMAC sigs.
+* Updated versioneer.
+* Updated contact/author info.
+* Removed stray keypair in test dir.
+* Removed SSH agent support.
+* Removed suport for reading keyfiles from disk as this is a huge security hole if this is used in a server framework like drf-httpsig.
+
+1.0b1 (2014-Jun-23)
+~~~~~~~~~~~~~~~~~~~~~~
+* Removed HTTP version from request-line, per spec (breaks backwards compatability).
+* Removed auto-generation of missing Date header (ensures client compatability).
+
+
+http-signature (previous)
+-------------------------
+
+0.2.0 (unreleased)
+~~~~~~~~~~~~~~~~~~
+
+* Update to newer spec (incompatible with prior version).
+* Handle `request-line` meta-header.
+* Allow secret to be a PEM encoded string.
+* Add test cases from spec.
+
+0.1.4 (2012-10-03)
+~~~~~~~~~~~~~~~~~~
+
+* Account for ssh now being re-merged into paramiko: either package is acceptable (but paramiko should ideally be >= 1.8.0)
+
+0.1.3 (2012-10-02)
+~~~~~~~~~~~~~~~~~~
+
+* Stop enabling `allow_agent` by default
+* Stop requiring `ssh` package by default -- it is imported only when `allow_agent=True`
+* Changed logic around ssh-agent: if one key is available, don't bother with any other authentication method
+* Changed logic around key file usage: if decryption fails, prompt for password
+* Bug fix: ssh-agent resulted in a nonsensical error if it found no correct keys (thanks, petervolpe)
+* Introduce versioneer.py
+
+
