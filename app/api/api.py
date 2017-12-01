@@ -12,7 +12,7 @@ import requests
 api = Blueprint('api', __name__, template_folder='templates')
 
 
-@api.before_request
+@rest_api.before_request
 def check_headers_before_request():
     """
     will abort with an appropriate HTTP error code if headers are wrong
@@ -22,7 +22,7 @@ def check_headers_before_request():
         check_headers(request=request)
 
 
-@api.before_request
+@rest_api.before_request
 def add_at_prefix():
     r = request.get_json()
     keys = ['id', 'type']
