@@ -2,12 +2,3 @@
 *.pyc
 __pycache__
 venv
-
-*.xd
-*.sublime-project
-*.sublime-workspace
-
-foo.json
-foo1.json
-foo2.json
-foo3.json
