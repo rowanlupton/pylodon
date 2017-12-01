@@ -42,15 +42,15 @@ def check_headers(request):
         if accept and (accept in VALID_HEADERS):
             pass
         else:
-            abort(406)
+            abort(406) # Not Acceptable
     elif method == 'POST':
         content_type = request.headers.get('Content-Type', None)
         if content_type and (content_type in VALID_HEADERS):
             pass
         else:
-            abort(415)
+            abort(415) # Unsupported Media Type
     else:
-        abort(400)
+        abort(400) # Bad Request
 
 
 def sign_headers(u, headers):
