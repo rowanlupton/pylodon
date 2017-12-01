@@ -1,4 +1,4 @@
-from app import mongo, rest_api
+from app import mongo
 from config import STRICT_HEADERS
 from .utilities import accept_headers, as_asobj, check_headers, content_headers, find_post, find_user
 
@@ -12,17 +12,17 @@ import requests
 api = Blueprint('api', __name__, template_folder='templates')
 
 
-@rest_api.before_request
+@api.before_request
 def check_headers_before_request():
     """
     will abort with an appropriate HTTP error code if headers are wrong
     """
-    print(checked_headers)
+    print('checked_headers')
     if STRICT_HEADERS:
         check_headers(request=request)
 
 
-@rest_api.before_request
+@api.before_request
 def add_at_prefix():
     r = request.get_json()
     keys = ['id', 'type']
@@ -31,50 +31,52 @@ def add_at_prefix():
             r['@'+key] = r.pop(key)
 
 
-class following(Resource):
-    def get(self, handle):
-        """
-        returns a Collection of all Actors' @ids who follow given Actor
-        """
-        u = find_user(handle)
+@api.route('/<handle>/followers')
+def following(handle):
+    """
+    returns a Collection of all Actors' @ids who follow given Actor
+    """
+    u = find_user(handle)
 
-        following = u.get('following_coll', [])
-        return Response(json.dumps(following), headers=content_headers(u))
-
-
-class followers(Resource):
-    def get(self, handle):
-        """
-        returns a Collection of all Actors' @ids who follow given Actor
-        """
-        print('followers get')
-        u = find_user(handle)
-
-        followers = u.get('followers_coll', [])
-        return Response(json.dumps(followers), headers=content_headers(u))
+    following = u.get('following_coll', [])
+    return Response(json.dumps(following), headers=content_headers(u))
 
 
-class liked(Resource):
-    def get(self, handle):
-        """
-        returns a Collection of Objects that given Actor has Liked
-        """
-        u = find_user(handle)
-        likes = []
+@api.route('/<handle>/followers')
+def followers(handle):
+    """
+    returns a Collection of all Actors' @ids who follow given Actor
+    """
+    print('followers get')
+    u = find_user(handle)
 
-        for post in mongo.db.posts.find({'object.liked_coll': u['@id']}):
-            likes.append(post['object'])
-
-        return Response(json.dumps(likes), headers=content_headers(u))
+    followers = u.get('followers_coll', [])
+    return Response(json.dumps(followers), headers=content_headers(u))
 
 
-class inbox(Resource):
-    def get(self, handle):
+@api.route('/<handle>/liked')
+def liked(handle):
+    """
+    returns a Collection of Objects that given Actor has Liked
+    """
+    u = find_user(handle)
+    likes = []
+
+    for post in mongo.db.posts.find({'object.liked_coll': u['@id']}):
+        likes.append(post['object'])
+
+    return Response(json.dumps(likes), headers=content_headers(u))
+
+
+@api.route('/<handle>/inbox', methods=['GET', 'POST'])
+def inbox(handle):
+    if request.method == 'GET':
         """
         think of this as the "Home" feed on mastodon. returns all Objects
         addressed to the user. this should require authentication
         """
-        items = list(mongo.db.posts.find({'to': find_user(handle)['@id']}, {'_id': False}).sort('published', -1))
+        u = find_user(handle)
+        items = list(mongo.db.posts.find({'to': u['@id']}, {'_id': False}).sort('published', -1))
 
         resp = vocab.OrderedCollection(
             u['inbox'],
@@ -83,7 +85,7 @@ class inbox(Resource):
 
         return Response(resp, headers=content_headers(find_user(handle)))
 
-    def post(self, handle):
+    if request.method == 'POST':
         """
         deduplicates requests, and adds them to the database. in some cases
         (e.g. Follow requests) it automatically responds, pending fuller API
@@ -131,8 +133,9 @@ class inbox(Resource):
         abort(400)
 
 
-class feed(Resource):
-    def get(self, handle):
+@api.route('/<handle>/feed', methods=['GET', 'POST'])
+def feed(handle):
+    if request.method == 'GET':
         """
         per AP spec, returns a reverse-chronological OrderedCollection of
         items in the outbox, pending privacy settings
@@ -149,7 +152,7 @@ class feed(Resource):
 
         return Response(json.dumps(resp.json()), headers=content_headers(u))
 
-    def post(self, handle):
+    if request.method == 'POST':
         """
         adds objects that it receives to mongodb and sends them along
         to appropriate Actor inboxes
@@ -241,52 +244,41 @@ class feed(Resource):
         return 202
 
 
-class user(Resource):
-    def get(self, handle):
-        """
-        returns either the user's public key or a Person object with
-        sensitive info removed
-        """
-        u = find_user(handle)
+@api.route('/<handle>')
+def user(handle):
+    """
+    returns either the user's public key or a Person object with
+    sensitive info removed
+    """
+    u = find_user(handle)
 
-        if request.args.get('get') == 'main-key':
-            return u['publicKey']['publicKeyPem'].decode('utf-8')
+    if request.args.get('get') == 'main-key':
+        return u['publicKey']['publicKeyPem'].decode('utf-8')
 
-        headers = content_headers(u)
+    headers = content_headers(u)
 
-        # important not to send these things around
-        entries = ('email', 'privateKey', 'password')
-        for entry in entries:
-            u.pop(entry)
-        u['publicKey']['publicKeyPem'] = u['publicKey']['publicKeyPem'].decode('utf-8')
+    # important not to send these things around
+    entries = ('email', 'privateKey', 'password')
+    for entry in entries:
+        u.pop(entry)
+    u['publicKey']['publicKeyPem'] = u['publicKey']['publicKeyPem'].decode('utf-8')
 
-        return Response(json.dumps(u), headers=headers)
-
-
-class get_post(Resource):
-    def get(self, handle, post_id):
-        """
-        """
-        post = find_post(handle, post_id)['object']
-        headers = content_headers(find_user(handle))
-        return Response(post, headers=headers)
+    return Response(json.dumps(u), headers=headers)
 
 
-class get_post_activity(Resource):
-    def get(self, handle, post_id):
-        """
-        """
-        post = find_post(handle, post_id)
-        headers = content_headers(find_user(handle))
-        return Response(post, headers=headers)
+@api.route('/<handle>/<post_id>')
+def get_post(handle, post_id):
+    """
+    """
+    post = find_post(handle, post_id)['object']
+    headers = content_headers(find_user(handle))
+    return Response(post, headers=headers)
 
 
-# url handling
-rest_api.add_resource(following, '/<string:handle>/following', subdomain='api')
-rest_api.add_resource(followers, '/<string:handle>/followers', subdomain='api')
-rest_api.add_resource(liked, '/<string:handle>/liked', subdomain='api')
-rest_api.add_resource(inbox, '/<string:handle>/inbox', subdomain='api')
-rest_api.add_resource(feed, '/<string:handle>/feed', subdomain='api')
-rest_api.add_resource(user, '/<string:handle>', subdomain='api')
-rest_api.add_resource(get_post, '/<string:handle>/<string:post_id>', subdomain='api')
-rest_api.add_resource(get_post_activity, '/<string:handle>/<string:post_id>/activity', subdomain='api')
+@api.route('/<handle>/<post_id>/activity')
+def get_post_activity(handle, post_id):
+    """
+    """
+    post = find_post(handle, post_id)
+    headers = content_headers(find_user(handle))
+    return Response(post, headers=headers)

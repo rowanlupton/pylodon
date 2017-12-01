@@ -2,7 +2,6 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_pymongo import PyMongo
-from flask_restful import Api
 from flask_sslify import SSLify
 
 
@@ -15,7 +14,6 @@ lm.login_view = 'login'
 
 mail = Mail(app)
 mongo = PyMongo(app)
-rest_api = Api(app)
 sslify = SSLify(app, subdomains=True, permanent=True)
 
 
