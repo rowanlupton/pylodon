@@ -1,15 +1,15 @@
 from app import mongo, rest_api
 from config import STRICT_HEADERS
-from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
+from .utilities import accept_headers, as_asobj, check_headers, content_headers, find_post, find_user
 
 from activipy import core, vocab
 from flask import abort, Blueprint, request, Response
 from flask_restful import Resource
 
+import json
 import requests
 
 api = Blueprint('api', __name__, template_folder='templates')
-print('registered api')
 
 
 @api.before_request
@@ -29,7 +29,8 @@ class following(Resource):
         """
         u = find_user(handle)
 
-        return u.get('following_coll', [])
+        following = u.get('following_coll', [])
+        return Response(json.dumps(following), headers=content_headers(u))
 
 
 class followers(Resource):
@@ -40,7 +41,8 @@ class followers(Resource):
         print('followers get')
         u = find_user(handle)
 
-        return u.get('followers_coll', [])
+        followers = u.get('followers_coll', [])
+        return Response(json.dumps(followers), headers=content_headers(u))
 
 
 class liked(Resource):
@@ -54,7 +56,7 @@ class liked(Resource):
         for post in mongo.db.posts.find({'object.liked_coll': u['@id']}):
             likes.append(post['object'])
 
-        return likes
+        return Response(json.dumps(likes), headers=content_headers(u))
 
 
 class inbox(Resource):
@@ -63,10 +65,14 @@ class inbox(Resource):
         think of this as the "Home" feed on mastodon. returns all Objects
         addressed to the user. this should require authentication
         """
-        print('inbox get')
         items = list(mongo.db.posts.find({'to': find_user(handle)['@id']}, {'_id': False}).sort('published', -1))
 
-        return items
+        resp = vocab.OrderedCollection(
+            u['inbox'],
+            totalItems=len(items),
+            orderedItems=items)
+
+        return Response(resp, headers=content_headers(find_user(handle)))
 
     def post(self, handle):
         """
@@ -132,7 +138,7 @@ class feed(Resource):
             totalItems=len(items),
             orderedItems=items)
 
-        return Response(json=resp.json(), headers=content_headers(u))
+        return Response(json.dumps(resp.json()), headers=content_headers(u))
 
     def post(self, handle):
         """
@@ -243,8 +249,9 @@ class user(Resource):
         entries = ('email', 'privateKey', 'password')
         for entry in entries:
             u.pop(entry)
+        u['publicKey']['publicKeyPem'] = u['publicKey']['publicKeyPem'].decode('utf-8')
 
-        return Response(u, headers=headers)
+        return Response(json.dumps(u), headers=headers)
 
 
 class get_post(Resource):

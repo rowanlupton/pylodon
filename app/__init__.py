@@ -16,7 +16,7 @@ lm.login_view = 'login'
 mail = Mail(app)
 mongo = PyMongo(app)
 rest_api = Api(app)
-sslify = SSLify(app, subdomains=True, permanent=True)
+# sslify = SSLify(app, subdomains=True, permanent=True)
 
 
 from app import views

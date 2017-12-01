@@ -1,6 +1,7 @@
 from app import mongo
 from config import VALID_HEADERS, API_URI, ACCEPT_HEADERS, CONTENT_HEADERS
 
+from activipy import core
 from flask import abort
 from httpsig import HeaderSigner, Signer
 from werkzeug.http import http_date
@@ -13,6 +14,10 @@ def get_time():
     returns in isoformat because that's what masto uses
     """
     return datetime.datetime.now().isoformat()
+
+
+def as_asobj(obj):
+    return core.ASObj(obj)
 
 
 # header checking
