@@ -17,7 +17,6 @@ def check_headers_before_request():
     """
     will abort with an appropriate HTTP error code if headers are wrong
     """
-    print('checked_headers')
     if STRICT_HEADERS:
         check_headers(request=request)
 
@@ -121,8 +120,6 @@ def inbox(handle):
 
         elif r['@type'] == 'Create':
             # this needs more stuff, like creating a user if necessary
-            print('received Create')
-            print(r)
             if not mongo.db.posts.find({'id': r['@id']}):
                 mongo.db.posts.insert_one(r['object'].json())
                 return 202
@@ -162,7 +159,6 @@ def feed(handle):
 
         # if it's a note it turns it into a Create object
         if 'Note' in r.types:
-            print('Note')
 
             obj = r.get_json()
             r = vocab.Create(
@@ -181,8 +177,6 @@ def feed(handle):
                 print(str(r))
                 print('not a note')
                 abort(403)
-
-            print('Create')
 
             mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
 
