@@ -240,7 +240,9 @@ class user(Resource):
         headers = content_headers(u)
 
         # important not to send these things around
-        u.pop('email', 'privateKey', 'password')
+        entries = ('email', 'privateKey', 'password')
+        for entry in entries:
+            u.pop(entry)
 
         return Response(json=u, headers=headers)
 
