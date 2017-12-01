@@ -244,7 +244,7 @@ class user(Resource):
         for entry in entries:
             u.pop(entry)
 
-        return Response(json=u, headers=headers)
+        return Response(u, headers=headers)
 
 
 class get_post(Resource):
