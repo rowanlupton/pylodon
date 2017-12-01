@@ -1,5 +1,5 @@
 from app import mongo, rest_api
-from .config import STRICT_HEADERS
+from config import STRICT_HEADERS
 from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
 
 from activipy import core, vocab
