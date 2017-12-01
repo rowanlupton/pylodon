@@ -25,7 +25,10 @@ def check_headers_before_request():
 @api.before_request
 def add_at_prefix():
     r = request.get_json()
-    print(r)
+    keys = ['id', 'type']
+    for key in keys:
+        if r.get(key, False):
+            r['@'+key] = r.pop(key)
 
 
 class following(Resource):
