@@ -20,7 +20,7 @@ VALID_HEADERS = (
     'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
     'application/ld+json; profile=\https://www.w3.org/ns/activitystreams\'',
     'application/activity+json')
-
+STRICT_HEADERS = True
 
 # email server
 MAIL_SERVER = 'smtp.mail.me.com'

@@ -17,7 +17,7 @@ print('registered api')
 @api.before_request
 def check_headers_before_request():
     """
-    will abort with HTTP 406 if headers are wrong
+    will abort with an appropriate HTTP error code if headers are wrong
     """
 
     if STRICT_HEADERS:
