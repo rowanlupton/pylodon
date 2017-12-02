@@ -93,13 +93,23 @@ def inbox(handle):
         """
         print('inbox post')
         u = find_user(handle)
-        r = request.get_json()
+        r = core.asobj(request.get_json())
 
-        if r['@type'] == 'Like':
-            print('received Like')
-            mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
+        if 'Create' in r.types:
+            # this needs more stuff, like creating a user if necessary
+            if mongo.db.posts.find({'id': r['@id']}) is not None:
+                try:
+                    mongo.db.posts.insert_one(r['object'])
+                    return Response(status=201)
+                except:
+                    return Response(status=500)
+        elif 'Update' in r.types:
 
-        elif r['@type'] == 'Follow':
+            return Response(status=501)
+        elif 'Delete' in r.types:
+
+            return Response(status=501)
+        elif 'Follow' in r.types:
             if u.get('followers_coll'):
                 if u['followers_coll'].get('actor'):
                     return 400
@@ -111,20 +121,40 @@ def inbox(handle):
                             object=r.get_json()).json()
             headers = content_headers(u)
 
-            requests.post(to, json=accept, headers=headers)
-            return 201
-
-        elif r['@type'] == 'Accept':
+            try:
+                requests.post(to, json=accept, headers=headers)
+                return Response(status=201)
+            except:
+                return Response(status=500)
+        elif 'Accept' in r.types:
             print('received Accept')
-            mongo.db.users.update_one({'id': u['@id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
-            return 201
-
-        elif r['@type'] == 'Create':
-            # this needs more stuff, like creating a user if necessary
-            if mongo.db.posts.find({'id': r['@id']}) is not None:
-                mongo.db.posts.insert_one(r['object'])
-                return Response("", status=201)
-
+            try:
+                mongo.db.users.update_one({'id': u['@id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
+                return Response(status=201)
+            except:
+                return Response(status=501)
+        elif 'Reject' in r.types:
+            
+            return Response(status=501)
+        elif 'Add' in r.types:
+            
+            return Response(status=501)
+        elif 'Remove' in r.types:
+            
+            return Response(status=501)
+        elif 'Like' in r.types:
+            print('received Like')
+            try:
+                mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
+                return Response(status=201)
+            except:
+                return Response(status=500)
+        elif 'Announce' in r.types:
+            
+            return Response(status=501)
+        elif 'Undo' in r.types:
+            
+            return Response(status=501)
         else:
             print('other type')
             print(r)
@@ -160,7 +190,6 @@ def feed(handle):
 
         # if it's a note it turns it into a Create object
         if 'Note' in r.types:
-
             obj = r.get_json()
             r = vocab.Create(
                 obj['@id']+'/activity',
@@ -177,53 +206,30 @@ def feed(handle):
             if r['object']['@type'] != 'Note':
                 print(str(r))
                 print('not a note')
-                abort(403)
+                return Response(status=403)
 
             mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
-
+        elif 'Update' in r.types:
+            Response(status=501)
+        elif 'Delete' in r.types:
+            Response(status=501)
+        elif 'Follow' in r.types:
+            Response(status=501)
+        elif 'Accept' in r.types:
+            Response(status=501)
+        elif 'Reject' in r.types:
+            Response(status=501)
+        elif 'Add' in r.types:
+            Response(status=501)
+        elif 'Remove' in r.types:
+            Response(status=501)
         elif 'Like' in r.types:
             if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
                 mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
-
-        elif 'Follow' in r.types:
-            pass
-
-        elif 'Update' in r.types:
-            """
-            update user object on other servers
-            """
-            pass
-
-        elif 'Delete' in r.types:
-            """
-            notify other servers that an object has been deleted
-            """
-            pass
-
-        elif 'Add' in r.types:
-            """
-            """
-            pass
-
-        elif 'Remove' in r.types:
-            """
-            """
-            pass
-
         elif 'Announce' in r.types:
-            """
-            """
-            pass
-
-        elif 'Block' in r.types:
-            """
-            """
-            pass
-
+            Response(status=501)
         elif 'Undo' in r.types:
-            """
-            """
-            pass
+            Response(status=501)
 
         recipients = []
         r = r.json()
@@ -234,9 +240,11 @@ def feed(handle):
 
         for address in addresses:
             requests.post(address, json=r, headers=content_headers(u))
-        mongo.db.posts.insert_one(r)
-
-        return 202
+        try:
+            mongo.db.posts.insert_one(r)
+            return Response(status=201)
+        except:
+            return Response(status=500)
 
 
 @api.route('/<handle>')
