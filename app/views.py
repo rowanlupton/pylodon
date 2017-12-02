@@ -104,8 +104,10 @@ def viewFeed(handle):
     """
     """
     u = find_user(handle)
-    r = requests.get(u['outbox'], headers=ACCEPT_HEADERS).json()
-    return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
+    if u:
+        r = requests.get(u['outbox'], headers=ACCEPT_HEADERS).json()
+        return render_template('feed.html', posts=r['orderedItems'], mongo=mongo)
+    return 404
 
 
 @app.route('/<handle>/<postID>')

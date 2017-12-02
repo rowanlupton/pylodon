@@ -111,22 +111,23 @@ def inbox(handle):
             headers = content_headers(u)
 
             requests.post(to, json=accept, headers=headers)
-            return 202
+            return 201
 
         elif r['@type'] == 'Accept':
             print('received Accept')
             mongo.db.users.update_one({'id': u['@id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
-            return 202
+            return 201
 
         elif r['@type'] == 'Create':
             # this needs more stuff, like creating a user if necessary
             if not mongo.db.posts.find({'id': r['@id']}):
                 mongo.db.posts.insert_one(r['object'].json())
-                return 202
+                return 201
 
         else:
             print('other type')
             print(r)
+            return 200
         abort(400)
 
 
