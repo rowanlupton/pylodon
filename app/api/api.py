@@ -122,7 +122,7 @@ def inbox(handle):
             # this needs more stuff, like creating a user if necessary
             if mongo.db.posts.find({'id': r['@id']}) is not None:
                 mongo.db.posts.insert_one(r['object'])
-                return 201
+                return Response("", status=201)
 
         else:
             print('other type')
