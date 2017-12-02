@@ -210,26 +210,30 @@ def feed(handle):
 
             mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
         elif 'Update' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Delete' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Follow' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Accept' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Reject' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Add' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Remove' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Like' in r.types:
             if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
-                mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
+                try:
+                    mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
+                    return Response(status=201)
+                except:
+                    return Response(status=500)
         elif 'Announce' in r.types:
-            Response(status=501)
+            return Response(status=501)
         elif 'Undo' in r.types:
-            Response(status=501)
+            return Response(status=501)
 
         recipients = []
         r = r.json()
