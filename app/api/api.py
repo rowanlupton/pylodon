@@ -120,14 +120,13 @@ def inbox(handle):
 
         elif r['@type'] == 'Create':
             # this needs more stuff, like creating a user if necessary
-            if not mongo.db.posts.find({'id': r['@id']}):
+            if mongo.db.posts.find({'id': r['@id']}) is not None:
                 mongo.db.posts.insert_one(r['object'].json())
-                return 200
+                return 201
 
         else:
             print('other type')
             print(r)
-            return 200
         abort(400)
 
 
