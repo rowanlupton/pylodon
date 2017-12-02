@@ -106,16 +106,15 @@ def inbox(handle):
         elif 'Update' in r.types:
             if 'Actor' in r.types:
                 time = get_time()
+                r['updated']=time
                 try:
-                    r['updated']=time
-                    mongo.db.users.find_one_and_replace({'@id': r['@id']}, r.json())
+                    mongo.db.users.find_one_and_replace({'@id': r['@id']}, r.json(), {'upsert': True})
                     return Response(status=201)
                 except:
                     return Response(status=500)
             elif ('Object' or 'Activity') in r.types:
                 try:
-                    r['updated']=time
-                    mongo.db.posts.find_one_and_replace({'@id': r['@id']}, r.json())
+                    mongo.db.posts.find_one_and_replace({'@id': r['@id']}, r.json(), {'upsert': True})
                     return Response(status=201)
                 except:
                     return Response(status=500)
@@ -182,7 +181,8 @@ def inbox(handle):
             except:
                 return Response(status=500)
         elif 'Undo' in r.types:
-            
+            # this requires maybe a lot of stuff for implementing?
+            # i'll think about it later
             return Response(status=501)
         else:
             print('other type')
@@ -232,11 +232,6 @@ def feed(handle):
                 obj=obj)
 
         if 'Create' in r.types:
-            if r['object']['@type'] != 'Note':
-                print(str(r))
-                print('not a note')
-                return Response(status=403)
-
             mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
         elif 'Update' in r.types:
             return Response(status=501)
