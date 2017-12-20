@@ -67,116 +67,118 @@ def liked(handle):
 
 
 @app.route('/<handle>/inbox', methods=['GET', 'POST'])
-def inbox(handle):
-    if request.method == 'GET':
-        """
-        think of this as the "Home" feed on mastodon. returns all Objects
-        addressed to the user. this should require authentication
-        """
-        u = find_user(handle)
-        items = list(mongo.db.posts.find({'to': u['@id']}, {'_id': False}).sort('published', -1))
+@requires_indieauth
+def inbox_get(handle=None):
+    """
+    think of this as the "Home" feed on mastodon. returns all Objects
+    addressed to the user. this should require authentication
+    """
+    u = find_user(handle)
+    items = list(mongo.db.posts.find({'to': u['@id']}, {'_id': False}).sort('published', -1))
 
-        resp = vocab.OrderedCollection(
-            u['inbox'],
-            totalItems=len(items),
-            orderedItems=items)
+    resp = vocab.OrderedCollection(
+        u['inbox'],
+        totalItems=len(items),
+        orderedItems=items)
 
-        return Response(json.dumps(resp.json()), headers=content_headers(u))
+    return Response(json.dumps(resp.json()), headers=content_headers(u))
 
-    if request.method == 'POST':
-        """
-        deduplicates requests, and adds them to the database. in some cases
-        (e.g. Follow requests) it automatically responds, pending fuller API
-        and UI implementation
-        """
-        print('inbox post')
-        u = find_user(handle)
-        r = core.asobj(request.get_json())
 
+@app.route('/<handle>/inbox', methods=['GET', 'POST'])
+def inpox_post(handle):
+    """
+    deduplicates requests, and adds them to the database. in some cases
+    (e.g. Follow requests) it automatically responds, pending fuller API
+    and UI implementation
+    """
+    print('inbox post')
+    u = find_user(handle)
+    r = core.asobj(request.get_json())
+
+    if 'Create' in r.types:
+        # this needs more stuff, like creating a user if necessary
+        if mongo.db.posts.find({'id': r['@id']}) is not None:
+            try:
+                mongo.db.posts.insert_one(r['object'])
+                return Response(status=201)
+            except:
+                return Response(status=500)
+    elif 'Update' in r.types:
+
+        return Response(status=501)
+    elif 'Delete' in r.types:
+
+        return Response(status=501)
+    elif 'Follow' in r.types:
+        if u.get('followers_coll'):
+            if u['followers_coll'].get('actor'):
+                return 400
+
+        mongo.db.users.update_one({'id': u['@id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
+        to = requests.get(r['actor'], headers=accept_headers(u)).json()['inbox']
+        accept = vocab.accept(
+                        to=to,
+                        object=r.get_json()).json()
+        headers = content_headers(u)
+
+        try:
+            requests.post(to, json=accept, headers=headers)
+            return Response(status=201)
+        except:
+            return Response(status=500)
+    elif 'Accept' in r.types:
+        print('received Accept')
+        try:
+            mongo.db.users.update_one({'id': u['@id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
+            return Response(status=201)
+        except:
+            return Response(status=501)
+    elif 'Reject' in r.types:
+        
+        return Response(status=501)
+    elif 'Add' in r.types:
+        
+        return Response(status=501)
+    elif 'Remove' in r.types:
+        
+        return Response(status=501)
+    elif 'Like' in r.types:
+        print('received Like')
+        try:
+            mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
+            return Response(status=201)
+        except:
+            return Response(status=500)
+    elif 'Announce' in r.types:
+        
+        return Response(status=501)
+    elif 'Undo' in r.types:
         if 'Create' in r.types:
-            # this needs more stuff, like creating a user if necessary
-            if mongo.db.posts.find({'id': r['@id']}) is not None:
-                try:
-                    mongo.db.posts.insert_one(r['object'])
-                    return Response(status=201)
-                except:
-                    return Response(status=500)
+            return Response(status=501)
         elif 'Update' in r.types:
-
             return Response(status=501)
         elif 'Delete' in r.types:
-
             return Response(status=501)
         elif 'Follow' in r.types:
-            if u.get('followers_coll'):
-                if u['followers_coll'].get('actor'):
-                    return 400
-
-            mongo.db.users.update_one({'id': u['@id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-            to = requests.get(r['actor'], headers=accept_headers(u)).json()['inbox']
-            accept = vocab.accept(
-                            to=to,
-                            object=r.get_json()).json()
-            headers = content_headers(u)
-
-            try:
-                requests.post(to, json=accept, headers=headers)
-                return Response(status=201)
-            except:
-                return Response(status=500)
+            return Response(status=501)
         elif 'Accept' in r.types:
-            print('received Accept')
-            try:
-                mongo.db.users.update_one({'id': u['@id']}, {'$push': {'following_coll': r['object']['actor']}}, upsert=True)
-                return Response(status=201)
-            except:
-                return Response(status=501)
+            return Response(status=501)
         elif 'Reject' in r.types:
-            
             return Response(status=501)
         elif 'Add' in r.types:
-            
             return Response(status=501)
         elif 'Remove' in r.types:
-            
             return Response(status=501)
         elif 'Like' in r.types:
-            print('received Like')
-            try:
-                mongo.db.posts.update_one({'id': r['object']}, {'$push': {'object.liked_coll': r['actor']}}, upsert=True)
-                return Response(status=201)
-            except:
-                return Response(status=500)
-        elif 'Announce' in r.types:
-            
             return Response(status=501)
-        elif 'Undo' in r.types:
-            if 'Create' in r.types:
-                return Response(status=501)
-            elif 'Update' in r.types:
-                return Response(status=501)
-            elif 'Delete' in r.types:
-                return Response(status=501)
-            elif 'Follow' in r.types:
-                return Response(status=501)
-            elif 'Accept' in r.types:
-                return Response(status=501)
-            elif 'Reject' in r.types:
-                return Response(status=501)
-            elif 'Add' in r.types:
-                return Response(status=501)
-            elif 'Remove' in r.types:
-                return Response(status=501)
-            elif 'Like' in r.types:
-                return Response(status=501)
-            elif 'Announce' in r.types:
-                return Response(status=501)
-            else:
-                return Response(status=501)
+        elif 'Announce' in r.types:
+            return Response(status=501)
         else:
-            print('other type')
-            print(r)
-        abort(400)
+            return Response(status=501)
+    else:
+        print('other type')
+        print(r)
+    abort(400)
 
 
 @app.route('/<handle>/feed', methods=['GET'])
