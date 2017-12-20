@@ -5,18 +5,10 @@ from .utilities import accept_headers, check_headers, content_headers, find_post
 from activipy import core, vocab
 from flask import abort, g, request, Response
 from flask_indieauth import requires_indieauth
-from functools import wraps
 
 import json
 import requests
 
-
-def requires_indieauth_if_post(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if request.method == 'POST':
-            requires_indieauth(f)
-    return decorated
 
 @app.before_request
 def check_headers_before_request():
@@ -89,7 +81,7 @@ def inbox(handle):
             totalItems=len(items),
             orderedItems=items)
 
-        return Response(resp, headers=content_headers(find_user(handle)))
+        return Response(resp, headers=content_headers(u))
 
     if request.method == 'POST':
         """
@@ -187,91 +179,92 @@ def inbox(handle):
         abort(400)
 
 
-@app.route('/<handle>/feed', methods=['GET', 'POST'])
-@requires_indieauth_if_post
-def feed(handle):
-    if request.method == 'GET':
-        """
-        per AP spec, returns a reverse-chronological OrderedCollection of
-        items in the outbox, pending privacy settings
-        """
-        print('feed get')
-        u = find_user(handle)
+@app.route('/<handle>/feed', methods=['GET'])
+def feed_get(handle):
+    """
+    per AP spec, returns a reverse-chronological OrderedCollection of
+    items in the outbox, pending privacy settings
+    """
+    print('feed get')
+    u = find_user(handle)
 
-        items = list(mongo.db.posts.find({'object.attributedTo': u['@id']}, {'_id': False}).sort('published', -1))
+    items = list(mongo.db.posts.find({'object.attributedTo': u['@id']}, {'_id': False}).sort('published', -1))
 
-        resp = vocab.OrderedCollection(
-            u['outbox'],
-            totalItems=len(items),
-            orderedItems=items)
+    resp = vocab.OrderedCollection(
+        u['outbox'],
+        totalItems=len(items),
+        orderedItems=items)
 
-        return Response(json.dumps(resp.json()), headers=content_headers(u))
+    return Response(json.dumps(resp.json()), headers=content_headers(u))
 
-    if request.method == 'POST':
-        """
-        adds objects that it receives to mongodb and sends them along
-        to appropriate Actor inboxes
-        """
-        r = core.ASObj(request.get_json(), vocab.BasicEnv)
-        u = find_user(handle)
 
-        # if it's a note it turns it into a Create object
-        if 'Note' in r.types:
-            obj = r.get_json()
-            r = vocab.Create(
-                obj['@id']+'/activity',
-                actor=u['@id'],
-                published=obj['published'],
-                to=obj['to'],
-                bto=obj['bto'],
-                cc=obj['cc'],
-                bcc=obj['bcc'],
-                audience=obj['audience'],
-                obj=obj)
+@app.route('/<handle>/feed', methods=['POST'])
+@requires_indieauth
+def feed_post(handle):
+    """
+    adds objects that it receives to mongodb and sends them along
+    to appropriate Actor inboxes
+    """
+    r = core.ASObj(request.get_json(), vocab.BasicEnv)
+    u = find_user(handle)
 
-        if 'Create' in r.types:
-            if r['object']['@type'] != 'Note':
-                print(str(r))
-                print('not a note')
-                return Response(status=403)
+    # if it's a note it turns it into a Create object
+    if 'Note' in r.types:
+        obj = r.get_json()
+        r = vocab.Create(
+            obj['@id']+'/activity',
+            actor=u['@id'],
+            published=obj['published'],
+            to=obj['to'],
+            bto=obj['bto'],
+            cc=obj['cc'],
+            bcc=obj['bcc'],
+            audience=obj['audience'],
+            obj=obj)
 
-            mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
-        elif 'Update' in r.types:
-            return Response(status=501)
-        elif 'Delete' in r.types:
-            return Response(status=501)
-        elif 'Follow' in r.types:
-            return Response(status=501)
-        elif 'Accept' in r.types:
-            return Response(status=501)
-        elif 'Reject' in r.types:
-            return Response(status=501)
-        elif 'Add' in r.types:
-            return Response(status=501)
-        elif 'Remove' in r.types:
-            return Response(status=501)
-        elif 'Like' in r.types:
-            if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
-                mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
-        elif 'Announce' in r.types:
-            return Response(status=501)
-        elif 'Undo' in r.types:
-            return Response(status=501)
+    if 'Create' in r.types:
+        if r['object']['@type'] != 'Note':
+            print(str(r))
+            print('not a note')
+            return Response(status=403)
 
-        recipients = []
-        r = r.json()
+        mongo.db.users.update({'acct': u['acct']}, {'$inc': {'metrics.post_count': 1}})
+    elif 'Update' in r.types:
+        return Response(status=501)
+    elif 'Delete' in r.types:
+        return Response(status=501)
+    elif 'Follow' in r.types:
+        return Response(status=501)
+    elif 'Accept' in r.types:
+        return Response(status=501)
+    elif 'Reject' in r.types:
+        return Response(status=501)
+    elif 'Add' in r.types:
+        return Response(status=501)
+    elif 'Remove' in r.types:
+        return Response(status=501)
+    elif 'Like' in r.types:
+        if u['acct'] not in mongo.db.posts.find({'@id': r['object']['@id']})['likes']:
+            mongo.db.posts.update({'@id': r['object']['@id']}, {'$push': {'likes': u['acct']}})
+    elif 'Announce' in r.types:
+        return Response(status=501)
+    elif 'Undo' in r.types:
+        return Response(status=501)
 
-        for group in ['to', 'bto', 'cc', 'bcc', 'audience']:
-            addresses = r.get(group, [])
-            recipients.extend(addresses)
+    recipients = []
+    r = r.json()
 
-        for address in addresses:
-            requests.post(address, json=r, headers=content_headers(u))
-        try:
-            mongo.db.posts.insert_one(r)
-            return Response(status=201)
-        except:
-            return Response(status=500)
+    for group in ['to', 'bto', 'cc', 'bcc', 'audience']:
+        addresses = r.get(group, [])
+        recipients.extend(addresses)
+
+    for address in addresses:
+        requests.post(address, json=r, headers=content_headers(u))
+    try:
+        mongo.db.posts.insert_one(r)
+        return Response(status=201)
+    except:
+        return Response(status=500)
 
 
 @app.route('/<handle>')
