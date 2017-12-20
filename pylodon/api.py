@@ -82,7 +82,7 @@ def inbox(handle):
         addressed to the user. this should require authentication
         """
         u = find_user(handle)
-        items = list(mongo.db.posts.find({'to': {'$in': u['@id']}}, {'_id': False}).sort('published', -1))
+        items = list(mongo.db.posts.find({'to': u['@id']}, {'_id': False}).sort('published', -1))
 
         resp = vocab.OrderedCollection(
             u['inbox'],
