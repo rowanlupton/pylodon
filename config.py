@@ -18,5 +18,8 @@ VALID_HEADERS = (
     'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
     'application/ld+json; profile=\'https://www.w3.org/ns/activitystreams\'',
     'application/activity+json')
-STRICT_HEADERS = True
+
+# require that all requests to the API conform to ActivityPub's expected headers
+STRICT_HEADERS = False
+# require that the API run over HTTPS
 STRICT_HTTPS = False
