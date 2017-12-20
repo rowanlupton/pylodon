@@ -1,10 +1,9 @@
-from app import mongo
+
 from config import STRICT_HEADERS
-from .utilities import accept_headers, as_asobj, check_headers, content_headers, find_post, find_user
+from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
 
 from activipy import core, vocab
 from flask import abort, Blueprint, request, Response
-from flask_restful import Resource
 
 import json
 import requests

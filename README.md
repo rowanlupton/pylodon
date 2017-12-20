@@ -1,5 +1,8 @@
 # smilodon
 
+# this README is currently out of date
+
+
 ## Setup
 
 Create a virtualenv, activate it, and then `pip install -r requirements.txt`. (Make sure it's a Python3 environment; some of our dependencies require it.)

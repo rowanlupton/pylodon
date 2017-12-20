@@ -18,17 +18,6 @@ ACCEPT_HEADERS = {'Accept': valid_header}
 # specified by ActivityPub/ActivityStreams
 VALID_HEADERS = (
     'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
-    'application/ld+json; profile=\https://www.w3.org/ns/activitystreams\'',
+    'application/ld+json; profile=\'https://www.w3.org/ns/activitystreams\'',
     'application/activity+json')
 STRICT_HEADERS = True
-
-# email server
-MAIL_SERVER = 'smtp.mail.me.com'
-MAIL_PORT = 587
-MAIL_USE_TLS = True
-MAIL_USE_SSL = False
-MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-
-# administrator list
-ADMINS = ['rowanlupton@icloud.com']
