@@ -1,17 +1,22 @@
-from pylodon import app
+from pylodon import app, mongo
 from config import STRICT_HEADERS
 from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
 
 from activipy import core, vocab
-from flask import abort, request, Response
+from flask import abort, g, request, Response
+from flask_indieauth import requires_indieauth
+from functools import wraps
 
 import json
 import requests
 
 
-@app.route('/')
-def hello():
-    return 'hello'
+def requires_indieauth_if_post(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.method == 'POST':
+            requires_indieauth(f)
+    return decorated
 
 @app.before_request
 def check_headers_before_request():
@@ -183,6 +188,7 @@ def inbox(handle):
 
 
 @app.route('/<handle>/feed', methods=['GET', 'POST'])
+@requires_indieauth_if_post
 def feed(handle):
     if request.method == 'GET':
         """

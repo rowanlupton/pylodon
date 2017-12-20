@@ -23,3 +23,6 @@ VALID_HEADERS = (
 STRICT_HEADERS = False
 # require that the API run over HTTPS
 STRICT_HTTPS = False
+
+TOKEN_ENDPOINT = 'https://tokens.indieauth.com/token'
+ME = 'https://pylodon.rowan.website'

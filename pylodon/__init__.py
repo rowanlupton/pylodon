@@ -10,3 +10,5 @@ app.config.from_object('config')
 mongo = PyMongo(app)
 if STRICT_HTTPS:
     sslify = SSLify(app, subdomains=True, permanent=True)
+
+from pylodon import api

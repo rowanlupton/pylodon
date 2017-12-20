@@ -1,4 +1,4 @@
-from app import mongo
+from pylodon import mongo
 from config import VALID_HEADERS, API_URI, ACCEPT_HEADERS, CONTENT_HEADERS
 
 from activipy import core
