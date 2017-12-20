@@ -81,7 +81,7 @@ def inbox(handle):
             totalItems=len(items),
             orderedItems=items)
 
-        return Response(resp, headers=content_headers(u))
+        return Response(json.dumps(resp.json()), headers=content_headers(u))
 
     if request.method == 'POST':
         """
