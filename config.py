@@ -19,3 +19,4 @@ VALID_HEADERS = (
     'application/ld+json; profile=\'https://www.w3.org/ns/activitystreams\'',
     'application/activity+json')
 STRICT_HEADERS = True
+STRICT_HTTPS = False

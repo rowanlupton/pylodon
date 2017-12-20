@@ -1,17 +1,19 @@
-
+from pylodon import app
 from config import STRICT_HEADERS
 from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
 
 from activipy import core, vocab
-from flask import abort, Blueprint, request, Response
+from flask import abort, request, Response
 
 import json
 import requests
 
-api = Blueprint('api', __name__, template_folder='templates')
 
+@app.route('/')
+def hello():
+    return 'hello'
 
-@api.before_request
+# @app.before_request
 def check_headers_before_request():
     """
     will abort with an appropriate HTTP error code if headers are wrong
@@ -20,7 +22,7 @@ def check_headers_before_request():
         check_headers(request=request)
 
 
-@api.before_request
+# @app.before_request
 def add_at_prefix():
     r = request.get_json()
     if r is not None:
@@ -30,7 +32,7 @@ def add_at_prefix():
                 r['@'+key] = r.pop(key)
 
 
-@api.route('/<handle>/followers')
+@app.route('/<handle>/followers')
 def following(handle):
     """
     returns a Collection of all Actors' @ids who follow given Actor
@@ -41,7 +43,7 @@ def following(handle):
     return Response(json.dumps(following), headers=content_headers(u))
 
 
-@api.route('/<handle>/followers')
+@app.route('/<handle>/followers')
 def followers(handle):
     """
     returns a Collection of all Actors' @ids who follow given Actor
@@ -53,7 +55,7 @@ def followers(handle):
     return Response(json.dumps(followers), headers=content_headers(u))
 
 
-@api.route('/<handle>/liked')
+@app.route('/<handle>/liked')
 def liked(handle):
     """
     returns a Collection of Objects that given Actor has Liked
@@ -67,7 +69,7 @@ def liked(handle):
     return Response(json.dumps(likes), headers=content_headers(u))
 
 
-@api.route('/<handle>/inbox', methods=['GET', 'POST'])
+@app.route('/<handle>/inbox', methods=['GET', 'POST'])
 def inbox(handle):
     if request.method == 'GET':
         """
@@ -180,7 +182,7 @@ def inbox(handle):
         abort(400)
 
 
-@api.route('/<handle>/feed', methods=['GET', 'POST'])
+@app.route('/<handle>/feed', methods=['GET', 'POST'])
 def feed(handle):
     if request.method == 'GET':
         """
@@ -266,7 +268,7 @@ def feed(handle):
             return Response(status=500)
 
 
-@api.route('/<handle>')
+@app.route('/<handle>')
 def user(handle):
     """
     returns either the user's public key or a Person object with
@@ -288,7 +290,7 @@ def user(handle):
     return Response(json.dumps(u), headers=headers)
 
 
-@api.route('/<handle>/<post_id>')
+@app.route('/<handle>/<post_id>')
 def get_post(handle, post_id):
     """
     """
@@ -297,7 +299,7 @@ def get_post(handle, post_id):
     return Response(post, headers=headers)
 
 
-@api.route('/<handle>/<post_id>/activity')
+@app.route('/<handle>/<post_id>/activity')
 def get_post_activity(handle, post_id):
     """
     """
