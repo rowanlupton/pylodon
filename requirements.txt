@@ -9,6 +9,7 @@ docutils==0.14
 Flask==0.12.2
 Flask-PyMongo==0.5.1
 Flask-SSLify==0.1.5
+gunicorn==19.7.1
 httpsig==1.1.2
 idna==2.6
 imagesize==0.7.1

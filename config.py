@@ -2,8 +2,6 @@ import os
 
 API_NAME = os.environ['api_name']
 API_URI = os.environ['api_uri']
-SERVER_NAME = os.environ['server_name']
-SERVER_URI = os.environ['server_uri']
 
 WTF_CSRF_ENABLED = True
 SECRET_KEY = os.environ['secret_key']
