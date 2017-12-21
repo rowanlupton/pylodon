@@ -1,5 +1,5 @@
 from pylodon import mongo
-from config import VALID_HEADERS, API_URI, ACCEPT_HEADERS, CONTENT_HEADERS
+from config import DEFAULT_HEADERS, VALID_HEADERS, API_URI, ACCEPT_HEADERS, CONTENT_HEADERS
 
 from activipy import core
 from flask import abort
@@ -82,6 +82,7 @@ def sign_headers(u, headers):
     auth['Signature'] = auth['Signature'][len('Signature '):]
 
     auth.update(headers)
+    auth.update(DEFAULT_HEADERS)
 
     return auth
 
