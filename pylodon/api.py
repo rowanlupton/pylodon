@@ -3,7 +3,7 @@ from config import STRICT_HEADERS
 from .utilities import accept_headers, check_headers, content_headers, find_post, find_user
 
 from activipy import core, vocab
-from flask import abort, Blueprint, g, request, Response
+from flask import abort, g, request, Response
 from flask_indieauth import requires_indieauth
 
 import json
