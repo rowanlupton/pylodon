@@ -9,10 +9,6 @@ from flask_indieauth import requires_indieauth
 import json
 import requests
 
-
-api = Blueprint('api', subdomain='api')
-
-
 @app.before_request
 def check_headers_before_request():
     """
