@@ -1,6 +1,6 @@
 # pylodon
 
-~[pylodon](docs/pylodon.png)
+![pylodon](docs/pylodon.png)
 
 # this README is currently out of date
 
