@@ -1,7 +1,6 @@
 # pylodon
 
-+[![Join the chat at https://gitter.im/pylodon/Lobby](https://badges.gitter.im/pylodon/Lobby.svg)](https://gitter.im/pylodon/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
- +
+[![Join the chat at https://gitter.im/pylodon/Lobby](https://badges.gitter.im/pylodon/Lobby.svg)](https://gitter.im/pylodon/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ![pylodon](docs/pylodon.png)
 *image courtesy of [@banjofox](https://dev.glitch.social/@banjofox)*
