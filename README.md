@@ -1,4 +1,6 @@
-# smilodon
+# pylodon
+
+~[pylodon](docs/pylodon.png)
 
 # this README is currently out of date
 
