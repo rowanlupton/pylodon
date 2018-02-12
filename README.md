@@ -1,6 +1,7 @@
 # pylodon
 
 ![pylodon](docs/pylodon.png)
+*image courtesy of [@banjofox](https://dev.glitch.social/@banjofox)*
 
 # this README is currently out of date
 
