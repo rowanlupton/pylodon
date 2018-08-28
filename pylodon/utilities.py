@@ -120,7 +120,7 @@ def find_user(handle):
     """
     u = mongo.db.users.find_one({'username': handle}, {'_id': False})
     if not u:
-        return None
+        abort(404)
     return u
 
 
@@ -131,5 +131,5 @@ def find_post(handle, post_id):
     id = user_api_uri+'/'+post_id
     p = mongo.db.posts.find_one({'object.id': id}, {'_id': False})
     if not p:
-        return None
+        abort(404)
     return p
