@@ -114,14 +114,14 @@ def inpox_post(handle):
                 return 400
 
         mongo.db.users.update_one({'id': u['@id']}, {'$push': {'followers_coll': r['actor']}}, upsert=True)
-        to = requests.get(r['actor'], headers=accept_headers(u)).json()['inbox']
+        to = requests.get(r['actor'], headers=accept_headers(u), timeout=30).json()['inbox']
         accept = vocab.accept(
                         to=to,
                         object=r.get_json()).json()
         headers = content_headers(u)
 
         try:
-            requests.post(to, json=accept, headers=headers)
+            requests.post(to, json=accept, headers=headers, timeout=30)
             return Response(status=201)
         except:
             return Response(status=500)
@@ -260,7 +260,7 @@ def feed_post(handle):
         recipients.extend(addresses)
 
     for address in addresses:
-        requests.post(address, json=r, headers=content_headers(u))
+        requests.post(address, json=r, headers=content_headers(u), timeout=30)
     try:
         mongo.db.posts.insert_one(r)
         return Response(status=201)
